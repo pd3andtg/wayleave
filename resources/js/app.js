@@ -1,5 +1,7 @@
 import './bootstrap';
 import $ from 'jquery';
+import Alpine from 'alpinejs';
 
 window.$ = window.jQuery = $;
-window.Chart = Chart;
+window.Alpine = Alpine;
+Alpine.start();

@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\ProjectController;
 use Illuminate\Support\Facades\Route;
 
 // Landing page
@@ -16,6 +18,12 @@ Route::middleware('guest')->group(function () {
     Route::post('/register',            [AuthController::class, 'register'])->name('register.submit');
     Route::get('/register/company',     [AuthController::class, 'showRegisterCompany'])->name('register.company');
     Route::post('/register/company',    [AuthController::class, 'registerCompany'])->name('register.company.submit');
+
+    // Password reset
+    Route::get('/forgot-password',      [ForgotPasswordController::class, 'showForgotForm'])->name('password.request');
+    Route::post('/forgot-password',     [ForgotPasswordController::class, 'sendResetLink'])->name('password.email');
+    Route::get('/reset-password/{token}', [ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/reset-password',      [ForgotPasswordController::class, 'resetPassword'])->name('password.update');
 });
 
 // Authenticated routes
@@ -26,9 +34,11 @@ Route::middleware('auth')->group(function () {
         return view('dashboard');
     })->name('dashboard');
 
-    // Projects (to be implemented)
-    Route::get('/projects', fn() => 'Coming soon')->name('projects.index');
-    Route::get('/projects/{project}', fn() => 'Coming soon')->name('projects.show');
+    // Projects
+    Route::get('/projects',              [ProjectController::class, 'index'])->name('projects.index');
+    Route::get('/projects/create',       [ProjectController::class, 'create'])->name('projects.create');
+    Route::post('/projects',             [ProjectController::class, 'store'])->name('projects.store');
+    Route::get('/projects/{project}',    [ProjectController::class, 'show'])->name('projects.show');
 
     // Admin routes (to be implemented)
     Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {

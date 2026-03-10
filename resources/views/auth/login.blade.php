@@ -42,22 +42,24 @@
     </div>
 
     <div class="mt-3">
-      <button type="submit" class="btn btn-block btn-primary btn-lg font-weight-medium auth-form-btn">
+      <button type="submit" class="auth-submit-btn">
         SIGN IN
       </button>
     </div>
 
     <div class="my-2 d-flex justify-content-between align-items-center">
       <div class="form-check">
-        <label class="form-check-label text-muted">
-          <input type="checkbox" class="form-check-input" name="remember">
-          Keep me signed in
-        </label>
+        <input type="checkbox" class="form-check-input" id="remember" name="remember">
+        <label class="form-check-label text-muted" for="remember">Keep me signed in</label>
       </div>
+      {{-- Only show forgot password link after a failed login attempt --}}
+      @if ($errors->has('email'))
+        <a href="{{ route('password.request') }}" class="text-primary" style="font-size: 0.82rem;">Forgot password?</a>
+      @endif
     </div>
 
     <div class="text-center mt-4 font-weight-light">
-      Don't have an account? <a href="{{ route('register') }}" class="text-primary">Create</a>
+      Don't have an account? <a href="{{ route('register') }}" class="text-primary">Sign Up</a>
     </div>
 
   </form>

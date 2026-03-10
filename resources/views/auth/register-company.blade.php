@@ -55,7 +55,7 @@
     </div>
 
     <div class="mt-3">
-      <button type="submit" class="btn btn-block btn-primary btn-lg font-weight-medium auth-form-btn">
+      <button type="submit" class="auth-submit-btn" style="width:100%">
         SUBMIT REQUEST
       </button>
     </div>
@@ -66,10 +66,12 @@
       </small>
     </div>
 
-    <div class="text-center mt-3 font-weight-light">
-      Already have an account? <a href="{{ route('login') }}" class="text-primary">Sign In</a>
-      &nbsp;|&nbsp;
-      <a href="{{ route('register') }}" class="text-primary">Back to Sign Up</a>
+    <div class="text-center mt-3">
+      <small class="text-muted">
+        Already have an account? <a href="{{ route('login') }}" class="text-primary">Sign In</a>
+        &nbsp;|&nbsp;
+        <a href="{{ route('register') }}" class="text-primary">Back to Sign Up</a>
+      </small>
     </div>
 
   </form>

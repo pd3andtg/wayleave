@@ -1,0 +1,151 @@
+*, body {
+  font-family: 'Poppins', sans-serif !important;
+}
+
+.auth-wrapper {
+  min-height: 100vh;
+  background-color: #EBEBEB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+}
+
+.auth-card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 16px rgba(6, 64, 137, 0.10);
+  width: 100%;
+  max-width: 460px;
+  padding: 40px 40px 36px;
+}
+
+.auth-back-home {
+  margin-bottom: 20px;
+}
+
+.auth-back-home a {
+  font-size: 0.8rem;
+  color: #749DC8;
+  text-decoration: none;
+}
+
+.auth-back-home a:hover {
+  color: #064089;
+}
+
+.auth-card h4 {
+  font-weight: 600;
+  color: #064089;
+  margin-bottom: 4px;
+}
+
+.auth-card h6 {
+  color: #749DC8;
+  margin-bottom: 24px;
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+.auth-card .form-control {
+  border-radius: 4px;
+  border-color: #d0d8e4;
+  font-size: 0.9rem;
+  font-family: 'Poppins', sans-serif !important;
+}
+
+.auth-card .form-control:focus {
+  border-color: #0A61C9;
+  box-shadow: 0 0 0 0.2rem rgba(10, 97, 201, 0.15);
+}
+
+.auth-card select.form-control {
+  color: #495057;
+}
+
+/* Custom styled checkbox */
+.auth-card .form-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 0;
+}
+
+.auth-card .form-check-input[type="checkbox"] {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  border: 2px solid #EBEBEB;
+  border-radius: 3px;
+  background-color: #fff;
+  cursor: pointer;
+  position: relative;
+  margin: 0;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.auth-card .form-check-input[type="checkbox"]:checked {
+  background-color: #064089;
+  border-color: #064089;
+}
+
+.auth-card .form-check-input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 0px;
+  width: 5px;
+  height: 9px;
+  border: 2px solid #fff;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+
+.auth-card .form-check-label {
+  cursor: pointer;
+  font-size: 0.82rem;
+  margin: 0;
+  user-select: none;
+}
+
+/* Custom auth button — avoids all Bootstrap .btn conflicts */
+.auth-card button.auth-submit-btn {
+  display: block;
+  width: 100%;
+  margin: 0 auto;
+  background-color: #064089;
+  border: 1px solid #064089;
+  border-radius: 4px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  padding: 4px 0 !important;
+  line-height: 1.4 !important;
+  height: 45px !important;
+  box-sizing: border-box !important;
+  text-align: center;
+  color: #ffffff !important;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.auth-card button.auth-submit-btn:hover,
+.auth-card button.auth-submit-btn:focus {
+  background-color: #07326A !important;
+  border-color: #07326A !important;
+  color: #ffffff !important;
+  outline: none;
+}
+
+.auth-card .text-primary {
+  color: #0A61C9 !important;
+}
+
+.auth-card .text-primary:hover {
+  color: #064089 !important;
+}

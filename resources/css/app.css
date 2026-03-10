@@ -2,12 +2,123 @@
 @import '../../public/css/dashboard.css';
 @import '../../public/css/landing.css';
 
+/* Hide Alpine x-cloak elements until Alpine initialises */
+[x-cloak] { display: none !important; }
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    --font-sans: 'Poppins', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+/* ============================================================
+   COLOUR PALETTE — Azure theme
+   #EBEBEB  light gray      (background)
+   #F1F7F9  light blue-white (light surfaces)
+   #749DC8  steel blue      (accent / highlights)
+   #0A61C9  vivid blue      (primary / navbar)
+   #064089  dark blue       (buttons, hover states)
+   #07326A  darkest navy    (sidebar, deep elements)
+============================================================ */
+
+:root {
+    /* Landing template variables */
+    --accent-color:    #0A61C9;
+    --secondary-color: #749DC8;
+    --dark-color:      #07326A;
+
+    /* Dashboard Bootstrap variables */
+    --bs-primary:     #0A61C9;
+    --bs-primary-rgb: 10, 97, 201;
+    --bs-dark:        #07326A;
+    --bs-dark-rgb:    7, 50, 106;
+}
+
+/* ── Landing page ─────────────────────────────────────── */
+body {
+    background-color: #EBEBEB;
+}
+
+#header,
+#header-wrap {
+    background-color: #064089;
+    border-bottom-color: #07326A;
+}
+
+/* Navbar font color */
+#header .menu-list a {
+    color: #EBEBEB;
+}
+
+/* Active nav link color */
+ul li.active a,
+#header .menu-list a.active {
+    color: #749DC8;
+}
+
+/* Hamburger bar color */
+.hamburger .bar {
+    background-color: #EBEBEB;
+}
+
+/* Billboard Sign In button — .btn.btn-accent needed to beat landing.css specificity */
+.btn.btn-accent,
+a.btn {
+    background: #064089 !important;
+    border-color: #064089 !important;
+    color: #EBEBEB !important;
+}
+
+.btn.btn-accent:hover,
+a.btn:hover {
+    background: #07326A !important;
+    border-color: #07326A !important;
+    color: #EBEBEB !important;
+}
+
+/* ── Dashboard ────────────────────────────────────────── */
+.navbar .navbar-brand-wrapper {
+    background: #07326A !important;
+}
+
+.navbar .navbar-menu-wrapper {
+    background: #07326A;
+    border-left: 1px solid #0A61C9;
+}
+
+.sidebar {
+    background: #07326A !important;
+}
+
+.sidebar .nav .nav-item .nav-link,
+.sidebar .nav .nav-item .nav-link i.menu-icon {
+    color: #749DC8;
+}
+
+.sidebar .nav .nav-item.active .nav-link,
+.sidebar .nav .nav-item:hover .nav-link {
+    background: #0A61C9;
+    color: #EBEBEB;
+}
+
+.sidebar .nav .nav-item.active .nav-link i.menu-icon,
+.sidebar .nav .nav-item:hover .nav-link i.menu-icon {
+    color: #EBEBEB;
+}
+
+.sidebar .nav .sub-menu {
+    background: #041d3d;
+}
+
+.sidebar .nav .sub-menu .nav-item .nav-link {
+    color: #749DC8;
+}
+
+.sidebar .nav .sub-menu .nav-item .nav-link.active,
+.sidebar .nav .sub-menu .nav-item .nav-link:hover {
+    color: #EBEBEB;
 }

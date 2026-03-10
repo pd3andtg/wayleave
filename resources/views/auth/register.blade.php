@@ -118,7 +118,7 @@
     </div>
 
     <div class="mt-3">
-      <button type="submit" class="btn btn-block btn-primary btn-lg font-weight-medium auth-form-btn">
+      <button type="submit" class="auth-submit-btn" style="width:100%">
         SIGN UP
       </button>
     </div>
