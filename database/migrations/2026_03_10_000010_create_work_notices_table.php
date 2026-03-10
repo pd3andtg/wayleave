@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('work_notices', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained('projects')->cascadeOnDelete();
-            $table->string('notis_mula_file');
-            $table->string('notis_siap_file');
-            $table->string('gambar_file');
+            $table->string('notis_mula_file')->nullable();
+            $table->string('notis_siap_file')->nullable();
+            $table->string('gambar_file')->nullable();
             $table->foreignId('uploaded_by')->constrained('users')->cascadeOnDelete();
             $table->timestamps();
         });

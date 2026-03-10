@@ -14,11 +14,11 @@ return new class extends Migration
         Schema::create('cpc_applications', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained('projects')->cascadeOnDelete();
-            $table->string('surat_serahan_file');
-            $table->string('laporan_bergambar_file');
-            $table->string('salinan_coa_file');
-            $table->string('salinan_permit_file');
-            $table->date('date_submit_to_kutt');
+            $table->string('surat_serahan_file')->nullable();
+            $table->string('laporan_bergambar_file')->nullable();
+            $table->string('salinan_coa_file')->nullable();
+            $table->string('salinan_permit_file')->nullable();
+            $table->date('date_submit_to_kutt')->nullable();
             $table->foreignId('submitted_by')->constrained('users')->cascadeOnDelete();
             $table->timestamps();
         });

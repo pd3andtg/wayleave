@@ -6,6 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <title>{{ config('app.name') }} - @yield('title')</title>
   <link rel="shortcut icon" href="{{ asset('images/favicon.png') }}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
   <link rel="stylesheet" href="{{ asset('vendors/ti-icons/css/themify-icons.css') }}">
   <link rel="stylesheet" href="{{ asset('vendors/base/vendor.bundle.base.css') }}">
   <link rel="stylesheet" href="{{ asset('css/style.css') }}">
@@ -29,7 +32,7 @@
       </div>
       <div class="navbar-menu-wrapper d-flex align-items-center justify-content-end">
         <button class="navbar-toggler navbar-toggler align-self-center" type="button" data-toggle="minimize">
-          <span class="ti-view-list"></span>
+          <span class="ti-menu"></span>
         </button>
 
         <ul class="navbar-nav navbar-nav-right">
@@ -81,7 +84,7 @@
         </ul>
 
         <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button" data-toggle="offcanvas">
-          <span class="ti-view-list"></span>
+          <span class="ti-menu"></span>
         </button>
       </div>
     </nav>
@@ -95,17 +98,10 @@
       <nav class="sidebar sidebar-offcanvas" id="sidebar">
         <ul class="nav">
 
-          <li class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-            <a class="nav-link" href="{{ route('dashboard') }}">
-              <i class="ti-home menu-icon"></i>
-              <span class="menu-title">Dashboard</span>
-            </a>
-          </li>
-
           <li class="nav-item {{ request()->routeIs('projects.*') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('projects.index') }}">
-              <i class="ti-files menu-icon"></i>
-              <span class="menu-title">Projects</span>
+              <i class="ti-home menu-icon"></i>
+              <span class="menu-title">Dashboard</span>
             </a>
           </li>
 
