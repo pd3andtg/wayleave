@@ -372,10 +372,6 @@
           <div class="border rounded p-3 mb-3">
             <div class="d-flex align-items-center gap-2 mb-3">
               <label class="form-label text-muted small mb-0">{{ $pbt->pbt_number }} &mdash; {{ $pbt->pbt_name === 'Others' ? $pbt->pbt_name_other : str_replace('_', ' ', $pbt->pbt_name) }}</label>
-              @if ($pbt->endorsed_file)
-                <a href="{{ route('projects.download', ['project' => $project, 'path' => $pbt->endorsed_file]) }}"
-                   class="btn-action"><i class="ti-download"></i> Endorsed File</a>
-              @endif
             </div>
 
             @role('officer|admin')
@@ -433,7 +429,14 @@
                   <input type="date" name="deposit_date" class="form-control" style="height:38px;" value="{{ $pbt->deposit_date?->format('Y-m-d') }}">
                 </div>
               </div>
-              <div class="d-flex justify-content-end">
+              {{-- Row 3: download endorsed file + save button --}}
+              <div class="d-flex justify-content-between align-items-center mt-2">
+                <div>
+                  @if ($pbt->endorsed_file)
+                    <a href="{{ route('projects.download', ['project' => $project, 'path' => $pbt->endorsed_file]) }}"
+                       class="btn-action"><i class="ti-download"></i> Download Endorsed File</a>
+                  @endif
+                </div>
                 <button type="submit" class="btn-action">Save</button>
               </div>
             </form>

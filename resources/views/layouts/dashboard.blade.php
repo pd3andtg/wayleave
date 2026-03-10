@@ -24,15 +24,19 @@
     <nav class="navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
       <div class="text-center navbar-brand-wrapper d-flex align-items-center justify-content-center">
         <a class="navbar-brand brand-logo me-5" href="{{ route('dashboard') }}">
-          <img src="{{ asset('images/logo.png') }}" class="me-2" alt="{{ config('app.name') }}" />
+          <img src="{{ asset('images/logo.png') }}" class="me-2" alt="{{ config('app.name') }}" style="height:52px;width:auto;" />
         </a>
         <a class="navbar-brand brand-logo-mini" href="{{ route('dashboard') }}">
-          <img src="{{ asset('images/logo.png') }}" alt="{{ config('app.name') }}" />
+          <img src="{{ asset('images/logo.png') }}" alt="{{ config('app.name') }}" style="height:52px;width:auto;" />
         </a>
       </div>
       <div class="navbar-menu-wrapper d-flex align-items-center justify-content-end">
         <button class="navbar-toggler navbar-toggler align-self-center" type="button" data-toggle="minimize">
-          <span class="ti-menu"></span>
+          <span style="display:flex;flex-direction:column;gap:5px;">
+            <span style="display:block;width:22px;height:2px;background:#07326A;border-radius:2px;"></span>
+            <span style="display:block;width:22px;height:2px;background:#07326A;border-radius:2px;"></span>
+            <span style="display:block;width:22px;height:2px;background:#07326A;border-radius:2px;"></span>
+          </span>
         </button>
 
         <ul class="navbar-nav navbar-nav-right">
@@ -84,7 +88,11 @@
         </ul>
 
         <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button" data-toggle="offcanvas">
-          <span class="ti-menu"></span>
+          <span style="display:flex;flex-direction:column;gap:5px;">
+            <span style="display:block;width:22px;height:2px;background:#07326A;border-radius:2px;"></span>
+            <span style="display:block;width:22px;height:2px;background:#07326A;border-radius:2px;"></span>
+            <span style="display:block;width:22px;height:2px;background:#07326A;border-radius:2px;"></span>
+          </span>
         </button>
       </div>
     </nav>

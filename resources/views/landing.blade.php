@@ -37,7 +37,7 @@
     }
 
     .main-logo img {
-      height: 22px;
+      height: 52px;
       width: auto;
     }
 
