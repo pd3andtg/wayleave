@@ -226,6 +226,12 @@ input[type="file"].form-control::file-selector-button {
     text-decoration: none;
 }
 
+/* ── Bold field labels inside summary boxes (Steps 5, 7) ── */
+/* Targets the label divs paired with fw-semibold value divs inside bordered boxes */
+.border.rounded .text-muted.small {
+    font-weight: 700;
+}
+
 /* ── Dashboard button variants ────────────────────────── */
 
 /* Filter button — matches Register/View buttons */

@@ -4,15 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-// Step 8: contractor uploads Notis Mula, Notis Siap, and a combined site photos PDF.
-// One record per project. Gambar file must be a single combined PDF.
+// Step 10: contractor uploads Notis Mula Kerja and Notis Siap Kerja.
+// Gambar (site photos) has been removed entirely from the system.
+// One record per project.
 class WorkNotice extends Model
 {
     protected $fillable = [
         'project_id',
         'notis_mula_file',
         'notis_siap_file',
-        'gambar_file',
         'uploaded_by',
     ];
 

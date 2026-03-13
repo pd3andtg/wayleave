@@ -4,7 +4,8 @@ namespace App\Http\Requests\Steps;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-// Step 10: contractor uploads the received CPC. Triggers project status → completed.
+// Step 12: contractor uploads the received CPC and records the date.
+// Triggers project status → completed.
 class StoreCpcReceivedRequest extends FormRequest
 {
     public function authorize(): bool
@@ -19,6 +20,7 @@ class StoreCpcReceivedRequest extends FormRequest
 
         return [
             'cpc_file' => [$required, 'file', 'mimes:pdf', 'max:10240'],
+            'cpc_date' => ['required', 'date'],
         ];
     }
 }

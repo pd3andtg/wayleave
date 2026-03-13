@@ -2,19 +2,21 @@
 
 namespace App\Services;
 
-use App\Models\BqInv;
+use App\Models\BqEndorsement;
+use App\Models\BqInvFile;
 use App\Models\CpcApplication;
 use App\Models\CpcReceived;
-use App\Models\InvPayment;
+use App\Models\InvEndorsement;
 use App\Models\PermitReceived;
 use App\Models\PermitSubmission;
 use App\Models\Project;
 use App\Models\User;
+use App\Models\WayleavePayment;
 use App\Models\WayleavePhbt;
 use App\Models\WorkNotice;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-// Handles all project business logic across all 10 workflow steps.
+// Handles all project business logic across all 12 workflow steps.
 // File storage uses the configured default disk (local or S3) — controlled by .env only.
 // Contractors are always scoped by company_id — never trust user input alone.
 class ProjectService
@@ -79,60 +81,69 @@ class ProjectService
         $project->update($data);
     }
 
-    // ── Step 2: BQ/INV Upload (Contractor) ────────────────────────────────────
+    // ── Step 4: BQ/INV File Upload (Contractor) ───────────────────────────────
 
-    public function storeBqInv(array $data, Project $project, User $user): BqInv
+    // Stores a single BQ/INV file for the given file_number slot (1-6).
+    // If a record for that slot already exists, it is replaced.
+    public function storeBqInvFile(array $data, Project $project, User $user): BqInvFile
     {
-        $folder   = 'projects/' . $project->id . '/bq-inv';
-        $existing = $project->bqInv;
+        $folder   = 'projects/' . $project->id . '/bq-inv-files';
+        $existing = $project->bqInvFiles()->where('file_number', $data['file_number'])->first();
 
-        $filePath = isset($data['bq_inv_file'])
-            ? $this->storeFile($data['bq_inv_file'], $folder)
-            : $existing?->bq_inv_file;
+        $filePath = isset($data['file_path'])
+            ? $this->storeFile($data['file_path'], $folder)
+            : $existing?->file_path;
 
-        return BqInv::updateOrCreate(
-            ['project_id' => $project->id],
-            ['bq_inv_file' => $filePath, 'uploaded_by' => $user->id]
+        return BqInvFile::updateOrCreate(
+            ['project_id' => $project->id, 'file_number' => $data['file_number']],
+            [
+                'file_path'     => $filePath,
+                'document_info' => $data['document_info'],
+                'payment_type'  => $data['payment_type'],
+                'date'          => $data['date'],
+                'amount'        => $data['amount'],
+                'eds_no'        => $data['eds_no'],
+                'remarks'       => $data['remarks'] ?? null,
+                'uploaded_by'   => $user->id,
+            ]
         );
     }
 
-    // ── Step 3: Officer Endorsement + Invoice Payments ─────────────────────────
+    // ── Step 5: Officer Endorses a BQ/INV File ────────────────────────────────
 
-    public function endorseBqInv(array $data, Project $project, User $user): BqInv
+    // Routes to bq_endorsements or inv_endorsements based on the file payment_type.
+    public function endorseBqInvFile(array $data, Project $project, BqInvFile $bqInvFile, User $user): BqEndorsement|InvEndorsement
     {
-        $folder   = 'projects/' . $project->id . '/bq-inv';
-        $existing = $project->bqInv;
+        if ($bqInvFile->payment_type === 'BQ') {
+            return BqEndorsement::updateOrCreate(
+                ['bq_inv_file_id' => $bqInvFile->id],
+                [
+                    'project_id'    => $project->id,
+                    'document_info' => $data['document_info'],
+                    'date'          => $data['date'],
+                    'remarks'       => $data['remarks'] ?? null,
+                    'endorsed_by'   => $user->id,
+                ]
+            );
+        }
 
-        $endorsedPath = isset($data['endorsed_file'])
-            ? $this->storeFile($data['endorsed_file'], $folder)
-            : $existing?->endorsed_file;
-
-        // updateOrCreate — bq_inv_file and uploaded_by are nullable so this works
-        // even if the contractor hasn't uploaded yet.
-        return BqInv::updateOrCreate(
-            ['project_id' => $project->id],
+        // INV type — includes amount, eds_no, and payment_status.
+        return InvEndorsement::updateOrCreate(
+            ['bq_inv_file_id' => $bqInvFile->id],
             [
-                'endorsed_file'  => $endorsedPath,
-                'payment_status' => $data['payment_status'] ?? $existing?->payment_status,
+                'project_id'     => $project->id,
+                'document_info'  => $data['document_info'],
+                'date'           => $data['date'],
+                'amount'         => $data['amount'],
+                'payment_status' => $data['payment_status'],
+                'eds_no'         => $data['eds_no'],
+                'remarks'        => $data['remarks'] ?? null,
                 'endorsed_by'    => $user->id,
             ]
         );
     }
 
-    public function storeInvPayment(array $data, Project $project): InvPayment
-    {
-        return InvPayment::updateOrCreate(
-            ['project_id' => $project->id, 'inv_number' => $data['inv_number']],
-            [
-                'eds_no'         => $data['eds_no'] ?? null,
-                'date'           => $data['date'] ?? null,
-                'amount'         => $data['amount'] ?? null,
-                'payment_status' => $data['payment_status'] ?? null,
-            ]
-        );
-    }
-
-    // ── Step 4: Wayleave PBT Upload (Contractor) ──────────────────────────────
+    // ── Step 6: Wayleave PBT Upload (Contractor) ──────────────────────────────
 
     public function storeWayleavePhbt(array $data, Project $project, User $user): WayleavePhbt
     {
@@ -149,32 +160,44 @@ class ProjectService
         ]);
     }
 
-    // ── Step 5: Officer Endorses Wayleave PBT ─────────────────────────────────
+    // ── Step 6 (Officer): Overwrite Wayleave File ─────────────────────────────
 
+    // Officer uploads the endorsed version, overwriting the contractor's file.
+    // endorsement_remarks is automatically set to "Endorsed" on upload.
     public function endorseWayleavePhbt(array $data, Project $project, WayleavePhbt $pbt, User $user): WayleavePhbt
     {
-        $folder = 'projects/' . $project->id . '/wayleave-endorsed';
-
-        $endorsedPath = isset($data['endorsed_file'])
-            ? $this->storeFile($data['endorsed_file'], $folder)
-            : $pbt->endorsed_file;
+        $folder       = 'projects/' . $project->id . '/wayleave-pbts';
+        $wayleaveFile = $this->storeFile($data['wayleave_file'], $folder);
 
         $pbt->update([
-            'endorsed_file'        => $endorsedPath,
-            'fi_payment'           => $data['fi_payment'] ?? $pbt->fi_payment,
-            'fi_eds_no'            => $data['fi_eds_no'] ?? $pbt->fi_eds_no,
-            'fi_date'              => $data['fi_date'] ?? $pbt->fi_date,
-            'deposit_payment'      => $data['deposit_payment'] ?? $pbt->deposit_payment,
-            'deposit_eds_no'       => $data['deposit_eds_no'] ?? $pbt->deposit_eds_no,
-            'deposit_payment_type' => $data['deposit_payment_type'] ?? $pbt->deposit_payment_type,
-            'deposit_date'         => $data['deposit_date'] ?? $pbt->deposit_date,
-            'endorsed_by'          => $user->id,
+            'wayleave_file'       => $wayleaveFile,
+            'endorsement_remarks' => 'Endorsed',
+            'endorsed_by'         => $user->id,
         ]);
 
         return $pbt;
     }
 
-    // ── Step 6: Permit Submission (Contractor) ────────────────────────────────
+    // ── Step 7: Wayleave Payment (Officer) ────────────────────────────────────
+
+    public function storeWayleavePayment(array $data, Project $project, User $user): WayleavePayment
+    {
+        return WayleavePayment::updateOrCreate(
+            ['project_id' => $project->id, 'wayleave_pbt_id' => $data['wayleave_pbt_id']],
+            [
+                'fi_payment'               => $data['fi_payment'] ?? null,
+                'fi_eds_no'                => $data['fi_eds_no'] ?? null,
+                'fi_application_date'      => $data['fi_application_date'] ?? null,
+                'deposit_payment'          => $data['deposit_payment'] ?? null,
+                'deposit_eds_no'           => $data['deposit_eds_no'] ?? null,
+                'deposit_payment_type'     => $data['deposit_payment_type'] ?? null,
+                'deposit_application_date' => $data['deposit_application_date'] ?? null,
+                'recorded_by'              => $user->id,
+            ]
+        );
+    }
+
+    // ── Step 8: Permit Submission to KUTT (Contractor) ────────────────────────
 
     public function storePermitSubmission(array $data, Project $project, User $user): PermitSubmission
     {
@@ -195,7 +218,7 @@ class ProjectService
         );
     }
 
-    // ── Step 7: Permit Received (Contractor) ──────────────────────────────────
+    // ── Step 9: Permit Received (Contractor) ──────────────────────────────────
 
     public function storePermitReceived(array $data, Project $project, User $user): PermitReceived
     {
@@ -216,8 +239,10 @@ class ProjectService
         );
     }
 
-    // ── Step 8: Work Notices + Site Photos (Contractor) ───────────────────────
+    // ── Step 10: Work Notices (Contractor) ────────────────────────────────────
 
+    // Gambar (site photos) has been removed from the system.
+    // Only Notis Mula and Notis Siap are stored.
     public function storeWorkNotice(array $data, Project $project, User $user): WorkNotice
     {
         $folder   = 'projects/' . $project->id . '/work-notices';
@@ -228,13 +253,12 @@ class ProjectService
             [
                 'notis_mula_file' => isset($data['notis_mula_file']) ? $this->storeFile($data['notis_mula_file'], $folder) : $existing?->notis_mula_file,
                 'notis_siap_file' => isset($data['notis_siap_file']) ? $this->storeFile($data['notis_siap_file'], $folder) : $existing?->notis_siap_file,
-                'gambar_file'     => isset($data['gambar_file'])     ? $this->storeFile($data['gambar_file'], $folder)     : $existing?->gambar_file,
                 'uploaded_by'     => $user->id,
             ]
         );
     }
 
-    // ── Step 9: CPC Application (Contractor) ──────────────────────────────────
+    // ── Step 11: CPC Application (Contractor) ─────────────────────────────────
 
     public function storeCpcApplication(array $data, Project $project, User $user): CpcApplication
     {
@@ -254,7 +278,7 @@ class ProjectService
         );
     }
 
-    // ── Step 10: CPC Received → Project Completed (Contractor) ────────────────
+    // ── Step 12: CPC Received → Project Completed (Contractor) ───────────────
 
     public function storeCpcReceived(array $data, Project $project, User $user): CpcReceived
     {
@@ -267,7 +291,11 @@ class ProjectService
 
         $record = CpcReceived::updateOrCreate(
             ['project_id' => $project->id],
-            ['cpc_file' => $filePath, 'uploaded_by' => $user->id]
+            [
+                'cpc_file'    => $filePath,
+                'cpc_date'    => $data['cpc_date'] ?? $existing?->cpc_date,
+                'uploaded_by' => $user->id,
+            ]
         );
 
         // Uploading the CPC marks the project as completed.

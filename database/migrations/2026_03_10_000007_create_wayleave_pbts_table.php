@@ -4,12 +4,13 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-// Creates the wayleave_pbts table (Steps 4 & 5 of the project flow).
-// Contractor uploads the wayleave received from KUTT/PBT (Step 4).
-// Officer endorses it and handles FI and deposit payments per PBT (Step 5).
-// Up to 3 PBTs allowed per project (PBT1, PBT2, PBT3).
-// pbt_name_other is required only when pbt_name is set to 'Others' —
-// the contractor writes the PBT name themselves in that case.
+// Creates the wayleave_pbts table (Step 6 of the project flow).
+// Contractor uploads the wayleave file received from KUTT/PBT.
+// Officer then overwrites the same wayleave_file column with the endorsed version
+// and sets endorsed_by + endorsement_remarks automatically on upload.
+// Up to 3 PBTs per project (PBT1, PBT2, PBT3).
+// pbt_name_other is required only when pbt_name is set to 'Others'.
+// FI and deposit payment details are stored separately in wayleave_payments (Step 7).
 return new class extends Migration
 {
     public function up(): void
@@ -24,16 +25,11 @@ return new class extends Migration
                 'Others',
             ]);
             $table->string('pbt_name_other')->nullable();
+            // Shared file column: contractor uploads first, officer overwrites with endorsed version.
             $table->string('wayleave_file');
             $table->date('wayleave_received_date');
-            $table->string('endorsed_file')->nullable();
-            $table->enum('fi_payment', ['required', 'not_required', 'waived'])->nullable();
-            $table->string('fi_eds_no')->nullable();
-            $table->date('fi_date')->nullable();
-            $table->enum('deposit_payment', ['required', 'not_required', 'waived'])->nullable();
-            $table->string('deposit_eds_no')->nullable();
-            $table->enum('deposit_payment_type', ['BG', 'BD'])->nullable();
-            $table->date('deposit_date')->nullable();
+            // Set automatically to "Endorsed" when officer overwrites the file.
+            $table->text('endorsement_remarks')->nullable();
             $table->foreignId('endorsed_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });

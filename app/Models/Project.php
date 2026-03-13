@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 // Central record for each wayleave project.
-// All 10 workflow steps hang off this model.
+// All 12 workflow steps hang off this model.
 // Contractors are always scoped by company_id — never trust user input.
 class Project extends Model
 {
@@ -31,19 +31,34 @@ class Project extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function bqInv()
+    // Step 4: up to 6 BQ/INV files per project
+    public function bqInvFiles()
     {
-        return $this->hasOne(BqInv::class);
+        return $this->hasMany(BqInvFile::class);
     }
 
-    public function invPayments()
+    // Step 5: endorsements for BQ-type files
+    public function bqEndorsements()
     {
-        return $this->hasMany(InvPayment::class);
+        return $this->hasMany(BqEndorsement::class);
     }
 
+    // Step 5: endorsements for INV-type files
+    public function invEndorsements()
+    {
+        return $this->hasMany(InvEndorsement::class);
+    }
+
+    // Step 6: up to 3 PBTs per project
     public function wayleavePhbts()
     {
         return $this->hasMany(WayleavePhbt::class);
+    }
+
+    // Step 7: FI and deposit payment per PBT
+    public function wayleavePayments()
+    {
+        return $this->hasMany(WayleavePayment::class);
     }
 
     public function permitSubmission()

@@ -66,7 +66,7 @@
           {{-- Profile dropdown --}}
           <li class="nav-item nav-profile dropdown">
             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" id="profileDropdown">
-              <img src="{{ asset('images/logo.png') }}" alt="profile" />
+              <img src="{{ asset('images/user.png') }}" alt="profile" />
             </a>
             <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="profileDropdown">
               <div class="dropdown-item">

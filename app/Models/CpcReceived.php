@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-// Step 10: contractor uploads the received CPC document.
+// Step 12: contractor uploads the received CPC document and records the date.
 // Creating this record triggers project status → completed.
 // One record per project.
 class CpcReceived extends Model
@@ -15,7 +15,12 @@ class CpcReceived extends Model
     protected $fillable = [
         'project_id',
         'cpc_file',
+        'cpc_date',
         'uploaded_by',
+    ];
+
+    protected $casts = [
+        'cpc_date' => 'date',
     ];
 
     public function project()

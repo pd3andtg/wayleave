@@ -4,9 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-// Steps 4 (contractor upload) and 5 (officer endorsement + payment) of the workflow.
+// Step 6: contractor uploads the wayleave file received from KUTT/PBT.
+// Officer then overwrites wayleave_file with the endorsed version and
+// endorsement_remarks is automatically set to "Endorsed" on upload.
 // Up to 3 PBT records per project (pbt_number: PBT1, PBT2, PBT3).
 // pbt_name_other is required only when pbt_name is set to 'Others'.
+// FI and deposit payment details live in wayleave_payments (Step 7).
 class WayleavePhbt extends Model
 {
     // Table name does not follow default Laravel pluralisation convention.
@@ -19,21 +22,12 @@ class WayleavePhbt extends Model
         'pbt_name_other',
         'wayleave_file',
         'wayleave_received_date',
-        'endorsed_file',
-        'fi_payment',
-        'fi_eds_no',
-        'fi_date',
-        'deposit_payment',
-        'deposit_eds_no',
-        'deposit_payment_type',
-        'deposit_date',
+        'endorsement_remarks',
         'endorsed_by',
     ];
 
     protected $casts = [
         'wayleave_received_date' => 'date',
-        'fi_date'                => 'date',
-        'deposit_date'           => 'date',
     ];
 
     public function project()
@@ -44,5 +38,10 @@ class WayleavePhbt extends Model
     public function endorsedBy()
     {
         return $this->belongsTo(User::class, 'endorsed_by');
+    }
+
+    public function payment()
+    {
+        return $this->hasOne(WayleavePayment::class, 'wayleave_pbt_id');
     }
 }

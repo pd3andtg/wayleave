@@ -9,9 +9,9 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\Steps\BqInvController;
 use App\Http\Controllers\Steps\CpcApplicationController;
 use App\Http\Controllers\Steps\CpcReceivedController;
-use App\Http\Controllers\Steps\InvPaymentController;
 use App\Http\Controllers\Steps\PermitReceivedController;
 use App\Http\Controllers\Steps\PermitSubmissionController;
+use App\Http\Controllers\Steps\WayleavePaymentController;
 use App\Http\Controllers\Steps\WayleavePhbtController;
 use App\Http\Controllers\Steps\WorkNoticeController;
 use Illuminate\Support\Facades\Route;
@@ -41,12 +41,10 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
-
-    // ── Projects ──────────────────────────────────────────────────────────────
-    Route::get('/projects',           [ProjectController::class, 'index'])->name('projects.index');
+    // ── Projects / Dashboard ──────────────────────────────────────────────────
+    // /dashboard and /projects both load the project list — the dashboard IS the project list.
+    Route::get('/dashboard', [ProjectController::class, 'index'])->name('dashboard');
+    Route::get('/projects',  [ProjectController::class, 'index'])->name('projects.index');
     Route::get('/projects/create',    [ProjectController::class, 'create'])->name('projects.create');
     Route::post('/projects',          [ProjectController::class, 'store'])->name('projects.store');
     Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
@@ -55,32 +53,34 @@ Route::middleware('auth')->group(function () {
     // File download — handles both local disk and S3 signed URLs
     Route::get('/projects/{project}/download', [ProjectController::class, 'downloadFile'])->name('projects.download');
 
-    // ── Step 2: BQ/INV Upload (Contractor) ───────────────────────────────────
-    Route::post('/projects/{project}/bq-inv',         [BqInvController::class, 'store'])->name('projects.bq-inv.store');
+    // ── Step 4: BQ/INV File Upload (Contractor — up to 6 files) ─────────────
+    Route::post('/projects/{project}/bq-inv-files',                              [BqInvController::class, 'store'])->name('projects.bq-inv-files.store');
 
-    // ── Step 3: Officer Endorsement + Invoice Payments ────────────────────────
-    Route::post('/projects/{project}/bq-inv/endorse', [BqInvController::class, 'endorse'])->name('projects.bq-inv.endorse');
-    Route::post('/projects/{project}/inv-payments',   [InvPaymentController::class, 'store'])->name('projects.inv-payments.store');
+    // ── Step 5: Officer Endorses each BQ/INV File ────────────────────────────
+    Route::post('/projects/{project}/bq-inv-files/{bqInvFile}/endorse',          [BqInvController::class, 'endorse'])->name('projects.bq-inv-files.endorse');
 
-    // ── Step 4: Wayleave PBT Upload (Contractor) ─────────────────────────────
-    Route::post('/projects/{project}/wayleave-pbts',                          [WayleavePhbtController::class, 'store'])->name('projects.wayleave-pbts.store');
+    // ── Step 6: Wayleave PBT Upload (Contractor — up to 3 PBTs) ─────────────
+    Route::post('/projects/{project}/wayleave-pbts',                              [WayleavePhbtController::class, 'store'])->name('projects.wayleave-pbts.store');
 
-    // ── Step 5: Officer Endorses per PBT ─────────────────────────────────────
-    Route::post('/projects/{project}/wayleave-pbts/{wayleavePhbt}/endorse',   [WayleavePhbtController::class, 'endorse'])->name('projects.wayleave-pbts.endorse');
+    // ── Step 6 (Officer): Overwrite wayleave file + auto-set endorsement ─────
+    Route::post('/projects/{project}/wayleave-pbts/{wayleavePhbt}/endorse',       [WayleavePhbtController::class, 'endorse'])->name('projects.wayleave-pbts.endorse');
 
-    // ── Step 6: Permit Submission (Contractor) ────────────────────────────────
+    // ── Step 7: Officer Records FI + Deposit Payment per PBT ─────────────────
+    Route::post('/projects/{project}/wayleave-payments',                          [WayleavePaymentController::class, 'store'])->name('projects.wayleave-payments.store');
+
+    // ── Step 8: Permit Submission to KUTT (Contractor) ───────────────────────
     Route::post('/projects/{project}/permit-submission', [PermitSubmissionController::class, 'store'])->name('projects.permit-submission.store');
 
-    // ── Step 7: Permit Received (Contractor) ──────────────────────────────────
+    // ── Step 9: Permit Received (Contractor) ──────────────────────────────────
     Route::post('/projects/{project}/permit-received',   [PermitReceivedController::class, 'store'])->name('projects.permit-received.store');
 
-    // ── Step 8: Work Notices + Site Photos (Contractor) ──────────────────────
+    // ── Step 10: Work Notices (Contractor) ────────────────────────────────────
     Route::post('/projects/{project}/work-notice',       [WorkNoticeController::class, 'store'])->name('projects.work-notice.store');
 
-    // ── Step 9: CPC Application (Contractor) ──────────────────────────────────
+    // ── Step 11: CPC Application (Contractor) ─────────────────────────────────
     Route::post('/projects/{project}/cpc-application',   [CpcApplicationController::class, 'store'])->name('projects.cpc-application.store');
 
-    // ── Step 10: CPC Received → Project Completed (Contractor) ───────────────
+    // ── Step 12: CPC Received → Project Completed (Contractor) ───────────────
     Route::post('/projects/{project}/cpc-received',      [CpcReceivedController::class, 'store'])->name('projects.cpc-received.store');
 
     // ── Admin pages (admin role only) ─────────────────────────────────────────

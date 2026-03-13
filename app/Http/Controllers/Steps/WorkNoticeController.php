@@ -7,7 +7,8 @@ use App\Http\Requests\Steps\StoreWorkNoticeRequest;
 use App\Models\Project;
 use App\Services\ProjectService;
 
-// Step 8: contractor uploads Notis Mula, Notis Siap, and combined site photos PDF.
+// Step 10: contractor uploads Notis Mula Kerja and Notis Siap Kerja.
+// Gambar (site photos) has been removed from the system.
 class WorkNoticeController extends Controller
 {
     public function __construct(private ProjectService $projectService) {}

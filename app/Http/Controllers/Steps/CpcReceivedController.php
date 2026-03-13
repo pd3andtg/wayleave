@@ -7,7 +7,7 @@ use App\Http\Requests\Steps\StoreCpcReceivedRequest;
 use App\Models\Project;
 use App\Services\ProjectService;
 
-// Step 10: contractor uploads the received CPC.
+// Step 12: contractor uploads the received CPC and records the date.
 // Creating this record triggers project status → completed.
 class CpcReceivedController extends Controller
 {
