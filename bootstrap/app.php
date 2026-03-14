@@ -11,7 +11,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Block pending/rejected users from accessing any authenticated route.
+        $middleware->appendToGroup('web', \App\Http\Middleware\EnsureUserApproved::class);
+
+        // Register Spatie Laravel Permission middleware aliases.
+        // Required in Laravel 12 — aliases are not auto-registered from the package.
+        $middleware->alias([
+            'role'       => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

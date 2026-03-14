@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminCompanyController;
+use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminUnitController;
 use App\Http\Controllers\Auth\AuthController;
@@ -62,6 +63,9 @@ Route::middleware('auth')->group(function () {
     // ── Step 6: Wayleave PBT Upload (Contractor — up to 3 PBTs) ─────────────
     Route::post('/projects/{project}/wayleave-pbts',                              [WayleavePhbtController::class, 'store'])->name('projects.wayleave-pbts.store');
 
+    // ── Step 3 (Contractor): Replace wayleave file before endorsement ─────────
+    Route::post('/projects/{project}/wayleave-pbts/{wayleavePhbt}/replace',       [WayleavePhbtController::class, 'replace'])->name('projects.wayleave-pbts.replace');
+
     // ── Step 6 (Officer): Overwrite wayleave file + auto-set endorsement ─────
     Route::post('/projects/{project}/wayleave-pbts/{wayleavePhbt}/endorse',       [WayleavePhbtController::class, 'endorse'])->name('projects.wayleave-pbts.endorse');
 
@@ -82,6 +86,13 @@ Route::middleware('auth')->group(function () {
 
     // ── Step 12: CPC Received → Project Completed (Contractor) ───────────────
     Route::post('/projects/{project}/cpc-received',      [CpcReceivedController::class, 'store'])->name('projects.cpc-received.store');
+
+    // ── User Approval Queue (admin + officer) ────────────────────────────────
+    Route::middleware('role:admin|officer')->group(function () {
+        Route::get('/approvals',                          [ApprovalController::class, 'index'])->name('approvals.index');
+        Route::post('/approvals/{user}/approve',          [ApprovalController::class, 'approve'])->name('approvals.approve');
+        Route::post('/approvals/{user}/reject',           [ApprovalController::class, 'reject'])->name('approvals.reject');
+    });
 
     // ── Admin pages (admin role only) ─────────────────────────────────────────
     Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {

@@ -64,7 +64,7 @@
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title">Project Information</h3>
+        <h3 class="card-title"><span class="me-3">1</span> Project Information</h3>
 
         <div x-data="{ editing: false }">
 
@@ -160,16 +160,16 @@
 {{-- ============================================================ --}}
 @php
 $timelineStages = [
-    ['label' => 'Project Info',      'step' => 2,  'done' => true],
-    ['label' => 'BQ/INV Upload',     'step' => 4,  'done' => $project->bqInvFiles->isNotEmpty()],
-    ['label' => 'BQ/INV Endorsed',   'step' => 5,  'done' => $project->bqInvFiles->filter(fn($f) => $f->bqEndorsement || $f->invEndorsement)->isNotEmpty()],
-    ['label' => 'Wayleave',          'step' => 6,  'done' => $project->wayleavePhbts->isNotEmpty()],
-    ['label' => 'Wayleave Payment',  'step' => 7,  'done' => $project->wayleavePayments->isNotEmpty()],
-    ['label' => 'Permit Submitted',  'step' => 8,  'done' => $project->permitSubmission !== null],
-    ['label' => 'Permit Received',   'step' => 9,  'done' => $project->permitReceived !== null],
-    ['label' => 'Work Notices',      'step' => 10, 'done' => $project->workNotice !== null],
-    ['label' => 'CPC Application',   'step' => 11, 'done' => $project->cpcApplication !== null],
-    ['label' => 'CPC Received',      'step' => 12, 'done' => $project->cpcReceived !== null],
+    ['label' => 'Project Info',      'step' => 1,  'done' => true],
+    ['label' => 'BQ/INV Upload',     'step' => 2,  'done' => $project->bqInvFiles->isNotEmpty()],
+    ['label' => 'BQ/INV Endorsed',   'step' => 3,  'done' => $project->bqInvFiles->filter(fn($f) => $f->bqEndorsement || $f->invEndorsement)->isNotEmpty()],
+    ['label' => 'Wayleave',          'step' => 4,  'done' => $project->wayleavePhbts->isNotEmpty()],
+    ['label' => 'Wayleave Payment',  'step' => 5,  'done' => $project->wayleavePayments->isNotEmpty()],
+    ['label' => 'Permit Submitted',  'step' => 6,  'done' => $project->permitSubmission !== null],
+    ['label' => 'Permit Received',   'step' => 7,  'done' => $project->permitReceived !== null],
+    ['label' => 'Work Notices',      'step' => 8,  'done' => $project->workNotice !== null],
+    ['label' => 'CPC Application',   'step' => 9,  'done' => $project->cpcApplication !== null],
+    ['label' => 'CPC Received',      'step' => 10, 'done' => $project->cpcReceived !== null],
 ];
 @endphp
 <div class="row">
@@ -223,7 +223,7 @@ $timelineStages = [
     <div class="card">
       <div class="card-body">
         <h3 class="card-title">
-          <span class="me-3">1</span> BOQ / Invoice Files
+          <span class="me-3">2</span> BOQ / Invoice Files
           @if ($project->bqInvFiles->isNotEmpty())
             <span class="badge bg-success ms-2">&#10003; {{ $project->bqInvFiles->count() }} file(s) uploaded</span>
           @endif
@@ -254,7 +254,7 @@ $timelineStages = [
 
               {{-- Each file gets its own tbody so Alpine x-data wraps both the data row and the replace row --}}
               @foreach ($project->bqInvFiles->sortBy('file_number') as $file)
-                <tbody x-data="{ editing: false }">
+                <tbody x-data="{ editing: false, fileName: 'No file chosen' }">
                   <tr>
                     <td class="text-muted small fw-bold">{{ $file->file_number }}</td>
                     <td>{{ $file->document_info }}</td>
@@ -286,10 +286,17 @@ $timelineStages = [
                         <form action="{{ route('projects.bq-inv-files.store', $project) }}" method="POST" enctype="multipart/form-data">
                           @csrf
                           <input type="hidden" name="file_number" value="{{ $file->file_number }}">
-                          <div class="row mb-2 align-items-end">
+                          <div class="row mb-2 align-items-start">
                             <div class="col-md-4 mb-2">
                               <label class="form-label text-muted small">Replace File (PDF) <span class="text-muted">— leave blank to keep existing</span></label>
-                              <input type="file" name="file_path" class="form-control" style="height:38px;" accept=".pdf">
+                              <div class="d-flex align-items-center" style="gap:8px;">
+                                <input type="file" name="file_path" id="bq_file_{{ $file->id }}" accept=".pdf" style="display:none;"
+                                       x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'">
+                                <label for="bq_file_{{ $file->id }}" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
+                                  <i class="ti-upload"></i> Choose File
+                                </label>
+                                <span x-text="fileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+                              </div>
                             </div>
                             <div class="col-md-4 mb-2">
                               <label class="form-label text-muted small">Document Info <span class="text-danger">*</span></label>
@@ -346,7 +353,7 @@ $timelineStages = [
             <p class="text-muted small mb-0 mt-2">All 6 slots used — use the Edit button on any row to update a file.</p>
           @elseif ($project->bqInvFiles->isNotEmpty())
             {{-- Existing files present: hide form behind a toggle button --}}
-            <div x-data="{ adding: false }">
+            <div x-data="{ adding: false, fileName: 'No file chosen' }">
               <div x-show="!adding" x-cloak>
                 <button type="button" class="btn-action" x-on:click="adding = true">+ Add New BOQ/Invoice File</button>
               </div>
@@ -354,10 +361,17 @@ $timelineStages = [
                 <form action="{{ route('projects.bq-inv-files.store', $project) }}" method="POST" enctype="multipart/form-data">
                   @csrf
                   <input type="hidden" name="file_number" value="{{ $nextNumber }}">
-                  <div class="row mb-2 align-items-end">
+                  <div class="row mb-2 align-items-start">
                     <div class="col-md-4 mb-2">
                       <label class="form-label text-muted small">File (PDF) <span class="text-danger">*</span></label>
-                      <input type="file" name="file_path" class="form-control" style="height:38px;" accept=".pdf" required>
+                      <div class="d-flex align-items-center" style="gap:8px;">
+                        <input type="file" name="file_path" id="bq_file_add" accept=".pdf" style="display:none;" required
+                               x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'">
+                        <label for="bq_file_add" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
+                          <i class="ti-upload"></i> Choose File
+                        </label>
+                        <span x-text="fileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+                      </div>
                     </div>
                     <div class="col-md-4 mb-2">
                       <label class="form-label text-muted small">Document Info <span class="text-danger">*</span></label>
@@ -400,13 +414,21 @@ $timelineStages = [
             </div>
           @else
             {{-- No files yet: show form directly --}}
-            <form action="{{ route('projects.bq-inv-files.store', $project) }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('projects.bq-inv-files.store', $project) }}" method="POST" enctype="multipart/form-data"
+                  x-data="{ fileName: 'No file chosen' }">
               @csrf
               <input type="hidden" name="file_number" value="{{ $nextNumber }}">
-              <div class="row mb-2 align-items-end">
+              <div class="row mb-2 align-items-start">
                 <div class="col-md-4 mb-2">
                   <label class="form-label text-muted small">File (PDF) <span class="text-danger">*</span></label>
-                  <input type="file" name="file_path" class="form-control" style="height:38px;" accept=".pdf" required>
+                  <div class="d-flex align-items-center" style="gap:8px;">
+                    <input type="file" name="file_path" id="bq_file_first" accept=".pdf" style="display:none;" required
+                           x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'">
+                    <label for="bq_file_first" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
+                      <i class="ti-upload"></i> Choose File
+                    </label>
+                    <span x-text="fileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+                  </div>
                 </div>
                 <div class="col-md-4 mb-2">
                   <label class="form-label text-muted small">Document Info <span class="text-danger">*</span></label>
@@ -463,7 +485,7 @@ $timelineStages = [
     <div class="card">
       <div class="card-body">
         <h3 class="card-title">
-          <span class="me-3">2</span> TM: BQ/INV Endorsement
+          <span class="me-3">3</span> TM: BQ/INVOICE Endorsement
         </h3>
 
         @php
@@ -472,7 +494,7 @@ $timelineStages = [
         @endphp
 
         {{-- BQ Section --}}
-        <h4 class="fw-bold mb-2 mt-1">BQ</h4>
+        <h4 class="fw-semibold mb-2 mt-1">BQ</h4>
         @if ($bqFiles->isEmpty())
           <p class="text-muted small mb-3">—</p>
         @else
@@ -577,7 +599,7 @@ $timelineStages = [
         @endif
 
         {{-- INV Section --}}
-        <h4 class="fw-bold mb-2 mt-3">INV</h4>
+        <h4 class="fw-semibold mb-2 mt-3">INV</h4>
         @if ($invFiles->isEmpty())
           <p class="text-muted small mb-3">—</p>
         @else
@@ -744,7 +766,7 @@ $timelineStages = [
     <div class="card">
       <div class="card-body">
         <h3 class="card-title">
-          <span class="me-3">3</span> Wayleave Received (KUTT/PBT)
+          <span class="me-3">4</span> Wayleave Received (KUTT/PBT)
           @if ($project->wayleavePhbts->count() > 0)
             <span class="badge bg-success ms-2">&#10003; {{ $project->wayleavePhbts->count() }} PBT(s) added</span>
           @endif
@@ -752,7 +774,7 @@ $timelineStages = [
 
         {{-- List existing PBTs with officer endorsement sub-form --}}
         @foreach ($project->wayleavePhbts as $pbt)
-          <div class="border rounded p-3 mb-3" x-data="{ endorsing: false, fileName: 'No file chosen' }">
+          <div class="border rounded p-3 mb-3" x-data="{ endorsing: false, fileName: 'No file chosen', replacing: false, replaceFileName: 'No file chosen' }">
             <div class="d-flex justify-content-between align-items-center mb-2">
               <div>
                 <strong>{{ $pbt->pbt_number }} &mdash; {{ $pbt->pbt_name === 'Others' ? $pbt->pbt_name_other : str_replace('_', ' ', $pbt->pbt_name) }}</strong>
@@ -773,6 +795,15 @@ $timelineStages = [
                         x-text="endorsing ? 'Cancel' : '{{ $pbt->endorsed_by ? 'Replace Endorsed' : 'Add Endorsed' }}'">
                 </button>
                 @endrole
+                @role('contractor')
+                @if (!$pbt->endorsed_by)
+                <button type="button" class="btn-action"
+                        style="font-size:0.8rem; padding:0.3rem 0.7rem; line-height:1; display:inline-flex; align-items:center;"
+                        x-on:click="replacing = !replacing"
+                        x-text="replacing ? 'Cancel' : 'Replace File'">
+                </button>
+                @endif
+                @endrole
               </div>
             </div>
 
@@ -789,7 +820,7 @@ $timelineStages = [
                          x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'"
                          {{ !$pbt->endorsed_by ? 'required' : '' }}>
                   <label for="wayleave_file_{{ $pbt->id }}" class="btn-action mb-0"
-                         style="display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+                         style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
                     <i class="ti-upload"></i> Choose File
                   </label>
                   <span x-text="fileName" class="text-muted" style="font-size:0.8rem; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
@@ -803,6 +834,29 @@ $timelineStages = [
               </form>
             </div>
             @endrole
+
+            {{-- Contractor: replace file before endorsement --}}
+            @role('contractor')
+            @if (!$pbt->endorsed_by)
+            <div x-show="replacing" x-cloak class="mt-2 pt-2 border-top">
+              <form action="{{ route('projects.wayleave-pbts.replace', [$project, $pbt]) }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <label class="form-label text-muted small mb-1">Replace Wayleave File (PDF) *</label>
+                <div class="d-flex align-items-center" style="gap:8px;">
+                  <input type="file" name="wayleave_file" id="replace_wayleave_file_{{ $pbt->id }}" accept=".pdf" style="display:none;" required
+                         x-on:change="replaceFileName = $event.target.files[0]?.name ?? 'No file chosen'">
+                  <label for="replace_wayleave_file_{{ $pbt->id }}" class="btn-action mb-0"
+                         style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
+                    <i class="ti-upload"></i> Choose File
+                  </label>
+                  <span x-text="replaceFileName" class="text-muted" style="font-size:0.8rem; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+                  <button type="submit" class="btn-action" style="display:inline-flex; align-items:center;">Replace File</button>
+                </div>
+              </form>
+            </div>
+            @endif
+            @endrole
+
           </div>
         @endforeach
 
@@ -811,17 +865,17 @@ $timelineStages = [
           @php $nextPbt = ['PBT1','PBT2','PBT3'][$project->wayleavePhbts->count()] ?? null; @endphp
           @if ($nextPbt)
             <form action="{{ route('projects.wayleave-pbts.store', $project) }}" method="POST" enctype="multipart/form-data"
-                  x-data="{ pbtName: '' }">
+                  x-data="{ pbtName: '', wayleaveFileName: 'No file chosen' }">
               @csrf
               @if ($project->wayleavePhbts->count() > 0)
                 <hr class="my-3">
               @endif
               <p class="text-muted small mb-3">Add {{ $nextPbt }}</p>
               <input type="hidden" name="pbt_number" value="{{ $nextPbt }}">
-              <div class="row mb-2 align-items-end">
+              <div class="row mb-2 align-items-start">
                 <div class="col-md-4 mb-2">
                   <label class="form-label text-muted small">PBT Name <span class="text-danger">*</span></label>
-                  <select name="pbt_name" class="form-control" x-model="pbtName" required>
+                  <select name="pbt_name" class="form-control" style="height:38px;" x-model="pbtName" required>
                     <option value="">-- Select PBT --</option>
                     @foreach (['MBKT','MPK','MDS','MDB','MPD','JKR_HT','JKR_KN','JKR_DN','JKR_KT','JKR_KM','JKR_ST','Others'] as $opt)
                       <option value="{{ $opt }}">{{ str_replace('_', ' ', $opt) }}</option>
@@ -829,16 +883,23 @@ $timelineStages = [
                   </select>
                   <div x-show="pbtName === 'Others'" x-cloak class="mt-2">
                     <label class="form-label text-muted small">Specify PBT Name <span class="text-danger">*</span></label>
-                    <input type="text" name="pbt_name_other" class="form-control" :required="pbtName === 'Others'">
+                    <input type="text" name="pbt_name_other" class="form-control" style="height:38px;" :required="pbtName === 'Others'">
                   </div>
                 </div>
-                <div class="col-md-3 mb-2">
+                <div class="col-md-4 mb-2">
                   <label class="form-label text-muted small">Wayleave Received Date <span class="text-danger">*</span></label>
-                  <input type="date" name="wayleave_received_date" class="form-control" required>
+                  <input type="date" name="wayleave_received_date" class="form-control" style="height:38px;" required>
                 </div>
-                <div class="col-md-5 mb-2">
+                <div class="col-md-4 mb-2">
                   <label class="form-label text-muted small">Wayleave File (PDF) <span class="text-danger">*</span></label>
-                  <input type="file" name="wayleave_file" class="form-control" accept=".pdf" required>
+                  <div class="d-flex align-items-center" style="gap:8px;">
+                    <input type="file" name="wayleave_file" id="wayleave_file_{{ $nextPbt }}" accept=".pdf" style="display:none;" required
+                           x-on:change="wayleaveFileName = $event.target.files[0]?.name ?? 'No file chosen'">
+                    <label for="wayleave_file_{{ $nextPbt }}" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
+                      <i class="ti-upload"></i> Choose File
+                    </label>
+                    <span x-text="wayleaveFileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+                  </div>
                 </div>
               </div>
               <div class="d-flex justify-content-center">
@@ -867,7 +928,7 @@ $timelineStages = [
     <div class="card">
       <div class="card-body">
         <h3 class="card-title">
-          <span class="me-3">4</span> TM: Wayleave Payment Details (FI &amp; Deposit)
+          <span class="me-3">5</span> TM: Wayleave Payment Details (FI &amp; Deposit)
         </h3>
 
         @foreach ($project->wayleavePhbts as $pbt)
@@ -902,11 +963,11 @@ $timelineStages = [
                     </div>
                     <div class="col-md-3 mb-2">
                       <div class="text-muted small">FI EDS No</div>
-                      <div class="fw-semibold">{{ $payment->fi_eds_no ?? '—' }}</div>
+                      <div class="fw-semibold">{{ $payment->fi_payment === 'required' ? ($payment->fi_eds_no ?? '—') : '—' }}</div>
                     </div>
                     <div class="col-md-3 mb-2">
                       <div class="text-muted small">FI Application Date</div>
-                      <div class="fw-semibold">{{ $payment->fi_application_date?->format('d M Y') ?? '—' }}</div>
+                      <div class="fw-semibold">{{ $payment->fi_payment === 'required' ? ($payment->fi_application_date?->format('d M Y') ?? '—') : '—' }}</div>
                     </div>
                     <div class="col-md-3 mb-2"></div>
                     <div class="col-md-3 mb-2">
@@ -915,15 +976,15 @@ $timelineStages = [
                     </div>
                     <div class="col-md-3 mb-2">
                       <div class="text-muted small">Deposit EDS No</div>
-                      <div class="fw-semibold">{{ $payment->deposit_eds_no ?? '—' }}</div>
+                      <div class="fw-semibold">{{ $payment->deposit_payment === 'required' ? ($payment->deposit_eds_no ?? '—') : '—' }}</div>
                     </div>
                     <div class="col-md-3 mb-2">
                       <div class="text-muted small">Deposit Type</div>
-                      <div class="fw-semibold">{{ $payment->deposit_payment_type ?? '—' }}</div>
+                      <div class="fw-semibold">{{ $payment->deposit_payment === 'required' ? ($payment->deposit_payment_type ?? '—') : '—' }}</div>
                     </div>
                     <div class="col-md-3 mb-2">
                       <div class="text-muted small">Deposit Application Date</div>
-                      <div class="fw-semibold">{{ $payment->deposit_application_date?->format('d M Y') ?? '—' }}</div>
+                      <div class="fw-semibold">{{ $payment->deposit_payment === 'required' ? ($payment->deposit_application_date?->format('d M Y') ?? '—') : '—' }}</div>
                     </div>
                   </div>
                   <div class="d-flex justify-content-end">
@@ -934,14 +995,18 @@ $timelineStages = [
 
               {{-- Form (always visible when no payment yet; toggled by Edit when payment exists) --}}
               <div @if($payment) x-show="editing" x-cloak @endif>
-                <form action="{{ route('projects.wayleave-payments.store', $project) }}" method="POST">
+                <form action="{{ route('projects.wayleave-payments.store', $project) }}" method="POST"
+                      x-data="{
+                        fiPayment: '{{ old('fi_payment', $payment?->fi_payment ?? '') }}',
+                        depositPayment: '{{ old('deposit_payment', $payment?->deposit_payment ?? '') }}'
+                      }">
                   @csrf
                   <input type="hidden" name="wayleave_pbt_id" value="{{ $pbt->id }}">
                   {{-- FI row --}}
                   <div class="row mb-2 align-items-end">
                     <div class="col-md-3 mb-2">
                       <label class="form-label text-muted small">FI Payment</label>
-                      <select name="fi_payment" class="form-control" style="height:38px;">
+                      <select name="fi_payment" class="form-control" style="height:38px;" x-model="fiPayment">
                         <option value="">-- Select --</option>
                         @foreach (['required', 'not_required', 'waived'] as $opt)
                           <option value="{{ $opt }}" {{ ($payment?->fi_payment ?? '') === $opt ? 'selected' : '' }}>
@@ -950,12 +1015,12 @@ $timelineStages = [
                         @endforeach
                       </select>
                     </div>
-                    <div class="col-md-3 mb-2">
+                    <div class="col-md-3 mb-2" x-show="fiPayment === 'required'" x-cloak>
                       <label class="form-label text-muted small">FI EDS No</label>
                       <input type="text" name="fi_eds_no" class="form-control" style="height:38px;"
                              value="{{ old('fi_eds_no', $payment?->fi_eds_no) }}">
                     </div>
-                    <div class="col-md-3 mb-2">
+                    <div class="col-md-3 mb-2" x-show="fiPayment === 'required'" x-cloak>
                       <label class="form-label text-muted small">FI Application Date</label>
                       <input type="date" name="fi_application_date" class="form-control" style="height:38px;"
                              value="{{ old('fi_application_date', $payment?->fi_application_date?->format('Y-m-d')) }}">
@@ -965,7 +1030,7 @@ $timelineStages = [
                   <div class="row mb-2 align-items-end">
                     <div class="col-md-3 mb-2">
                       <label class="form-label text-muted small">Deposit Payment</label>
-                      <select name="deposit_payment" class="form-control" style="height:38px;">
+                      <select name="deposit_payment" class="form-control" style="height:38px;" x-model="depositPayment">
                         <option value="">-- Select --</option>
                         @foreach (['required', 'not_required', 'waived'] as $opt)
                           <option value="{{ $opt }}" {{ ($payment?->deposit_payment ?? '') === $opt ? 'selected' : '' }}>
@@ -974,12 +1039,12 @@ $timelineStages = [
                         @endforeach
                       </select>
                     </div>
-                    <div class="col-md-3 mb-2">
+                    <div class="col-md-3 mb-2" x-show="depositPayment === 'required'" x-cloak>
                       <label class="form-label text-muted small">Deposit EDS No</label>
                       <input type="text" name="deposit_eds_no" class="form-control" style="height:38px;"
                              value="{{ old('deposit_eds_no', $payment?->deposit_eds_no) }}">
                     </div>
-                    <div class="col-md-2 mb-2">
+                    <div class="col-md-2 mb-2" x-show="depositPayment === 'required'" x-cloak>
                       <label class="form-label text-muted small">Deposit Type</label>
                       <select name="deposit_payment_type" class="form-control" style="height:38px;">
                         <option value="">--</option>
@@ -987,7 +1052,7 @@ $timelineStages = [
                         <option value="BD" {{ ($payment?->deposit_payment_type ?? '') === 'BD' ? 'selected' : '' }}>BD</option>
                       </select>
                     </div>
-                    <div class="col-md-4 mb-2">
+                    <div class="col-md-4 mb-2" x-show="depositPayment === 'required'" x-cloak>
                       <label class="form-label text-muted small">Deposit Application Date</label>
                       <input type="date" name="deposit_application_date" class="form-control" style="height:38px;"
                              value="{{ old('deposit_application_date', $payment?->deposit_application_date?->format('Y-m-d')) }}">
@@ -1014,11 +1079,11 @@ $timelineStages = [
                 </div>
                 <div class="col-md-3 mb-2">
                   <div class="text-muted small">FI EDS No</div>
-                  <div class="fw-semibold">{{ $payment->fi_eds_no ?? '—' }}</div>
+                  <div class="fw-semibold">{{ $payment->fi_payment === 'required' ? ($payment->fi_eds_no ?? '—') : '—' }}</div>
                 </div>
                 <div class="col-md-3 mb-2">
                   <div class="text-muted small">FI Application Date</div>
-                  <div class="fw-semibold">{{ $payment->fi_application_date?->format('d M Y') ?? '—' }}</div>
+                  <div class="fw-semibold">{{ $payment->fi_payment === 'required' ? ($payment->fi_application_date?->format('d M Y') ?? '—') : '—' }}</div>
                 </div>
                 <div class="col-md-3 mb-2"></div>
                 <div class="col-md-3 mb-2">
@@ -1027,15 +1092,15 @@ $timelineStages = [
                 </div>
                 <div class="col-md-3 mb-2">
                   <div class="text-muted small">Deposit EDS No</div>
-                  <div class="fw-semibold">{{ $payment->deposit_eds_no ?? '—' }}</div>
+                  <div class="fw-semibold">{{ $payment->deposit_payment === 'required' ? ($payment->deposit_eds_no ?? '—') : '—' }}</div>
                 </div>
                 <div class="col-md-3 mb-2">
                   <div class="text-muted small">Deposit Type</div>
-                  <div class="fw-semibold">{{ $payment->deposit_payment_type ?? '—' }}</div>
+                  <div class="fw-semibold">{{ $payment->deposit_payment === 'required' ? ($payment->deposit_payment_type ?? '—') : '—' }}</div>
                 </div>
                 <div class="col-md-3 mb-2">
                   <div class="text-muted small">Deposit Application Date</div>
-                  <div class="fw-semibold">{{ $payment->deposit_application_date?->format('d M Y') ?? '—' }}</div>
+                  <div class="fw-semibold">{{ $payment->deposit_payment === 'required' ? ($payment->deposit_application_date?->format('d M Y') ?? '—') : '—' }}</div>
                 </div>
               </div>
             @else
@@ -1059,14 +1124,14 @@ $timelineStages = [
     <div class="card">
       <div class="card-body">
         <h3 class="card-title">
-          <span class="me-3">5</span> Permit Submission to KUTT
+          <span class="me-3">6</span> Permit Submission to KUTT
           @if ($project->permitSubmission)
             <span class="badge bg-success ms-2">&#10003; Submitted</span>
           @endif
         </h3>
 
         @if ($project->permitSubmission)
-        <div x-data="{ editing: false }">
+        <div x-data="{ editing: false, fileName: 'No file chosen' }">
           <div x-show="!editing" x-cloak>
             <div class="row mb-2">
               <div class="col-md-3">
@@ -1089,7 +1154,7 @@ $timelineStages = [
           <div x-show="editing" x-cloak>
             <form action="{{ route('projects.permit-submission.store', $project) }}" method="POST" enctype="multipart/form-data">
               @csrf
-              <div class="row align-items-end mb-2">
+              <div class="row align-items-start mb-2">
                 <div class="col-md-3">
                   <label class="form-label text-muted small">Submit Date</label>
                   <input type="date" name="submit_date" class="form-control" style="height:38px;"
@@ -1097,7 +1162,14 @@ $timelineStages = [
                 </div>
                 <div class="col-md-4">
                   <label class="form-label text-muted small">Replace Submission File (PDF)</label>
-                  <input type="file" name="submission_file" class="form-control" style="height:38px;" accept=".pdf">
+                  <div class="d-flex align-items-center" style="gap:8px;">
+                    <input type="file" name="submission_file" id="submission_file_edit" accept=".pdf" style="display:none;"
+                           x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'">
+                    <label for="submission_file_edit" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
+                      <i class="ti-upload"></i> Choose File
+                    </label>
+                    <span x-text="fileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+                  </div>
                 </div>
               </div>
               <div class="d-flex justify-content-end gap-2">
@@ -1111,9 +1183,10 @@ $timelineStages = [
         </div>
         @else
         @can('update', $project)
-        <form action="{{ route('projects.permit-submission.store', $project) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('projects.permit-submission.store', $project) }}" method="POST" enctype="multipart/form-data"
+              x-data="{ fileName: 'No file chosen' }">
           @csrf
-          <div class="row align-items-end mb-2">
+          <div class="row align-items-start mb-2">
             <div class="col-md-3">
               <label class="form-label text-muted small">Submit Date *</label>
               <input type="date" name="submit_date" class="form-control" style="height:38px;"
@@ -1121,7 +1194,14 @@ $timelineStages = [
             </div>
             <div class="col-md-4">
               <label class="form-label text-muted small">Submission File (PDF) *</label>
-              <input type="file" name="submission_file" class="form-control" style="height:38px;" accept=".pdf" required>
+              <div class="d-flex align-items-center" style="gap:8px;">
+                <input type="file" name="submission_file" id="submission_file_new" accept=".pdf" style="display:none;" required
+                       x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'">
+                <label for="submission_file_new" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
+                  <i class="ti-upload"></i> Choose File
+                </label>
+                <span x-text="fileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+              </div>
             </div>
           </div>
           <div class="d-flex justify-content-end">
@@ -1144,14 +1224,14 @@ $timelineStages = [
     <div class="card">
       <div class="card-body">
         <h3 class="card-title">
-          <span class="me-3">6</span> Permit Received
+          <span class="me-3">7</span> Permit Received
           @if ($project->permitReceived)
             <span class="badge bg-success ms-2">&#10003; Recorded</span>
           @endif
         </h3>
 
         @if ($project->permitReceived)
-        <div x-data="{ editing: false }">
+        <div x-data="{ editing: false, fileName: 'No file chosen' }">
           <div x-show="!editing" x-cloak>
             <div class="row mb-2">
               <div class="col-md-3">
@@ -1174,7 +1254,7 @@ $timelineStages = [
           <div x-show="editing" x-cloak>
             <form action="{{ route('projects.permit-received.store', $project) }}" method="POST" enctype="multipart/form-data">
               @csrf
-              <div class="row align-items-end mb-2">
+              <div class="row align-items-start mb-2">
                 <div class="col-md-3">
                   <label class="form-label text-muted small">Permit Received Date</label>
                   <input type="date" name="permit_received_date" class="form-control" style="height:38px;"
@@ -1182,7 +1262,14 @@ $timelineStages = [
                 </div>
                 <div class="col-md-4">
                   <label class="form-label text-muted small">Replace Permit File (PDF)</label>
-                  <input type="file" name="permit_file" class="form-control" style="height:38px;" accept=".pdf">
+                  <div class="d-flex align-items-center" style="gap:8px;">
+                    <input type="file" name="permit_file" id="permit_file_edit" accept=".pdf" style="display:none;"
+                           x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'">
+                    <label for="permit_file_edit" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
+                      <i class="ti-upload"></i> Choose File
+                    </label>
+                    <span x-text="fileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+                  </div>
                 </div>
               </div>
               <div class="d-flex justify-content-end gap-2">
@@ -1196,9 +1283,10 @@ $timelineStages = [
         </div>
         @else
         @can('update', $project)
-        <form action="{{ route('projects.permit-received.store', $project) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('projects.permit-received.store', $project) }}" method="POST" enctype="multipart/form-data"
+              x-data="{ fileName: 'No file chosen' }">
           @csrf
-          <div class="row align-items-end mb-2">
+          <div class="row align-items-start mb-2">
             <div class="col-md-3">
               <label class="form-label text-muted small">Permit Received Date *</label>
               <input type="date" name="permit_received_date" class="form-control" style="height:38px;"
@@ -1206,7 +1294,14 @@ $timelineStages = [
             </div>
             <div class="col-md-4">
               <label class="form-label text-muted small">Permit File (PDF) *</label>
-              <input type="file" name="permit_file" class="form-control" style="height:38px;" accept=".pdf" required>
+              <div class="d-flex align-items-center" style="gap:8px;">
+                <input type="file" name="permit_file" id="permit_file_new" accept=".pdf" style="display:none;" required
+                       x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'">
+                <label for="permit_file_new" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
+                  <i class="ti-upload"></i> Choose File
+                </label>
+                <span x-text="fileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+              </div>
             </div>
           </div>
           <div class="d-flex justify-content-end">
@@ -1231,7 +1326,7 @@ $timelineStages = [
     <div class="card">
       <div class="card-body">
         <h3 class="card-title">
-          <span class="me-3">7</span> Work Notices
+          <span class="me-3">8</span> Work Notices
           @if ($project->workNotice)
             <span class="badge bg-success ms-2">&#10003; Uploaded</span>
           @endif
@@ -1265,13 +1360,20 @@ $timelineStages = [
               @csrf
               <div class="row mb-2">
                 @foreach (['notis_mula_file' => 'Notis Mula Kerja', 'notis_siap_file' => 'Notis Siap Kerja'] as $field => $label)
-                  <div class="col-md-4 mb-2">
+                  <div class="col-md-4 mb-2" x-data="{ fileName: 'No file chosen' }">
                     <label class="form-label text-muted small">
                       {{ $project->workNotice->$field ? 'Replace ' : 'Upload ' }}{{ $label }} (PDF)
                       @if (!$project->workNotice->$field)<span class="text-danger">*</span>@endif
                     </label>
-                    <input type="file" name="{{ $field }}" class="form-control" style="height:38px;" accept=".pdf"
-                           {{ !$project->workNotice->$field ? 'required' : '' }}>
+                    <div class="d-flex align-items-center" style="gap:8px;">
+                      <input type="file" name="{{ $field }}" id="wn_edit_{{ $field }}" accept=".pdf" style="display:none;"
+                             {{ !$project->workNotice->$field ? 'required' : '' }}
+                             x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'">
+                      <label for="wn_edit_{{ $field }}" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
+                        <i class="ti-upload"></i> Choose File
+                      </label>
+                      <span x-text="fileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+                    </div>
                   </div>
                 @endforeach
               </div>
@@ -1290,9 +1392,16 @@ $timelineStages = [
           @csrf
           <div class="row mb-2">
             @foreach (['notis_mula_file' => 'Notis Mula Kerja', 'notis_siap_file' => 'Notis Siap Kerja'] as $field => $label)
-              <div class="col-md-4 mb-2">
+              <div class="col-md-4 mb-2" x-data="{ fileName: 'No file chosen' }">
                 <label class="form-label text-muted small">{{ $label }} (PDF) *</label>
-                <input type="file" name="{{ $field }}" class="form-control" style="height:38px;" accept=".pdf" required>
+                <div class="d-flex align-items-center" style="gap:8px;">
+                  <input type="file" name="{{ $field }}" id="wn_new_{{ $field }}" accept=".pdf" style="display:none;" required
+                         x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'">
+                  <label for="wn_new_{{ $field }}" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
+                    <i class="ti-upload"></i> Choose File
+                  </label>
+                  <span x-text="fileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+                </div>
               </div>
             @endforeach
           </div>
@@ -1316,7 +1425,7 @@ $timelineStages = [
     <div class="card">
       <div class="card-body">
         <h3 class="card-title">
-          <span class="me-3">8</span> CPC Application
+          <span class="me-3">9</span> CPC Application
           @if ($project->cpcApplication)
             <span class="badge bg-success ms-2">&#10003; Submitted</span>
           @endif
@@ -1364,13 +1473,20 @@ $timelineStages = [
                          value="{{ old('date_submit_to_kutt', $project->cpcApplication->date_submit_to_kutt?->format('Y-m-d')) }}">
                 </div>
                 @foreach (['surat_serahan_file' => 'Surat Serahan', 'laporan_bergambar_file' => 'Laporan Bergambar', 'salinan_coa_file' => 'Salinan COA', 'salinan_permit_file' => 'Salinan Permit'] as $field => $label)
-                  <div class="col-md-4 mb-2">
+                  <div class="col-md-4 mb-2" x-data="{ fileName: 'No file chosen' }">
                     <label class="form-label text-muted small">
                       {{ $project->cpcApplication->$field ? 'Replace ' : 'Upload ' }}{{ $label }} (PDF)
                       @if (!$project->cpcApplication->$field)<span class="text-danger">*</span>@endif
                     </label>
-                    <input type="file" name="{{ $field }}" class="form-control" style="height:38px;" accept=".pdf"
-                           {{ !$project->cpcApplication->$field ? 'required' : '' }}>
+                    <div class="d-flex align-items-center" style="gap:8px;">
+                      <input type="file" name="{{ $field }}" id="cpc_edit_{{ $field }}" accept=".pdf" style="display:none;"
+                             {{ !$project->cpcApplication->$field ? 'required' : '' }}
+                             x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'">
+                      <label for="cpc_edit_{{ $field }}" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
+                        <i class="ti-upload"></i> Choose File
+                      </label>
+                      <span x-text="fileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+                    </div>
                   </div>
                 @endforeach
               </div>
@@ -1397,9 +1513,16 @@ $timelineStages = [
                      value="{{ old('date_submit_to_kutt') }}" required>
             </div>
             @foreach (['surat_serahan_file' => 'Surat Serahan', 'laporan_bergambar_file' => 'Laporan Bergambar', 'salinan_coa_file' => 'Salinan COA', 'salinan_permit_file' => 'Salinan Permit'] as $field => $label)
-              <div class="col-md-4 mb-2">
+              <div class="col-md-4 mb-2" x-data="{ fileName: 'No file chosen' }">
                 <label class="form-label text-muted small">{{ $label }} (PDF) *</label>
-                <input type="file" name="{{ $field }}" class="form-control" style="height:38px;" accept=".pdf" required>
+                <div class="d-flex align-items-center" style="gap:8px;">
+                  <input type="file" name="{{ $field }}" id="cpc_new_{{ $field }}" accept=".pdf" style="display:none;" required
+                         x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'">
+                  <label for="cpc_new_{{ $field }}" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
+                    <i class="ti-upload"></i> Choose File
+                  </label>
+                  <span x-text="fileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+                </div>
               </div>
             @endforeach
           </div>
@@ -1425,14 +1548,14 @@ $timelineStages = [
     <div class="card {{ $project->cpcReceived ? 'border-success' : '' }}">
       <div class="card-body">
         <h3 class="card-title">
-          <span class="me-3">9</span> CPC Received
+          <span class="me-3">10</span> CPC Received
           @if ($project->cpcReceived)
             <span class="badge bg-success ms-2">&#10003; Project Completed</span>
           @endif
         </h3>
 
         @if ($project->cpcReceived)
-        <div x-data="{ editing: false }">
+        <div x-data="{ editing: false, fileName: 'No file chosen' }">
           <div x-show="!editing" x-cloak>
             <div class="row mb-2">
               <div class="col-md-3">
@@ -1455,7 +1578,7 @@ $timelineStages = [
           <div x-show="editing" x-cloak>
             <form action="{{ route('projects.cpc-received.store', $project) }}" method="POST" enctype="multipart/form-data">
               @csrf
-              <div class="row align-items-end mb-2">
+              <div class="row align-items-start mb-2">
                 <div class="col-md-3">
                   <label class="form-label text-muted small">CPC Date</label>
                   <input type="date" name="cpc_date" class="form-control" style="height:38px;"
@@ -1463,7 +1586,14 @@ $timelineStages = [
                 </div>
                 <div class="col-md-4">
                   <label class="form-label text-muted small">Replace CPC File (PDF)</label>
-                  <input type="file" name="cpc_file" class="form-control" style="height:38px;" accept=".pdf">
+                  <div class="d-flex align-items-center" style="gap:8px;">
+                    <input type="file" name="cpc_file" id="cpc_file_edit" accept=".pdf" style="display:none;"
+                           x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'">
+                    <label for="cpc_file_edit" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
+                      <i class="ti-upload"></i> Choose File
+                    </label>
+                    <span x-text="fileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+                  </div>
                 </div>
               </div>
               <div class="d-flex justify-content-end gap-2">
@@ -1480,9 +1610,10 @@ $timelineStages = [
           <div class="alert alert-info py-2 mb-3">
             Uploading the CPC will mark this project as <strong>Completed</strong>.
           </div>
-          <form action="{{ route('projects.cpc-received.store', $project) }}" method="POST" enctype="multipart/form-data">
+          <form action="{{ route('projects.cpc-received.store', $project) }}" method="POST" enctype="multipart/form-data"
+                x-data="{ fileName: 'No file chosen' }">
             @csrf
-            <div class="row align-items-end mb-2">
+            <div class="row align-items-start mb-2">
               <div class="col-md-3">
                 <label class="form-label text-muted small">CPC Date *</label>
                 <input type="date" name="cpc_date" class="form-control" style="height:38px;"
@@ -1490,7 +1621,14 @@ $timelineStages = [
               </div>
               <div class="col-md-4">
                 <label class="form-label text-muted small">CPC File (PDF) *</label>
-                <input type="file" name="cpc_file" class="form-control" style="height:38px;" accept=".pdf" required>
+                <div class="d-flex align-items-center" style="gap:8px;">
+                  <input type="file" name="cpc_file" id="cpc_file_new" accept=".pdf" style="display:none;" required
+                         x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'">
+                  <label for="cpc_file_new" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
+                    <i class="ti-upload"></i> Choose File
+                  </label>
+                  <span x-text="fileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+                </div>
               </div>
             </div>
             <div class="d-flex justify-content-end">

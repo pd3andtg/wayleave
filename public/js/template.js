@@ -33,10 +33,9 @@
       addActiveClass($(this));
     });
 
-    // Close other submenus in sidebar on opening any
-    sidebar.on('show.bs.collapse', '.collapse', function() {
-      sidebar.find('.collapse.show').collapse('hide');
-    });
+    // Removed: the "close other submenus on open" handler was immediately closing
+    // the Admin dropdown due to Bootstrap event timing. Since there is only one
+    // collapsible sidebar menu, closing others is unnecessary.
 
     // Minimize sidebar toggle
     $('[data-toggle="minimize"]').on("click", function() {

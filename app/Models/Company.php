@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 // Companies must be approved by Admin before contractors can register under them.
 class Company extends Model
 {
-    protected $fillable = ['name', 'status', 'requested_by', 'approved_by'];
+    protected $fillable = ['name', 'status', 'requester_name', 'requester_email', 'requested_by', 'approved_by'];
 
     public function requestedBy()
     {

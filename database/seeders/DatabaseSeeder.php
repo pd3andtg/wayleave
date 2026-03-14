@@ -35,9 +35,10 @@ class DatabaseSeeder extends Seeder
 
         // ── Test Accounts ──────────────────────────────────────────────────────
         // All test accounts use password: "password"
+        // All seeded accounts are pre-approved — no manual approval needed for testing.
         $admin = User::firstOrCreate(
             ['email' => 'admin@wayleave.test'],
-            ['name' => 'Admin User', 'password' => Hash::make('password')]
+            ['name' => 'Admin User', 'password' => Hash::make('password'), 'status' => 'approved']
         );
         $admin->assignRole($adminRole);
 
@@ -48,6 +49,7 @@ class DatabaseSeeder extends Seeder
                 'password'  => Hash::make('password'),
                 'id_number' => 'TM001',
                 'unit_id'   => $unitTrg->id,
+                'status'    => 'approved',
             ]
         );
         $officerTrg->assignRole($officerRole);
@@ -59,6 +61,7 @@ class DatabaseSeeder extends Seeder
                 'password'   => Hash::make('password'),
                 'id_number'  => '900101-01-1111',
                 'company_id' => $companyA->id,
+                'status'     => 'approved',
             ]
         );
         $contractorA->assignRole($contractorRole);
@@ -70,6 +73,7 @@ class DatabaseSeeder extends Seeder
                 'password'   => Hash::make('password'),
                 'id_number'  => '900202-02-2222',
                 'company_id' => $companyB->id,
+                'status'     => 'approved',
             ]
         );
         $contractorB->assignRole($contractorRole);

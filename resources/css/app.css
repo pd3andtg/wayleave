@@ -126,46 +126,58 @@ select.form-control {
     background: #E0E1DD !important;
 }
 
+/* Normal state — dark navy text on light background */
 .sidebar .nav .nav-item .nav-link,
 .sidebar .nav .nav-item .nav-link i.menu-icon,
-.sidebar .nav .nav-item .nav-link .menu-title,
-.sidebar .nav .nav-item.active > .nav-link .menu-title,
-.sidebar .nav .nav-item.active > .nav-link i {
+.sidebar .nav .nav-item .nav-link .menu-title {
+    color: #07326A !important;
+}
+
+/* Active item — dark blue bg, light font */
+.sidebar .nav .nav-item.active > .nav-link,
+.sidebar .nav .nav-item.active > .nav-link i.menu-icon,
+.sidebar .nav .nav-item.active > .nav-link .menu-title {
+    background: #064089;
     color: #E0E1DD !important;
 }
 
-/* Sidebar active item — dark blue bg, light font */
-.sidebar .nav .nav-item.active .nav-link {
+/* Hover — dark blue bg, light font (matches active state) */
+.sidebar .nav .nav-item:hover > .nav-link,
+.sidebar .nav .nav-item:hover > .nav-link i.menu-icon,
+.sidebar .nav .nav-item:hover > .nav-link .menu-title {
     background: #064089;
-    color: #E0E1DD;
+    color: #E0E1DD !important;
 }
 
-.sidebar .nav .nav-item.active .nav-link i.menu-icon {
-    color: #E0E1DD;
-}
-
-/* Sidebar hover — dark blue bg, dark font */
-.sidebar .nav .nav-item:hover .nav-link {
-    background: #064089;
-    color: #07326A !important;
-}
-
-.sidebar .nav .nav-item:hover .nav-link i.menu-icon,
-.sidebar .nav .nav-item:hover .nav-link .menu-title {
-    color: #07326A !important;
-}
-
+/* Sub-menu background */
 .sidebar .nav .sub-menu {
     background: #c8c9c5;
+    width: 100%;
+    list-style: none !important;
+    padding-left: 0;
 }
 
+.sidebar .nav .sub-menu .nav-item {
+    list-style: none !important;
+}
+
+.sidebar .nav .sub-menu .nav-item::before,
+.sidebar .nav .sub-menu .nav-item::after {
+    display: none !important;
+}
+
+/* Sub-menu normal — dark navy text, allow wrapping so text isn't clipped */
 .sidebar .nav .sub-menu .nav-item .nav-link {
-    color: #07326A;
+    color: #07326A !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
 }
 
+/* Sub-menu active/hover — light text on dark blue */
 .sidebar .nav .sub-menu .nav-item .nav-link.active,
 .sidebar .nav .sub-menu .nav-item .nav-link:hover {
-    color: #E0E1DD;
+    color: #E0E1DD !important;
     background: #064089;
 }
 
@@ -209,14 +221,16 @@ input[type="file"].form-control::file-selector-button {
     border: 1px solid #07326A !important;
     color: #E0E1DD !important;
     border-radius: 0 !important;
-    padding: 0 1.6rem !important;
-    height: 34px !important;
+    /* Match the template's form-control padding (0.875rem top/bottom, line-height:1)
+       so btn-action naturally reaches the same height as an input field */
+    padding: 0.875rem 1.6rem !important;
     font-size: 0.8rem !important;
-    line-height: 34px !important;
+    line-height: 1 !important;
     text-decoration: none;
     display: inline-block;
     cursor: pointer;
     white-space: nowrap;
+    vertical-align: middle;
 }
 
 .btn-action:hover {

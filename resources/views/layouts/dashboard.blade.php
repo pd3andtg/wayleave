@@ -41,25 +41,56 @@
 
         <ul class="navbar-nav navbar-nav-right">
 
-          {{-- Notification dropdown --}}
+          {{-- Notification dropdown (pending approvals for admin + officer) --}}
+          {{-- $pendingCount is provided by the view composer in AppServiceProvider --}}
           <li class="nav-item dropdown">
             <a class="nav-link count-indicator dropdown-toggle" id="notificationDropdown" href="#" data-bs-toggle="dropdown">
               <i class="ti-bell mx-0"></i>
-              <span class="count"></span>
+              @hasanyrole('admin|officer')
+                @if ($pendingCount > 0)
+                  <span class="count" style="background:#e74c3c;">{{ $pendingCount }}</span>
+                @else
+                  <span class="count"></span>
+                @endif
+              @else
+                <span class="count"></span>
+              @endhasanyrole
             </a>
             <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="notificationDropdown">
               <p class="mb-0 font-weight-medium float-left dropdown-header">Notifications</p>
-              <a class="dropdown-item">
-                <div class="item-thumbnail">
-                  <div class="item-icon bg-info">
-                    <i class="ti-info-alt mx-0"></i>
+              @hasanyrole('admin|officer')
+                @if ($pendingCount > 0)
+                  <a class="dropdown-item" href="{{ route('approvals.index') }}">
+                    <div class="item-thumbnail">
+                      <div class="item-icon bg-danger">
+                        <i class="ti-user mx-0"></i>
+                      </div>
+                    </div>
+                    <div class="item-content">
+                      <h6 class="font-weight-normal">{{ $pendingCount }} pending approval{{ $pendingCount > 1 ? 's' : '' }}</h6>
+                      <p class="font-weight-light small-text mb-0 text-muted">Click to review</p>
+                    </div>
+                  </a>
+                @else
+                  <a class="dropdown-item">
+                    <div class="item-content">
+                      <h6 class="font-weight-normal">No pending approvals</h6>
+                    </div>
+                  </a>
+                @endif
+              @else
+                <a class="dropdown-item">
+                  <div class="item-thumbnail">
+                    <div class="item-icon bg-info">
+                      <i class="ti-info-alt mx-0"></i>
+                    </div>
                   </div>
-                </div>
-                <div class="item-content">
-                  <h6 class="font-weight-normal">Welcome, {{ auth()->user()->name }}</h6>
-                  <p class="font-weight-light small-text mb-0 text-muted">Just now</p>
-                </div>
-              </a>
+                  <div class="item-content">
+                    <h6 class="font-weight-normal">Welcome, {{ auth()->user()->name }}</h6>
+                    <p class="font-weight-light small-text mb-0 text-muted">Just now</p>
+                  </div>
+                </a>
+              @endhasanyrole
             </div>
           </li>
 
@@ -113,17 +144,31 @@
             </a>
           </li>
 
+          @hasanyrole('admin|officer')
+          <li class="nav-item {{ request()->routeIs('approvals.*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('approvals.index') }}">
+              <i class="ti-check-box menu-icon"></i>
+              <span class="menu-title">
+                Approvals
+                @if (isset($pendingCount) && $pendingCount > 0)
+                  <span class="badge ms-1" style="background:#e74c3c; color:#fff; font-size:0.7rem; padding:2px 6px; border-radius:10px;">{{ $pendingCount }}</span>
+                @endif
+              </span>
+            </a>
+          </li>
+          @endhasanyrole
+
           @role('admin')
-          <li class="nav-item {{ request()->routeIs('admin.*') ? 'active' : '' }}">
-            <a class="nav-link" data-bs-toggle="collapse" href="#admin-menu"
-               aria-expanded="{{ request()->routeIs('admin.*') ? 'true' : 'false' }}"
-               aria-controls="admin-menu">
+          {{-- Alpine.js toggle replaces Bootstrap collapse to avoid BS4/BS5 conflict --}}
+          <li class="nav-item {{ request()->routeIs('admin.*') ? 'active' : '' }}"
+              x-data="{ open: {{ request()->routeIs('admin.*') ? 'true' : 'false' }} }">
+            <a class="nav-link" href="javascript:void(0)" @click="open = !open">
               <i class="ti-settings menu-icon"></i>
               <span class="menu-title">Admin</span>
               <i class="menu-arrow"></i>
             </a>
-            <div class="collapse {{ request()->routeIs('admin.*') ? 'show' : '' }}" id="admin-menu">
-              <ul class="nav flex-column sub-menu">
+            <div x-show="open" x-cloak style="width:100%;">
+              <ul class="nav flex-column sub-menu" style="width:100%;">
                 <li class="nav-item">
                   <a class="nav-link {{ request()->routeIs('admin.companies.*') ? 'active' : '' }}"
                      href="{{ route('admin.companies.index') }}">Company Requests</a>

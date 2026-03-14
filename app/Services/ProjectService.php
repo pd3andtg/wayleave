@@ -178,6 +178,20 @@ class ProjectService
         return $pbt;
     }
 
+    // ── Step 3 (Contractor): Replace Wayleave File ────────────────────────────
+
+    // Contractor replaces their own wayleave file before officer endorsement.
+    // Does not touch endorsed_by or endorsement_remarks.
+    public function replaceWayleavePhbt(array $data, Project $project, WayleavePhbt $pbt): WayleavePhbt
+    {
+        $folder       = 'projects/' . $project->id . '/wayleave-pbts';
+        $wayleaveFile = $this->storeFile($data['wayleave_file'], $folder);
+
+        $pbt->update(['wayleave_file' => $wayleaveFile]);
+
+        return $pbt;
+    }
+
     // ── Step 7: Wayleave Payment (Officer) ────────────────────────────────────
 
     public function storeWayleavePayment(array $data, Project $project, User $user): WayleavePayment

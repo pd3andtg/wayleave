@@ -32,11 +32,12 @@ class AuthController extends Controller
 
     public function register(RegisterRequest $request)
     {
-        $user = $this->authService->registerUser($request->validated());
+        $this->authService->registerUser($request->validated());
 
-        Auth::login($user);
-
-        return redirect()->route('projects.index');
+        // New accounts start as 'pending' — do not log in immediately.
+        // Redirect to login with a message so the user knows to wait for approval.
+        return redirect()->route('login')
+                         ->with('success', 'Registration successful! Your account is pending approval. You will receive an email once it has been reviewed.');
     }
 
     public function showRegisterCompany()
@@ -55,9 +56,12 @@ class AuthController extends Controller
         ]);
 
         // requested_by is left null — requester has no account yet.
+        // requester_name and requester_email are stored so admin can email them on approval/rejection.
         Company::create([
-            'name'   => $request->company_name,
-            'status' => 'pending',
+            'name'            => $request->company_name,
+            'status'          => 'pending',
+            'requester_name'  => $request->requester_name,
+            'requester_email' => $request->requester_email,
         ]);
 
         return back()->with('success', 'Your company registration request has been submitted. Admin will review it shortly.');

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Steps;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Steps\EndorseWayleavePhbtRequest;
+use App\Http\Requests\Steps\ReplaceWayleavePhbtRequest;
 use App\Http\Requests\Steps\StoreWayleavePhbtRequest;
 use App\Models\Project;
 use App\Models\WayleavePhbt;
@@ -22,6 +23,14 @@ class WayleavePhbtController extends Controller
         $this->projectService->storeWayleavePhbt($request->validated(), $project, auth()->user());
 
         return back()->with('success', 'Wayleave PBT added successfully.');
+    }
+
+    // Step 3 (Contractor): replace their own wayleave file before officer endorsement.
+    public function replace(ReplaceWayleavePhbtRequest $request, Project $project, WayleavePhbt $wayleavePhbt)
+    {
+        $this->projectService->replaceWayleavePhbt($request->validated(), $project, $wayleavePhbt);
+
+        return back()->with('success', 'Wayleave file replaced successfully.');
     }
 
     // Step 6 (Officer): overwrite wayleave file with endorsed version.

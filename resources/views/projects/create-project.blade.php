@@ -11,7 +11,7 @@
 
         <div class="d-flex justify-content-between align-items-center mb-4">
           <h4 class="card-title mb-0">Register New Project</h4>
-          <a href="{{ route('projects.index') }}" class="btn btn-outline-secondary btn-sm">&larr; Back to Projects</a>
+          <a href="{{ route('projects.index') }}" class="btn-action" style="font-size:0.75rem; padding:0 1rem;">&larr; Back to Projects</a>
         </div>
 
         {{-- Validation errors --}}
@@ -27,7 +27,7 @@
           @csrf
 
           <div class="form-group row">
-            <label class="col-sm-3 col-form-label">KUTT Ref No / PBT Ref No</label>
+            <label class="col-sm-3 col-form-label text-sm-end">KUTT Ref No / PBT Ref No</label>
             <div class="col-sm-9">
               <input type="text"
                      class="form-control @error('ref_no') is-invalid @enderror"
@@ -38,7 +38,7 @@
           </div>
 
           <div class="form-group row">
-            <label class="col-sm-3 col-form-label">LOR No</label>
+            <label class="col-sm-3 col-form-label text-sm-end">LOR No</label>
             <div class="col-sm-9">
               <input type="text"
                      class="form-control @error('lor_no') is-invalid @enderror"
@@ -49,7 +49,7 @@
           </div>
 
           <div class="form-group row">
-            <label class="col-sm-3 col-form-label">Project No</label>
+            <label class="col-sm-3 col-form-label text-sm-end">Project No</label>
             <div class="col-sm-9">
               <input type="text"
                      class="form-control @error('project_no') is-invalid @enderror"
@@ -60,7 +60,7 @@
           </div>
 
           <div class="form-group row">
-            <label class="col-sm-3 col-form-label">Project Description <span class="text-danger">*</span></label>
+            <label class="col-sm-3 col-form-label text-sm-end">Project Description <span class="text-danger">*</span></label>
             <div class="col-sm-9">
               <textarea class="form-control @error('project_desc') is-invalid @enderror"
                         name="project_desc"
@@ -71,7 +71,7 @@
           </div>
 
           <div class="form-group row">
-            <label class="col-sm-3 col-form-label">ND State <span class="text-danger">*</span></label>
+            <label class="col-sm-3 col-form-label text-sm-end">ND State <span class="text-danger">*</span></label>
             <div class="col-sm-9">
               <select class="form-control @error('nd_state') is-invalid @enderror"
                       name="nd_state"
@@ -85,7 +85,7 @@
           </div>
 
           <div class="form-group row">
-            <label class="col-sm-3 col-form-label">Remarks</label>
+            <label class="col-sm-3 col-form-label text-sm-end">Remarks</label>
             <div class="col-sm-9">
               <textarea class="form-control @error('remarks') is-invalid @enderror"
                         name="remarks"
@@ -96,8 +96,8 @@
 
           <div class="form-group row mt-4">
             <div class="col-sm-9 offset-sm-3">
-              <button type="submit" class="btn btn-primary me-2">Register Project</button>
-              <a href="{{ route('projects.index') }}" class="btn btn-outline-secondary">Cancel</a>
+              <button type="submit" class="btn-action me-2">Register Project</button>
+              <a href="{{ route('projects.index') }}" class="btn-action">Cancel</a>
             </div>
           </div>
 
