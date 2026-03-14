@@ -23,7 +23,7 @@
           <table class="table table-hover mb-0">
             <thead class="table-light">
               <tr>
-                <th>#</th>
+                <th style="padding-left: 1.25rem;">#</th>
                 <th>Company Name</th>
                 <th>Status</th>
                 <th>Requested By</th>
@@ -35,7 +35,7 @@
             <tbody>
               @forelse ($companies as $company)
                 <tr>
-                  <td>{{ $loop->iteration + ($companies->currentPage() - 1) * $companies->perPage() }}</td>
+                  <td style="padding-left: 1.25rem;">{{ $loop->iteration + ($companies->currentPage() - 1) * $companies->perPage() }}</td>
                   <td class="fw-semibold">{{ $company->name }}</td>
                   <td>
                     @if ($company->status === 'approved')

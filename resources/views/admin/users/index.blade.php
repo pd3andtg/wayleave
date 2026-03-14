@@ -30,7 +30,7 @@
           <table class="table table-hover mb-0">
             <thead class="table-light">
               <tr>
-                <th>#</th>
+                <th style="padding-left: 1.25rem;">#</th>
                 <th>Name</th>
                 <th>Email</th>
                 <th>Role</th>
@@ -44,16 +44,16 @@
               @forelse ($users as $user)
                 @php $role = $user->getRoleNames()->first() ?? '—'; @endphp
                 <tr>
-                  <td>{{ $loop->iteration + ($users->currentPage() - 1) * $users->perPage() }}</td>
+                  <td style="padding-left: 1.25rem;">{{ $loop->iteration + ($users->currentPage() - 1) * $users->perPage() }}</td>
                   <td class="fw-semibold">{{ $user->name }}</td>
                   <td>{{ $user->email }}</td>
                   <td>
                     @if ($role === 'admin')
-                      <span class="badge bg-dark">Admin</span>
+                      Admin
                     @elseif ($role === 'officer')
-                      <span class="badge bg-primary">Officer</span>
+                      Officer
                     @elseif ($role === 'contractor')
-                      <span class="badge bg-secondary">Contractor</span>
+                      Contractor
                     @else
                       <span class="text-muted">—</span>
                     @endif
@@ -69,22 +69,26 @@
                   </td>
                   <td>{{ $user->id_number ?? '—' }}</td>
                   <td>{{ $user->created_at->format('d M Y') }}</td>
-                  <td>
-                    {{-- Only allow role changes for officers and admins — not contractors --}}
-                    @if ($role !== 'contractor')
+                  @if ($role !== 'contractor')
+                    <td>
+                      {{-- d-inline (display:inline) makes the form inline-level so the
+                           td's vertical-align:middle centres it — same pattern used on
+                           the approvals page. --}}
                       <form action="{{ route('admin.users.update-role', $user) }}" method="POST"
-                            class="d-flex gap-2 align-items-center">
+                            class="d-inline" style="margin: 0;">
                         @csrf
-                        <select name="role" class="form-select form-select-sm" style="width: auto;">
+                        <select name="role" class="form-select form-select-sm"
+                                style="width: 7rem; vertical-align: middle;">
                           <option value="officer" {{ $role === 'officer' ? 'selected' : '' }}>Officer</option>
                           <option value="admin"   {{ $role === 'admin'   ? 'selected' : '' }}>Admin</option>
                         </select>
-                        <button type="submit" class="btn btn-sm btn-outline-primary">Save</button>
+                        <button type="submit" class="btn-action btn-action-sm"
+                                style="width: 7rem; vertical-align: middle;">Save</button>
                       </form>
-                    @else
-                      <span class="text-muted small">Fixed</span>
-                    @endif
-                  </td>
+                    </td>
+                  @else
+                    <td><span class="text-muted small">Fixed</span></td>
+                  @endif
                 </tr>
               @empty
                 <tr>

@@ -511,9 +511,10 @@ $timelineStages = [
                 @endif
               </div>
               <div class="d-flex gap-2 align-items-center">
-                <a href="{{ route('projects.download', ['project' => $project, 'path' => $bqInvFile->file_path]) }}"
+                @php $downloadPath = ($endorsement?->endorsed_file) ? $endorsement->endorsed_file : $bqInvFile->file_path; @endphp
+                <a href="{{ route('projects.download', ['project' => $project, 'path' => $downloadPath]) }}"
                    class="btn-action" style="font-size:0.8rem; padding:0.3rem 0.7rem; line-height:1; display:inline-flex; align-items:center; gap:4px;">
-                  <i class="ti-download"></i> Download
+                  <i class="ti-download"></i> {{ $endorsement?->endorsed_file ? 'Endorsed File' : 'Download' }}
                 </a>
                 @role('officer|admin')
                 <button type="button" class="btn-action"
@@ -547,7 +548,8 @@ $timelineStages = [
             @endif
             {{-- BQ edit form --}}
             <div @if ($endorsement) x-show="editing" x-cloak @endif>
-              <form action="{{ route('projects.bq-inv-files.endorse', [$project, $bqInvFile]) }}" method="POST">
+              <form action="{{ route('projects.bq-inv-files.endorse', [$project, $bqInvFile]) }}" method="POST" enctype="multipart/form-data"
+                    x-data="{ endorsedFileName: 'No file chosen' }">
                 @csrf
                 <div class="row mb-2 align-items-end">
                   <div class="col-md-4 mb-2">
@@ -564,6 +566,21 @@ $timelineStages = [
                     <label class="form-label text-muted small">Remarks</label>
                     <input type="text" name="remarks" class="form-control" style="height:38px;"
                            value="{{ old('remarks', $endorsement?->remarks) }}">
+                  </div>
+                </div>
+                <div class="row mb-2 align-items-end">
+                  <div class="col-md-12 mb-2">
+                    <label class="form-label text-muted small">Endorsed File (PDF)</label>
+                    <div class="d-flex align-items-center" style="gap:8px;">
+                      <input type="file" id="endorsed_file_{{ $bqInvFile->id }}" name="endorsed_file" accept=".pdf" class="d-none"
+                             x-on:change="endorsedFileName = $event.target.files[0]?.name ?? 'No file chosen'">
+                      <label for="endorsed_file_{{ $bqInvFile->id }}" class="btn-action mb-0"
+                             style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
+                        Choose File
+                      </label>
+                      <span x-text="endorsedFileName" class="text-muted" style="font-size:0.8rem; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+                    </div>
+                    <div class="text-muted" style="font-size:0.7rem; margin-top:0.1rem;">PDF only, max 10MB. Leave blank to keep existing file.</div>
                   </div>
                 </div>
                 <div class="d-flex justify-content-end">
@@ -616,9 +633,10 @@ $timelineStages = [
                 @endif
               </div>
               <div class="d-flex gap-2 align-items-center">
-                <a href="{{ route('projects.download', ['project' => $project, 'path' => $bqInvFile->file_path]) }}"
+                @php $downloadPath = ($endorsement?->endorsed_file) ? $endorsement->endorsed_file : $bqInvFile->file_path; @endphp
+                <a href="{{ route('projects.download', ['project' => $project, 'path' => $downloadPath]) }}"
                    class="btn-action" style="font-size:0.8rem; padding:0.3rem 0.7rem; line-height:1; display:inline-flex; align-items:center; gap:4px;">
-                  <i class="ti-download"></i> Download
+                  <i class="ti-download"></i> {{ $endorsement?->endorsed_file ? 'Endorsed File' : 'Download' }}
                 </a>
                 @role('officer|admin')
                 <button type="button" class="btn-action"
@@ -662,7 +680,8 @@ $timelineStages = [
             </div>
             @endif
             <div @if ($endorsement) x-show="editing" x-cloak @endif>
-              <form action="{{ route('projects.bq-inv-files.endorse', [$project, $bqInvFile]) }}" method="POST">
+              <form action="{{ route('projects.bq-inv-files.endorse', [$project, $bqInvFile]) }}" method="POST" enctype="multipart/form-data"
+                    x-data="{ endorsedFileName: 'No file chosen' }">
                 @csrf
                 <div class="row mb-2 align-items-end">
                   <div class="col-md-4 mb-2">
@@ -702,6 +721,21 @@ $timelineStages = [
                     <label class="form-label text-muted small">Remarks</label>
                     <input type="text" name="remarks" class="form-control" style="height:38px;"
                            value="{{ old('remarks', $endorsement?->remarks) }}">
+                  </div>
+                </div>
+                <div class="row mb-2 align-items-end">
+                  <div class="col-md-12 mb-2">
+                    <label class="form-label text-muted small">Endorsed File (PDF)</label>
+                    <div class="d-flex align-items-center" style="gap:8px;">
+                      <input type="file" id="endorsed_file_{{ $bqInvFile->id }}" name="endorsed_file" accept=".pdf" class="d-none"
+                             x-on:change="endorsedFileName = $event.target.files[0]?.name ?? 'No file chosen'">
+                      <label for="endorsed_file_{{ $bqInvFile->id }}" class="btn-action mb-0"
+                             style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
+                        Choose File
+                      </label>
+                      <span x-text="endorsedFileName" class="text-muted" style="font-size:0.8rem; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+                    </div>
+                    <div class="text-muted" style="font-size:0.7rem; margin-top:0.1rem;">PDF only, max 10MB. Leave blank to keep existing file.</div>
                   </div>
                 </div>
                 <div class="d-flex justify-content-end">

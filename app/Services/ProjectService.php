@@ -115,31 +115,45 @@ class ProjectService
     public function endorseBqInvFile(array $data, Project $project, BqInvFile $bqInvFile, User $user): BqEndorsement|InvEndorsement
     {
         if ($bqInvFile->payment_type === 'BQ') {
+            $bqPayload = [
+                'project_id'    => $project->id,
+                'document_info' => $data['document_info'],
+                'date'          => $data['date'],
+                'remarks'       => $data['remarks'] ?? null,
+                'endorsed_by'   => $user->id,
+            ];
+
+            // Only update endorsed_file if a new file was provided — preserves existing file otherwise.
+            if (isset($data['endorsed_file'])) {
+                $bqPayload['endorsed_file'] = $data['endorsed_file'];
+            }
+
             return BqEndorsement::updateOrCreate(
                 ['bq_inv_file_id' => $bqInvFile->id],
-                [
-                    'project_id'    => $project->id,
-                    'document_info' => $data['document_info'],
-                    'date'          => $data['date'],
-                    'remarks'       => $data['remarks'] ?? null,
-                    'endorsed_by'   => $user->id,
-                ]
+                $bqPayload
             );
         }
 
         // INV type — includes amount, eds_no, and payment_status.
+        $invPayload = [
+            'project_id'     => $project->id,
+            'document_info'  => $data['document_info'],
+            'date'           => $data['date'],
+            'amount'         => $data['amount'],
+            'payment_status' => $data['payment_status'],
+            'eds_no'         => $data['eds_no'],
+            'remarks'        => $data['remarks'] ?? null,
+            'endorsed_by'    => $user->id,
+        ];
+
+        // Only update endorsed_file if a new file was provided — preserves existing file otherwise.
+        if (isset($data['endorsed_file'])) {
+            $invPayload['endorsed_file'] = $data['endorsed_file'];
+        }
+
         return InvEndorsement::updateOrCreate(
             ['bq_inv_file_id' => $bqInvFile->id],
-            [
-                'project_id'     => $project->id,
-                'document_info'  => $data['document_info'],
-                'date'           => $data['date'],
-                'amount'         => $data['amount'],
-                'payment_status' => $data['payment_status'],
-                'eds_no'         => $data['eds_no'],
-                'remarks'        => $data['remarks'] ?? null,
-                'endorsed_by'    => $user->id,
-            ]
+            $invPayload
         );
     }
 

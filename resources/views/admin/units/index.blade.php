@@ -32,10 +32,12 @@
       <div class="card-body">
         <form action="{{ route('admin.units.store') }}" method="POST">
           @csrf
-          <label for="name" class="form-label">Unit Name</label>
-          <div class="d-flex align-items-stretch gap-2">
+          <div class="mb-3">
+            <label for="name" class="form-label">Unit Name</label>
             <input type="text" id="name" name="name" class="form-control @error('name') is-invalid @enderror"
                    value="{{ old('name') }}" placeholder="e.g. ND JHR" required>
+          </div>
+          <div class="text-center">
             <button type="submit" class="btn-action">Add Unit</button>
           </div>
           @error('name')
@@ -54,9 +56,9 @@
         <table class="table table-hover mb-0">
           <thead class="table-light">
             <tr>
-              <th style="padding-left: 1.25rem;">#</th>
-              <th>Unit Name</th>
-              <th>Officers in Unit</th>
+              <th style="padding-left: 1.25rem; font-weight: 600; color: #07326A;">#</th>
+              <th style="font-weight: 600; color: #07326A;">Unit Name</th>
+              <th style="font-weight: 600; color: #07326A;">Officers in Unit</th>
             </tr>
           </thead>
           <tbody>

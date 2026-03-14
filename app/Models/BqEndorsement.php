@@ -14,6 +14,7 @@ class BqEndorsement extends Model
         'document_info',
         'date',
         'remarks',
+        'endorsed_file',
         'endorsed_by',
     ];
 

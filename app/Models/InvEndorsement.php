@@ -18,6 +18,7 @@ class InvEndorsement extends Model
         'payment_status',
         'eds_no',
         'remarks',
+        'endorsed_file',
         'endorsed_by',
     ];
 

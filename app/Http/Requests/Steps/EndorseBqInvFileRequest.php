@@ -25,6 +25,8 @@ class EndorseBqInvFileRequest extends FormRequest
             'eds_no'         => ['nullable', 'string', 'max:255'],
             'payment_status' => ['nullable', 'in:paid,outstanding,waived'],
             'remarks'        => ['nullable', 'string'],
+            // Optional endorsed file upload — PDF only, max 10MB.
+            'endorsed_file'  => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
         ];
     }
 }

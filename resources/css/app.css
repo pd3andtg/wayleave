@@ -141,12 +141,26 @@ select.form-control {
     color: #E0E1DD !important;
 }
 
-/* Hover — dark blue bg, light font (matches active state) */
+/* Hover — no background change, keep same text color */
 .sidebar .nav .nav-item:hover > .nav-link,
 .sidebar .nav .nav-item:hover > .nav-link i.menu-icon,
 .sidebar .nav .nav-item:hover > .nav-link .menu-title {
-    background: #064089;
-    color: #E0E1DD !important;
+    background: transparent !important;
+    color: #07326A !important;
+}
+
+/* ── Sidebar icon-only mode: prevent Alpine sub-menu from overflowing ──
+   Alpine's x-show adds display:block as an inline style when open=true.
+   !important in a stylesheet overrides inline styles, so this hides the
+   sub-menu wrapper when the sidebar is collapsed to icons. */
+.sidebar-icon-only .sidebar .nav .nav-item > div[x-show] {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* Suppress hover-open text flyout — user prefers no expansion on hover */
+.sidebar-icon-only .sidebar .nav .nav-item.hover-open .nav-link .menu-title {
+    display: none !important;
 }
 
 /* Sub-menu background */
@@ -215,22 +229,29 @@ input[type="file"].form-control::file-selector-button {
     cursor: pointer;
 }
 
+/* ── Force a form-control to exactly 38px — overrides template's min-height ── */
+.form-control-38 {
+    height: 38px !important;
+    min-height: 38px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    line-height: 36px !important;
+}
+
 /* ── Project detail action buttons (Save, Upload, Download, Replace, etc.) ── */
 .btn-action {
     background-color: #07326A !important;
     border: 1px solid #07326A !important;
     color: #E0E1DD !important;
     border-radius: 0 !important;
-    /* Match the template's form-control padding (0.875rem top/bottom, line-height:1)
-       so btn-action naturally reaches the same height as an input field */
-    padding: 0.875rem 1.6rem !important;
+    padding: 0 1.6rem !important;
+    height: 38px !important;
     font-size: 0.8rem !important;
-    line-height: 1 !important;
+    line-height: 36px !important;
     text-decoration: none;
     display: inline-block;
     cursor: pointer;
     white-space: nowrap;
-    vertical-align: middle;
 }
 
 .btn-action:hover {
@@ -238,6 +259,25 @@ input[type="file"].form-control::file-selector-button {
     border-color: #051f42 !important;
     color: #E0E1DD !important;
     text-decoration: none;
+}
+
+/* Small variant — matches Bootstrap form-select-sm height (~31px) */
+.btn-action-sm {
+    height: 31px !important;
+    line-height: 29px !important;
+    padding: 0 0.9rem !important;
+    font-size: 0.75rem !important;
+}
+
+/* Force form-select-sm inside tables to 31px — normalises height against
+   the template's td line-height:1 inheritance and btn-action-sm */
+.table .form-select-sm {
+    height: 31px !important;
+    min-height: 31px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    line-height: 29px !important;
+    font-size: 0.75rem !important;
 }
 
 /* ── Bold field labels inside summary boxes (Steps 5, 7) ── */
