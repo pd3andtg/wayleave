@@ -100,10 +100,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/companies',                        [AdminCompanyController::class, 'index'])->name('companies.index');
         Route::post('/companies/{company}/approve',     [AdminCompanyController::class, 'approve'])->name('companies.approve');
         Route::post('/companies/{company}/reject',      [AdminCompanyController::class, 'reject'])->name('companies.reject');
+        Route::patch('/companies/{company}',            [AdminCompanyController::class, 'update'])->name('companies.update');
+        Route::delete('/companies/{company}',           [AdminCompanyController::class, 'destroy'])->name('companies.destroy');
 
         // User management — view all users, change officer/admin roles
         Route::get('/users',                            [AdminUserController::class, 'index'])->name('users.index');
         Route::post('/users/{user}/role',               [AdminUserController::class, 'updateRole'])->name('users.update-role');
+        Route::post('/users/{user}/suspend',            [AdminUserController::class, 'suspend'])->name('users.suspend');
+        Route::post('/users/{user}/reactivate',         [AdminUserController::class, 'reactivate'])->name('users.reactivate');
 
         // Unit management — add new units (regions)
         Route::get('/units',                            [AdminUnitController::class, 'index'])->name('units.index');

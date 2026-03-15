@@ -35,10 +35,16 @@ class ApprovalController extends Controller
 
     public function reject(User $user)
     {
-        $user->update(['status' => 'rejected']);
+        $name  = $user->name;
+        $email = $user->email;
 
-        Mail::to($user->email)->send(new UserRejected($user));
+        // Send rejection email before deleting so we still have the user data.
+        Mail::to($email)->send(new UserRejected($user));
 
-        return back()->with('success', "Account for \"{$user->name}\" rejected.");
+        // Delete the record entirely so the email address is freed up.
+        // This lets the person correct their details and sign up again.
+        $user->delete();
+
+        return back()->with('success', "Account for \"{$name}\" rejected and removed.");
     }
 }

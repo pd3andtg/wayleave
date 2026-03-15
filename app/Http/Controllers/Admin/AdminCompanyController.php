@@ -51,4 +51,28 @@ class AdminCompanyController extends Controller
 
         return back()->with('success', "Company \"{$company->name}\" rejected.");
     }
+
+    public function update(Request $request, Company $company)
+    {
+        $request->validate([
+            'name' => ['required', 'string', 'max:255', 'unique:companies,name,' . $company->id],
+        ]);
+
+        $company->update(['name' => $request->name]);
+
+        return back()->with('success', "Company name updated to \"{$request->name}\".");
+    }
+
+    public function destroy(Company $company)
+    {
+        $name = $company->name;
+
+        // Detach all users from this company before deleting so the FK doesn't block deletion.
+        // Affected users will have a null company_id — admin should reassign or suspend them.
+        $company->users()->update(['company_id' => null]);
+
+        $company->delete();
+
+        return back()->with('success', "Company \"{$name}\" has been deleted.");
+    }
 }

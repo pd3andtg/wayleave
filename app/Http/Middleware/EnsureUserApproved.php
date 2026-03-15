@@ -17,7 +17,7 @@ class EnsureUserApproved
     {
         $user = Auth::user();
 
-        if ($user && $user->status !== 'approved') {
+        if ($user && ($user->status !== 'approved' || $user->is_suspended)) {
             // Allow the logout route so the user can sign out cleanly.
             if ($request->routeIs('logout')) {
                 return $next($request);
@@ -27,9 +27,13 @@ class EnsureUserApproved
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            $message = $user->status === 'rejected'
-                ? 'Your account has been rejected. Please contact the administrator.'
-                : 'Your account is pending approval. You will be notified by email once it is reviewed.';
+            if ($user->is_suspended) {
+                $message = 'Your account has been suspended. Please contact the administrator.';
+            } elseif ($user->status === 'rejected') {
+                $message = 'Your account has been rejected. Please contact the administrator.';
+            } else {
+                $message = 'Your account is pending approval. You will be notified by email once it is reviewed.';
+            }
 
             return redirect()->route('login')->withErrors(['email' => $message]);
         }

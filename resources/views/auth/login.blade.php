@@ -16,9 +16,14 @@
     </div>
   @endif
 
-  {{-- Session status (e.g. after logout) --}}
+  {{-- Session status (e.g. after logout or password reset) --}}
   @if (session('status'))
     <div class="alert alert-success py-2">{{ session('status') }}</div>
+  @endif
+
+  {{-- Post-registration approval notice --}}
+  @if (session('success'))
+    <div class="alert alert-success py-2">{{ session('success') }}</div>
   @endif
 
   <form class="pt-3" action="{{ route('login') }}" method="POST">
@@ -39,6 +44,9 @@
              name="password"
              placeholder="Password"
              required>
+      @error('password')
+        <div class="invalid-feedback">{{ $message }}</div>
+      @enderror
     </div>
 
     <div class="mt-3">
@@ -52,8 +60,7 @@
         <input type="checkbox" class="form-check-input" id="remember" name="remember">
         <label class="form-check-label text-muted" for="remember">Keep me signed in</label>
       </div>
-      {{-- Only show forgot password link after a failed login attempt --}}
-      @if ($errors->has('email'))
+      @if ($errors->has('password'))
         <a href="{{ route('password.request') }}" class="text-primary" style="font-size: 0.82rem;">Forgot password?</a>
       @endif
     </div>

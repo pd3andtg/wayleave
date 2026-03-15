@@ -261,6 +261,24 @@ input[type="file"].form-control::file-selector-button {
     text-decoration: none;
 }
 
+.btn-action-green {
+    background-color: #198754 !important;
+    border-color: #198754 !important;
+}
+.btn-action-green:hover {
+    background-color: #146c43 !important;
+    border-color: #146c43 !important;
+}
+
+.btn-action-red {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+}
+.btn-action-red:hover {
+    background-color: #b02a37 !important;
+    border-color: #b02a37 !important;
+}
+
 /* Small variant — matches Bootstrap form-select-sm height (~31px) */
 .btn-action-sm {
     height: 31px !important;

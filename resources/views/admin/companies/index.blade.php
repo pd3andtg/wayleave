@@ -29,14 +29,29 @@
                 <th>Requested By</th>
                 <th>Approved / Rejected By</th>
                 <th>Submitted</th>
-                <th>Actions</th>
+                <th>Approval</th>
+                <th style="padding-left: 1.25rem; padding-right: 1.25rem;">Manage</th>
               </tr>
             </thead>
             <tbody>
               @forelse ($companies as $company)
-                <tr>
+                <tr x-data="{ editing: false }">
                   <td style="padding-left: 1.25rem;">{{ $loop->iteration + ($companies->currentPage() - 1) * $companies->perPage() }}</td>
-                  <td class="fw-semibold">{{ $company->name }}</td>
+                  <td class="fw-semibold">
+                    <span x-show="!editing">{{ $company->name }}</span>
+                    <form x-show="editing" x-cloak
+                          action="{{ route('admin.companies.update', $company) }}" method="POST">
+                      @csrf
+                      @method('PATCH')
+                      <input type="text" name="name" value="{{ $company->name }}"
+                             class="form-control form-control-sm d-inline"
+                             style="width: 14rem; height: 31px; display: inline-block !important;"
+                             required>
+                      <button type="submit" class="btn-action btn-action-sm ms-1">Save</button>
+                      <button type="button" class="btn-action btn-action-sm ms-1"
+                              x-on:click="editing = false">Cancel</button>
+                    </form>
+                  </td>
                   <td>
                     @if ($company->status === 'approved')
                       <span class="badge bg-success">Approved</span>
@@ -53,15 +68,15 @@
                     @if ($company->status === 'pending')
                       <form action="{{ route('admin.companies.approve', $company) }}" method="POST" class="d-inline">
                         @csrf
-                        <button type="submit" class="btn btn-sm btn-success"
-                                onclick="return confirm('Approve {{ $company->name }}?')">
+                        <button type="submit" class="btn-action btn-action-green"
+                                onclick="return confirm('Approve {{ addslashes($company->name) }}?')">
                           Approve
                         </button>
                       </form>
                       <form action="{{ route('admin.companies.reject', $company) }}" method="POST" class="d-inline ms-1">
                         @csrf
-                        <button type="submit" class="btn btn-sm btn-danger"
-                                onclick="return confirm('Reject {{ $company->name }}?')">
+                        <button type="submit" class="btn-action btn-action-red"
+                                onclick="return confirm('Reject {{ addslashes($company->name) }}?')">
                           Reject
                         </button>
                       </form>
@@ -69,10 +84,23 @@
                       <span class="text-muted small">No actions</span>
                     @endif
                   </td>
+                  <td style="padding-left: 1.25rem; padding-right: 1.25rem;">
+                    <button type="button" class="btn-action btn-action-sm"
+                            x-on:click="editing = !editing"
+                            x-text="editing ? 'Cancel' : 'Edit'">
+                    </button>
+                    <form action="{{ route('admin.companies.destroy', $company) }}" method="POST"
+                          class="d-inline ms-1"
+                          onsubmit="return confirm('Delete {{ addslashes($company->name) }}? This cannot be undone.')">
+                      @csrf
+                      @method('DELETE')
+                      <button type="submit" class="btn-action btn-action-red btn-action-sm">Delete</button>
+                    </form>
+                  </td>
                 </tr>
               @empty
                 <tr>
-                  <td colspan="7" class="text-center text-muted py-4">No company requests found.</td>
+                  <td colspan="8" class="text-center text-muted py-4">No company requests found.</td>
                 </tr>
               @endforelse
             </tbody>

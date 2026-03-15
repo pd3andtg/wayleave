@@ -37,7 +37,9 @@
                 <th>Company / Unit</th>
                 <th>ID Number</th>
                 <th>Registered</th>
-                <th>Change Role</th>
+                <th>Status</th>
+                <th>Account</th>
+                <th style="padding-left: 1.25rem; padding-right: 1.25rem;">Change Role</th>
               </tr>
             </thead>
             <tbody>
@@ -69,8 +71,33 @@
                   </td>
                   <td>{{ $user->id_number ?? '—' }}</td>
                   <td>{{ $user->created_at->format('d M Y') }}</td>
+                  <td>
+                    @if ($user->is_suspended)
+                      <span class="text-danger small fw-semibold">Suspended</span>
+                    @else
+                      <span class="text-success small fw-semibold">Active</span>
+                    @endif
+                  </td>
+                  <td>
+                    @if ($user->id !== auth()->id())
+                      @if ($user->is_suspended)
+                        <form action="{{ route('admin.users.reactivate', $user) }}" method="POST" class="d-inline">
+                          @csrf
+                          <button type="submit" class="btn-action btn-action-green btn-action-sm">Reactivate</button>
+                        </form>
+                      @else
+                        <form action="{{ route('admin.users.suspend', $user) }}" method="POST" class="d-inline"
+                              onsubmit="return confirm('Suspend {{ addslashes($user->name) }}? They will be logged out immediately.')">
+                          @csrf
+                          <button type="submit" class="btn-action btn-action-red btn-action-sm">Suspend</button>
+                        </form>
+                      @endif
+                    @else
+                      <span class="text-muted small">—</span>
+                    @endif
+                  </td>
                   @if ($role !== 'contractor')
-                    <td>
+                    <td style="padding-left: 1.25rem; padding-right: 1.25rem;">
                       {{-- d-inline (display:inline) makes the form inline-level so the
                            td's vertical-align:middle centres it — same pattern used on
                            the approvals page. --}}
@@ -87,12 +114,12 @@
                       </form>
                     </td>
                   @else
-                    <td><span class="text-muted small">Fixed</span></td>
+                    <td style="padding-left: 1.25rem; padding-right: 1.25rem;"><span class="text-muted small">Fixed</span></td>
                   @endif
                 </tr>
               @empty
                 <tr>
-                  <td colspan="8" class="text-center text-muted py-4">No users found.</td>
+                  <td colspan="10" class="text-center text-muted py-4">No users found.</td>
                 </tr>
               @endforelse
             </tbody>

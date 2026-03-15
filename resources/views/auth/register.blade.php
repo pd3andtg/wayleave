@@ -86,7 +86,8 @@
              name="id_number"
              value="{{ old('id_number') }}"
              placeholder="Staff ID"
-             :required="isTmTech">
+             :required="isTmTech"
+             :disabled="!isTmTech">
     </div>
 
     {{-- IC No — external contractors only --}}
@@ -96,7 +97,8 @@
              name="id_number"
              value="{{ old('id_number') }}"
              placeholder="IC Number (e.g. 990101-01-1234)"
-             :required="isContractor">
+             :required="isContractor"
+             :disabled="!isContractor">
     </div>
 
     {{-- Password --}}

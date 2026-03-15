@@ -44,9 +44,11 @@ class ProjectService
         if (!empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
-                // ilike is PostgreSQL's case-insensitive LIKE — matches upper, lower, mixed.
-                $q->where('ref_no', 'ilike', "%{$search}%")
-                  ->orWhere('project_desc', 'ilike', "%{$search}%");
+                // Use 'like' for SQLite compatibility (case-insensitive for ASCII by default).
+                // PostgreSQL also supports 'like'; switch to 'ilike' only if case sensitivity
+                // becomes an issue on the production PostgreSQL database.
+                $q->where('ref_no', 'like', "%{$search}%")
+                  ->orWhere('project_desc', 'like', "%{$search}%");
             });
         }
 

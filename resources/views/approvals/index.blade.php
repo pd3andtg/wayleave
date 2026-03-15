@@ -43,9 +43,9 @@
                     <td>{{ $pendingUser->email }}</td>
                     <td>
                       @if ($pendingUser->unit_id)
-                        <span class="badge bg-info text-dark">Officer</span>
+                        Officer
                       @else
-                        <span class="badge bg-secondary">Contractor</span>
+                        Contractor
                       @endif
                     </td>
                     <td>
@@ -62,14 +62,13 @@
                     <td>
                       <form action="{{ route('approvals.approve', $pendingUser) }}" method="POST" class="d-inline">
                         @csrf
-                        <button type="submit" class="btn-action" style="font-size:0.75rem; padding:0 0.75rem;">
+                        <button type="submit" class="btn-action btn-action-green">
                           Approve
                         </button>
                       </form>
                       <form action="{{ route('approvals.reject', $pendingUser) }}" method="POST" class="d-inline ms-1">
                         @csrf
-                        <button type="submit" class="btn-action"
-                                style="font-size:0.75rem; padding:0 0.75rem; background:#c0392b;"
+                        <button type="submit" class="btn-action btn-action-red"
                                 onclick="return confirm('Reject account for {{ addslashes($pendingUser->name) }}?')">
                           Reject
                         </button>

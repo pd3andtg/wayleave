@@ -33,4 +33,21 @@ class AdminUserController extends Controller
 
         return back()->with('success', "Role updated to \"{$request->role}\" for {$user->name}.");
     }
+
+    public function suspend(User $user)
+    {
+        // Prevent admin from suspending their own account.
+        abort_if($user->id === auth()->id(), 403, 'You cannot suspend your own account.');
+
+        $user->update(['is_suspended' => true]);
+
+        return back()->with('success', "\"{$user->name}\" has been suspended. They will no longer be able to log in.");
+    }
+
+    public function reactivate(User $user)
+    {
+        $user->update(['is_suspended' => false]);
+
+        return back()->with('success', "\"{$user->name}\" has been reactivated and can log in again.");
+    }
 }

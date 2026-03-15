@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\Company;
 use App\Models\Unit;
 use App\Services\AuthService;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -79,8 +80,18 @@ class AuthController extends Controller
             return redirect()->intended(route('projects.index'));
         }
 
+        // Distinguish wrong email from wrong password so the error highlights
+        // the correct field and the user knows exactly what to fix.
+        $emailExists = User::where('email', $credentials['email'])->exists();
+
+        if (!$emailExists) {
+            return back()->withErrors([
+                'email' => 'These credentials do not match our records.',
+            ])->onlyInput('email');
+        }
+
         return back()->withErrors([
-            'email' => 'These credentials do not match our records.',
+            'password' => 'The password you entered is incorrect.',
         ])->onlyInput('email');
     }
 
