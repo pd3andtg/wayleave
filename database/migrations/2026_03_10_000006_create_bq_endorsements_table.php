@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('document_info');
             $table->date('date');
             $table->text('remarks')->nullable();
+            $table->string('endorsed_file')->nullable();
             $table->foreignId('endorsed_by')->constrained('users')->cascadeOnDelete();
             $table->timestamps();
         });
