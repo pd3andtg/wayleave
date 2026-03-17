@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Unit;
 use Illuminate\Http\Request;
 
-// Admin-only: view and add units (e.g. ND TRG, ND KEL, ND PHG).
+// Admin-only: view, add, rename, and delete units (e.g. ND TRG, ND KEL, ND PHG).
 // Stored in the database so admin can add new regions without any code changes.
 class AdminUnitController extends Controller
 {
@@ -26,5 +26,25 @@ class AdminUnitController extends Controller
         Unit::create(['name' => $request->name]);
 
         return back()->with('success', "Unit \"{$request->name}\" added.");
+    }
+
+    public function update(Request $request, Unit $unit)
+    {
+        $request->validate([
+            'name' => ['required', 'string', 'max:255', 'unique:units,name,' . $unit->id],
+        ]);
+
+        $unit->update(['name' => $request->name]);
+
+        return back()->with('success', "Unit renamed to \"{$request->name}\".");
+    }
+
+    public function destroy(Unit $unit)
+    {
+        // Nullify officer references before deleting (unit_id is nullable FK).
+        $unit->users()->update(['unit_id' => null]);
+        $unit->delete();
+
+        return back()->with('success', 'Unit deleted.');
     }
 }

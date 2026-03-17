@@ -5,8 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 // Central record for each wayleave project.
-// All 12 workflow steps hang off this model.
+// All 13 workflow sections hang off this model.
 // Contractors are always scoped by company_id — never trust user input.
+//
+// payment_to_kutt = waived/not_required -> Sections 2 & 3 are hidden (data preserved).
+// application_status = cancelled -> all sections locked except Section 1.
+// self_applied_by_tm = true -> company_id is set to TM's company record.
 class Project extends Model
 {
     protected $fillable = [
@@ -14,11 +18,21 @@ class Project extends Model
         'lor_no',
         'project_no',
         'project_desc',
+        'pic_name',
         'nd_state',
+        'node_id',
+        'self_applied_by_tm',
+        'payment_to_kutt',
+        'application_status',
+        'cancellation_reason',
         'remarks',
         'company_id',
         'created_by',
         'status',
+    ];
+
+    protected $casts = [
+        'self_applied_by_tm' => 'boolean',
     ];
 
     public function company()
@@ -31,58 +45,68 @@ class Project extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    // Step 4: up to 6 BQ/INV files per project
-    public function bqInvFiles()
+    public function node()
     {
-        return $this->hasMany(BqInvFile::class);
+        return $this->belongsTo(Node::class);
     }
 
-    // Step 5: endorsements for BQ-type files
-    public function bqEndorsements()
+    // Sections 2 & 3: shared BOQ/INV items table
+    public function boqInvItems()
     {
-        return $this->hasMany(BqEndorsement::class);
+        return $this->hasMany(BoqInvItem::class);
     }
 
-    // Step 5: endorsements for INV-type files
-    public function invEndorsements()
-    {
-        return $this->hasMany(InvEndorsement::class);
-    }
-
-    // Step 6: up to 3 PBTs per project
+    // Section 4 & 5: up to 3 PBTs per project
     public function wayleavePhbts()
     {
         return $this->hasMany(WayleavePhbt::class);
     }
 
-    // Step 7: FI and deposit payment per PBT
+    // Sections 6 & 7: FI and deposit payment per PBT
     public function wayleavePayments()
     {
         return $this->hasMany(WayleavePayment::class);
     }
 
+    // Section 8
     public function permitSubmission()
     {
         return $this->hasOne(PermitSubmission::class);
     }
 
+    // Section 9
     public function permitReceived()
     {
         return $this->hasOne(PermitReceived::class);
     }
 
+    // Sections 10 & 11 (notis_mula_file and notis_siap_file — same table, two sections)
     public function workNotice()
     {
         return $this->hasOne(WorkNotice::class);
     }
 
+    // Section 12
     public function cpcApplication()
     {
         return $this->hasOne(CpcApplication::class);
     }
 
+    // Section 13
     public function cpcReceived()
     {
         return $this->hasOne(CpcReceived::class);
+    }
+
+    // Helper: is this project cancelled?
+    public function isCancelled(): bool
+    {
+        return $this->application_status === 'cancelled';
+    }
+
+    // Helper: should Sections 2 & 3 be hidden due to payment_to_kutt setting?
+    public function isBoqHidden(): bool
+    {
+        return in_array($this->payment_to_kutt, ['waived', 'not_required']);
     }
 }

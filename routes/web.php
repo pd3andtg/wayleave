@@ -1,9 +1,10 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminCompanyController;
-use App\Http\Controllers\ApprovalController;
-use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\AdminNodeController;
 use App\Http\Controllers\Admin\AdminUnitController;
+use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\ProjectController;
@@ -51,40 +52,52 @@ Route::middleware('auth')->group(function () {
     Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
     Route::put('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
 
+    // Cancel project — anyone with project access can cancel (reason compulsory)
+    Route::post('/projects/{project}/cancel',   [ProjectController::class, 'cancel'])->name('projects.cancel');
+
+    // Reopen cancelled project — admin only (enforced via policy)
+    Route::post('/projects/{project}/reopen',   [ProjectController::class, 'reopen'])->name('projects.reopen');
+
     // File download — handles both local disk and S3 signed URLs
     Route::get('/projects/{project}/download', [ProjectController::class, 'downloadFile'])->name('projects.download');
 
-    // ── Step 4: BQ/INV File Upload (Contractor — up to 6 files) ─────────────
-    Route::post('/projects/{project}/bq-inv-files',                              [BqInvController::class, 'store'])->name('projects.bq-inv-files.store');
+    // ── Sections 2 & 3: BOQ/INV Items (shared table) ─────────────────────────
+    // store: contractor adds new row (visible in both Section 2 and Section 3)
+    // update: officer/admin updates eds_no, payment_status, endorsed file per row
+    Route::post('/projects/{project}/boq-inv-items',                       [BqInvController::class, 'store'])->name('projects.boq-inv-items.store');
+    Route::post('/projects/{project}/boq-inv-items/{boqInvItem}',          [BqInvController::class, 'update'])->name('projects.boq-inv-items.update');
+    Route::delete('/projects/{project}/boq-inv-items/{boqInvItem}',        [BqInvController::class, 'destroy'])->name('projects.boq-inv-items.destroy');
 
-    // ── Step 5: Officer Endorses each BQ/INV File ────────────────────────────
-    Route::post('/projects/{project}/bq-inv-files/{bqInvFile}/endorse',          [BqInvController::class, 'endorse'])->name('projects.bq-inv-files.endorse');
-
-    // ── Step 6: Wayleave PBT Upload (Contractor — up to 3 PBTs) ─────────────
+    // ── Section 4: Wayleave PBT Upload (Contractor) ───────────────────────────
     Route::post('/projects/{project}/wayleave-pbts',                              [WayleavePhbtController::class, 'store'])->name('projects.wayleave-pbts.store');
-
-    // ── Step 3 (Contractor): Replace wayleave file before endorsement ─────────
     Route::post('/projects/{project}/wayleave-pbts/{wayleavePhbt}/replace',       [WayleavePhbtController::class, 'replace'])->name('projects.wayleave-pbts.replace');
 
-    // ── Step 6 (Officer): Overwrite wayleave file + auto-set endorsement ─────
+    // ── Section 5: Officer Endorses Wayleave File ─────────────────────────────
     Route::post('/projects/{project}/wayleave-pbts/{wayleavePhbt}/endorse',       [WayleavePhbtController::class, 'endorse'])->name('projects.wayleave-pbts.endorse');
 
-    // ── Step 7: Officer Records FI + Deposit Payment per PBT ─────────────────
+    // ── Section 6: Wayleave Payment Details (Officer) ─────────────────────────
     Route::post('/projects/{project}/wayleave-payments',                          [WayleavePaymentController::class, 'store'])->name('projects.wayleave-payments.store');
+    Route::post('/projects/{project}/wayleave-payments/pbt',                      [WayleavePaymentController::class, 'storePbt'])->name('projects.wayleave-payments.store-pbt');
 
-    // ── Step 8: Permit Submission to KUTT (Contractor) ───────────────────────
+    // ── Section 7: BG & BD Received from FINSSO (Officer) ─────────────────────
+    Route::post('/projects/{project}/wayleave-payments/{wayleavePayment}/received', [WayleavePaymentController::class, 'updateReceived'])->name('projects.wayleave-payments.received');
+
+    // ── Section 8: Permit Submission to KUTT (Contractor) ─────────────────────
     Route::post('/projects/{project}/permit-submission', [PermitSubmissionController::class, 'store'])->name('projects.permit-submission.store');
 
-    // ── Step 9: Permit Received (Contractor) ──────────────────────────────────
+    // ── Section 9: Permit Received (Contractor/Officer) ───────────────────────
     Route::post('/projects/{project}/permit-received',   [PermitReceivedController::class, 'store'])->name('projects.permit-received.store');
 
-    // ── Step 10: Work Notices (Contractor) ────────────────────────────────────
-    Route::post('/projects/{project}/work-notice',       [WorkNoticeController::class, 'store'])->name('projects.work-notice.store');
+    // ── Section 10: Notis Mula Kerja (Contractor) ─────────────────────────────
+    Route::post('/projects/{project}/notis-mula',        [WorkNoticeController::class, 'storeNotisMula'])->name('projects.notis-mula.store');
 
-    // ── Step 11: CPC Application (Contractor) ─────────────────────────────────
+    // ── Section 11: Notis Siap Kerja (Contractor) ─────────────────────────────
+    Route::post('/projects/{project}/notis-siap',        [WorkNoticeController::class, 'storeNotisSiap'])->name('projects.notis-siap.store');
+
+    // ── Section 12: CPC Application (Contractor) ──────────────────────────────
     Route::post('/projects/{project}/cpc-application',   [CpcApplicationController::class, 'store'])->name('projects.cpc-application.store');
 
-    // ── Step 12: CPC Received → Project Completed (Contractor) ───────────────
+    // ── Section 13: CPC Received → Project Completed (Contractor) ────────────
     Route::post('/projects/{project}/cpc-received',      [CpcReceivedController::class, 'store'])->name('projects.cpc-received.store');
 
     // ── User Approval Queue (admin + officer) ────────────────────────────────
@@ -96,21 +109,33 @@ Route::middleware('auth')->group(function () {
 
     // ── Admin pages (admin role only) ─────────────────────────────────────────
     Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {
-        // Company registration requests — approve or reject
+        // Company registration requests — register directly, approve, reject, edit, delete
         Route::get('/companies',                        [AdminCompanyController::class, 'index'])->name('companies.index');
+        Route::post('/companies',                       [AdminCompanyController::class, 'store'])->name('companies.store');
         Route::post('/companies/{company}/approve',     [AdminCompanyController::class, 'approve'])->name('companies.approve');
         Route::post('/companies/{company}/reject',      [AdminCompanyController::class, 'reject'])->name('companies.reject');
         Route::patch('/companies/{company}',            [AdminCompanyController::class, 'update'])->name('companies.update');
         Route::delete('/companies/{company}',           [AdminCompanyController::class, 'destroy'])->name('companies.destroy');
 
-        // User management — view all users, change officer/admin roles
+        // User management — register, view all users, edit, delete, change officer roles, suspend/reactivate
         Route::get('/users',                            [AdminUserController::class, 'index'])->name('users.index');
+        Route::post('/users',                           [AdminUserController::class, 'store'])->name('users.store');
         Route::post('/users/{user}/role',               [AdminUserController::class, 'updateRole'])->name('users.update-role');
+        Route::patch('/users/{user}',                   [AdminUserController::class, 'update'])->name('users.update');
+        Route::delete('/users/{user}',                  [AdminUserController::class, 'destroy'])->name('users.destroy');
         Route::post('/users/{user}/suspend',            [AdminUserController::class, 'suspend'])->name('users.suspend');
         Route::post('/users/{user}/reactivate',         [AdminUserController::class, 'reactivate'])->name('users.reactivate');
 
-        // Unit management — add new units (regions)
+        // Unit management — add, rename, delete units (regions)
         Route::get('/units',                            [AdminUnitController::class, 'index'])->name('units.index');
         Route::post('/units',                           [AdminUnitController::class, 'store'])->name('units.store');
+        Route::patch('/units/{unit}',                   [AdminUnitController::class, 'update'])->name('units.update');
+        Route::delete('/units/{unit}',                  [AdminUnitController::class, 'destroy'])->name('units.destroy');
+
+        // Node management — add/edit/delete TM nodes (Admin manages via UI)
+        Route::get('/nodes',                            [AdminNodeController::class, 'index'])->name('nodes.index');
+        Route::post('/nodes',                           [AdminNodeController::class, 'store'])->name('nodes.store');
+        Route::patch('/nodes/{node}',                   [AdminNodeController::class, 'update'])->name('nodes.update');
+        Route::delete('/nodes/{node}',                  [AdminNodeController::class, 'destroy'])->name('nodes.destroy');
     });
 });

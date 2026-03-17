@@ -28,8 +28,14 @@ class ProjectPolicy
 
     public function create(User $user): bool
     {
-        // Only contractors can register new projects (Step 1).
-        return $user->hasRole('contractor');
+        // All authenticated users can register new projects.
+        return true;
+    }
+
+    // Reopen a cancelled project — admin only.
+    public function reopen(User $user, Project $project): bool
+    {
+        return $user->hasRole('admin');
     }
 
     public function update(User $user, Project $project): bool

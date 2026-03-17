@@ -90,6 +90,21 @@ a.btn:hover {
     color: #EBEBEB !important;
 }
 
+/* ── Horizontal form label alignment fix ─────────────────
+   dashboard.css gives .col-form-label a large padding-top (calc(.875rem + 1px))
+   which causes the input box's top edge to appear visually higher than the label text.
+   Fix: remove padding, reset line-height/margin, and use align-items:center on the
+   row so both the label column and input column are centered relative to each other. ── */
+.form-group.row {
+    align-items: flex-start;
+}
+.form-group .col-form-label {
+    padding-top: calc(0.875rem + 1px);
+    padding-bottom: 0;
+    line-height: 1.4;
+    margin-bottom: 0;
+}
+
 /* ── Dashboard ────────────────────────────────────────── */
 
 /* Card title — bumped to 1.15rem and darkened */

@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CancelProjectRequest;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
+use App\Models\Company;
+use App\Models\Node;
 use App\Models\Project;
 use App\Services\ProjectService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
-// Handles the project list, project detail, registration (Step 1), and file downloads.
+// Handles the project list, project detail, registration, update, cancel/reopen, and file downloads.
 // Thin controller — all business logic is in ProjectService.
 // Contractors are scoped to their own company at the service level.
 class ProjectController extends Controller
@@ -32,7 +35,15 @@ class ProjectController extends Controller
     {
         $this->authorize('create', Project::class);
 
-        return view('projects.create-project');
+        // Officers/admins need the approved company list to assign the project.
+        // Contractors do not see the company dropdown — their company is auto-set.
+        $companies = auth()->user()->hasRole('contractor')
+            ? collect()
+            : Company::where('status', 'approved')->orderBy('name')->get();
+
+        $nodes = Node::orderBy('acronym')->get();
+
+        return view('projects.create-project', compact('companies', 'nodes'));
     }
 
     public function store(StoreProjectRequest $request)
@@ -53,12 +64,12 @@ class ProjectController extends Controller
         $project->load([
             'company',
             'createdBy',
-            'bqInvFiles.uploadedBy',
-            'bqInvFiles.bqEndorsement.endorsedBy',
-            'bqInvFiles.invEndorsement.endorsedBy',
+            'node',
+            'boqInvItems.endorsedBy',
+            'boqInvItems.updatedBy',
             'wayleavePhbts.endorsedBy',
-            'wayleavePhbts.payment',
-            'wayleavePayments',
+            'wayleavePhbts.payments',
+            'wayleavePayments.wayleavePhbt',
             'permitSubmission.submittedBy',
             'permitReceived.uploadedBy',
             'workNotice.uploadedBy',
@@ -66,15 +77,48 @@ class ProjectController extends Controller
             'cpcReceived.uploadedBy',
         ]);
 
-        return view('projects.project-detail', compact('project'));
+        // Pass timeline completion status to the view.
+        $timelineStatus = $this->projectService->getTimelineStatus($project);
+
+        // Officers/admins need company list for the Section 1 edit form.
+        $companies = auth()->user()->hasRole('contractor')
+            ? collect()
+            : Company::where('status', 'approved')->orderBy('name')->get();
+
+        $nodes = Node::orderBy('acronym')->get();
+
+        return view('projects.project-detail', compact('project', 'timelineStatus', 'companies', 'nodes'));
     }
 
-    // Step 1: update project information.
+    // Section 1: update project information (editable by anyone with access).
     public function update(UpdateProjectRequest $request, Project $project)
     {
-        $this->projectService->updateProject($request->validated(), $project);
+        $this->authorize('update', $project);
+
+        $this->projectService->updateProject($request->validated(), $project, auth()->user());
 
         return back()->with('success', 'Project updated successfully.');
+    }
+
+    // Cancel a project — anyone (contractor, officer, admin) can cancel.
+    // Cancellation reason is compulsory.
+    public function cancel(CancelProjectRequest $request, Project $project)
+    {
+        $this->authorize('update', $project);
+
+        $this->projectService->cancelProject($project, $request->validated()['cancellation_reason']);
+
+        return back()->with('success', 'Project cancelled.');
+    }
+
+    // Reopen a cancelled project — admin only.
+    public function reopen(Project $project)
+    {
+        $this->authorize('reopen', $project);
+
+        $this->projectService->reopenProject($project);
+
+        return back()->with('success', 'Project reopened.');
     }
 
     // Serves uploaded files securely.

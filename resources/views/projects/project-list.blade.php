@@ -12,11 +12,9 @@
         {{-- Header --}}
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h4 class="card-title mb-0">Project List</h4>
-          @role('contractor')
-            <a href="{{ route('projects.create') }}" class="btn btn-primary btn-sm">
-              + Register New Project
-            </a>
-          @endrole
+          <a href="{{ route('projects.create') }}" class="btn btn-primary btn-sm">
+            + Register New Project
+          </a>
         </div>
 
         {{-- Search & Filter — dropdowns auto-submit on change; search submits on Enter --}}

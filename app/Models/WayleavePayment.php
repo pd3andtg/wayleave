@@ -4,28 +4,31 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-// Step 7 (officer section): FI and deposit payment details per PBT.
-// Separated from wayleave_pbts so Step 6 (file upload + endorsement)
-// and Step 7 (payment recording) have clear, distinct completion boundaries.
-// fi_application_date and deposit_application_date track when payments were applied for.
+// Shared model for Section 6 (TM: Wayleave Payment Details) and
+// Section 7 (TM: BG & BD Received from FINSSO).
+// One row per payment_type (FI or Deposit) per PBT.
+// Section 7 shows only rows where status = required, plus received_posted_date + bg_bd_file_path.
+// method_of_payment applies to BOTH FI and Deposit rows (BG, BD_DAP, EFT_DAP).
 class WayleavePayment extends Model
 {
     protected $fillable = [
         'project_id',
         'wayleave_pbt_id',
-        'fi_payment',
-        'fi_eds_no',
-        'fi_application_date',
-        'deposit_payment',
-        'deposit_eds_no',
-        'deposit_payment_type',
-        'deposit_application_date',
+        'payment_type',
+        'status',
+        'amount',
+        'eds_no',
+        'method_of_payment',
+        'application_date',
+        'received_posted_date',
+        'bg_bd_file_path',
         'recorded_by',
     ];
 
     protected $casts = [
-        'fi_application_date'      => 'date',
-        'deposit_application_date' => 'date',
+        'application_date'     => 'date',
+        'received_posted_date' => 'date',
+        'amount'               => 'decimal:2',
     ];
 
     public function project()

@@ -181,6 +181,10 @@
                   <a class="nav-link {{ request()->routeIs('admin.units.*') ? 'active' : '' }}"
                      href="{{ route('admin.units.index') }}">Unit Management</a>
                 </li>
+                <li class="nav-item">
+                  <a class="nav-link {{ request()->routeIs('admin.nodes.*') ? 'active' : '' }}"
+                     href="{{ route('admin.nodes.index') }}">Node Management</a>
+                </li>
               </ul>
             </div>
           </li>

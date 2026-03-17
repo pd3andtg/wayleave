@@ -17,6 +17,23 @@
       </div>
     @endif
 
+    {{-- Admin directly registers a company (auto-approved) --}}
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="fw-semibold mb-0">Register New Company</h5>
+      </div>
+      <div class="card-body">
+        <form action="{{ route('admin.companies.store') }}" method="POST" class="d-flex gap-2 align-items-end">
+          @csrf
+          <div style="flex:1; max-width:360px;">
+            <label class="form-label small mb-1">Company Name <span class="text-danger">*</span></label>
+            <input type="text" name="name" class="form-control" value="{{ old('name') }}" placeholder="e.g. Syarikat ABC Sdn Bhd" required>
+          </div>
+          <button type="submit" class="btn-action">Register Company</button>
+        </form>
+      </div>
+    </div>
+
     <div class="card">
       <div class="card-body p-0">
         <div class="table-responsive">

@@ -22,6 +22,22 @@ class AdminCompanyController extends Controller
         return view('admin.companies.index', compact('companies'));
     }
 
+    // Admin registers a company directly (status = approved immediately, no request needed).
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => ['required', 'string', 'max:255', 'unique:companies,name'],
+        ]);
+
+        Company::create([
+            'name'        => $request->name,
+            'status'      => 'approved',
+            'approved_by' => auth()->id(),
+        ]);
+
+        return back()->with('success', "Company \"{$request->name}\" registered and approved.");
+    }
+
     public function approve(Company $company)
     {
         $company->update([

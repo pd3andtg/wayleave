@@ -2,11 +2,9 @@
 
 namespace App\Services;
 
-use App\Models\BqEndorsement;
-use App\Models\BqInvFile;
+use App\Models\BoqInvItem;
 use App\Models\CpcApplication;
 use App\Models\CpcReceived;
-use App\Models\InvEndorsement;
 use App\Models\PermitReceived;
 use App\Models\PermitSubmission;
 use App\Models\Project;
@@ -16,7 +14,7 @@ use App\Models\WayleavePhbt;
 use App\Models\WorkNotice;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-// Handles all project business logic across all 12 workflow steps.
+// Handles all project business logic across all 13 workflow sections.
 // File storage uses the configured default disk (local or S3) — controlled by .env only.
 // Contractors are always scoped by company_id — never trust user input alone.
 class ProjectService
@@ -29,7 +27,7 @@ class ProjectService
         return $file->store($folder, config('filesystems.default'));
     }
 
-    // ── Project (Step 1) ───────────────────────────────────────────────────────
+    // ── Project List ──────────────────────────────────────────────────────────
 
     public function getProjectList(User $user, array $filters): LengthAwarePaginator
     {
@@ -44,9 +42,7 @@ class ProjectService
         if (!empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
-                // Use 'like' for SQLite compatibility (case-insensitive for ASCII by default).
-                // PostgreSQL also supports 'like'; switch to 'ilike' only if case sensitivity
-                // becomes an issue on the production PostgreSQL database.
+                // Use 'like' for SQLite/PostgreSQL compatibility.
                 $q->where('ref_no', 'like', "%{$search}%")
                   ->orWhere('project_desc', 'like', "%{$search}%");
             });
@@ -63,108 +59,171 @@ class ProjectService
         return $query->paginate(15)->withQueryString();
     }
 
+    // ── Section 1: Create / Update Project ────────────────────────────────────
+
     public function createProject(array $data, User $user): Project
     {
+        // If officer/admin sets self_applied_by_tm = true, use TM's company_id.
+        // Otherwise use the submitting user's company_id.
+        $isSelfApplied = !empty($data['self_applied_by_tm']);
+        if ($isSelfApplied) {
+            $tmCompany = \App\Models\Company::where('name', 'TM')->first();
+            $companyId = $tmCompany?->id ?? $user->company_id;
+        } elseif (!empty($data['company_id'])) {
+            // Officer/admin can assign project to any company.
+            $companyId = $data['company_id'];
+        } else {
+            $companyId = $user->company_id;
+        }
+
         return Project::create([
-            'ref_no'       => $data['ref_no'] ?? null,
-            'lor_no'       => $data['lor_no'] ?? null,
-            'project_no'   => $data['project_no'] ?? null,
-            'project_desc' => $data['project_desc'],
-            'nd_state'     => $data['nd_state'],
-            'remarks'      => $data['remarks'] ?? null,
-            'company_id'   => $user->company_id,
-            'created_by'   => $user->id,
-            'status'       => 'outstanding',
+            'ref_no'             => $data['ref_no'] ?? null,
+            'lor_no'             => $data['lor_no'] ?? null,
+            'project_no'         => $data['project_no'] ?? null,
+            'project_desc'       => $data['project_desc'],
+            'pic_name'           => $user->name,         // Auto-filled; stored as text to persist if user deleted
+            'nd_state'           => $data['nd_state'],
+            'node_id'            => $data['node_id'] ?? null,
+            'self_applied_by_tm' => $isSelfApplied,
+            'payment_to_kutt'    => $data['payment_to_kutt'] ?? null,
+            'remarks'            => $data['remarks'] ?? null,
+            'company_id'         => $companyId,
+            'created_by'         => $user->id,
+            'status'             => 'outstanding',
+            'application_status' => 'in_progress',
         ]);
     }
 
-    public function updateProject(array $data, Project $project): void
+    public function updateProject(array $data, Project $project, User $user): void
     {
+        // If officer/admin changes self_applied_by_tm, update company_id accordingly.
+        if (isset($data['self_applied_by_tm'])) {
+            if ($data['self_applied_by_tm']) {
+                $tmCompany = \App\Models\Company::where('name', 'TM')->first();
+                $data['company_id'] = $tmCompany?->id ?? $project->company_id;
+            } elseif (isset($data['company_id'])) {
+                // Keep the provided company_id
+            }
+        }
         $project->update($data);
     }
 
-    // ── Step 4: BQ/INV File Upload (Contractor) ───────────────────────────────
+    // ── Cancel / Reopen Project ────────────────────────────────────────────────
 
-    // Stores a single BQ/INV file for the given file_number slot (1-6).
-    // If a record for that slot already exists, it is replaced.
-    public function storeBqInvFile(array $data, Project $project, User $user): BqInvFile
+    // Anyone (contractor, officer, admin) can cancel. Reason is compulsory.
+    public function cancelProject(Project $project, string $reason): void
     {
-        $folder   = 'projects/' . $project->id . '/bq-inv-files';
-        $existing = $project->bqInvFiles()->where('file_number', $data['file_number'])->first();
-
-        $filePath = isset($data['file_path'])
-            ? $this->storeFile($data['file_path'], $folder)
-            : $existing?->file_path;
-
-        return BqInvFile::updateOrCreate(
-            ['project_id' => $project->id, 'file_number' => $data['file_number']],
-            [
-                'file_path'     => $filePath,
-                'document_info' => $data['document_info'],
-                'payment_type'  => $data['payment_type'],
-                'date'          => $data['date'],
-                'amount'        => $data['amount'],
-                'eds_no'        => $data['eds_no'],
-                'remarks'       => $data['remarks'] ?? null,
-                'uploaded_by'   => $user->id,
-            ]
-        );
+        $project->update([
+            'application_status'  => 'cancelled',
+            'cancellation_reason' => $reason,
+        ]);
     }
 
-    // ── Step 5: Officer Endorses a BQ/INV File ────────────────────────────────
-
-    // Routes to bq_endorsements or inv_endorsements based on the file payment_type.
-    public function endorseBqInvFile(array $data, Project $project, BqInvFile $bqInvFile, User $user): BqEndorsement|InvEndorsement
+    // Admin only — reopens a cancelled project.
+    public function reopenProject(Project $project): void
     {
-        if ($bqInvFile->payment_type === 'BQ') {
-            $bqPayload = [
-                'project_id'    => $project->id,
-                'document_info' => $data['document_info'],
-                'date'          => $data['date'],
-                'remarks'       => $data['remarks'] ?? null,
-                'endorsed_by'   => $user->id,
-            ];
+        $project->update([
+            'application_status'  => 'in_progress',
+            'cancellation_reason' => null,
+        ]);
+    }
 
-            // Only update endorsed_file if a new file was provided — preserves existing file otherwise.
-            if (isset($data['endorsed_file'])) {
-                $bqPayload['endorsed_file'] = $data['endorsed_file'];
-            }
+    // ── Timeline Completion Logic (13 Stages) ──────────────────────────────────
 
-            return BqEndorsement::updateOrCreate(
-                ['bq_inv_file_id' => $bqInvFile->id],
-                $bqPayload
-            );
-        }
+    // Returns an array of 13 booleans indicating which sections are complete.
+    // Used by the project detail view to render the read-only timeline.
+    public function getTimelineStatus(Project $project): array
+    {
+        $boqItems     = $project->boqInvItems;
+        $wayleavePhbts = $project->wayleavePhbts;
+        $payments     = $project->wayleavePayments;
 
-        // INV type — includes amount, eds_no, and payment_status.
-        $invPayload = [
-            'project_id'     => $project->id,
-            'document_info'  => $data['document_info'],
-            'date'           => $data['date'],
-            'amount'         => $data['amount'],
-            'payment_status' => $data['payment_status'],
-            'eds_no'         => $data['eds_no'],
-            'remarks'        => $data['remarks'] ?? null,
-            'endorsed_by'    => $user->id,
+        // Sections 2 & 3: if payment_to_kutt = waived/not_required, auto-complete (waived).
+        $boqWaived = in_array($project->payment_to_kutt, ['waived', 'not_required']);
+
+        // Section 3 complete only when ALL rows are endorsed_and_paid OR waived.
+        $sec3Complete = $boqWaived || (
+            $boqItems->count() > 0 &&
+            $boqItems->every(fn($item) => in_array($item->payment_status, ['endorsed_and_paid', 'waived']))
+        );
+
+        // Section 7: all required payment rows must have received_posted_date set.
+        $requiredPayments = $payments->where('status', 'required');
+        $sec7Complete = $requiredPayments->count() === 0
+            ? false
+            : $requiredPayments->every(fn($p) => !is_null($p->received_posted_date));
+
+        return [
+            1  => true,                                                      // Section 1: project exists
+            2  => $boqWaived || $boqItems->count() > 0,                     // Section 2: any boq_inv_items row
+            3  => $sec3Complete,                                             // Section 3: all rows endorsed_and_paid or waived
+            4  => $wayleavePhbts->count() > 0,                              // Section 4: any PBT record
+            5  => $wayleavePhbts->whereNotNull('endorsed_by')->count() > 0, // Section 5: any PBT endorsed
+            6  => $payments->count() > 0,                                   // Section 6: any payment record
+            7  => $sec7Complete,                                             // Section 7: all required rows posted
+            8  => !is_null($project->permitSubmission),                     // Section 8
+            9  => !is_null($project->permitReceived),                       // Section 9
+            10 => !is_null($project->workNotice?->notis_mula_file),         // Section 10
+            11 => !is_null($project->workNotice?->notis_siap_file),         // Section 11
+            12 => !is_null($project->cpcApplication),                       // Section 12
+            13 => !is_null($project->cpcReceived),                          // Section 13
+        ];
+    }
+
+    // ── Section 2 & 3: BOQ/INV Items ──────────────────────────────────────────
+
+    // Contractor adds a new BOQ/INV row (visible in both Section 2 and Section 3).
+    public function storeBoqInvItem(array $data, Project $project, User $user): BoqInvItem
+    {
+        $folder   = 'projects/' . $project->id . '/boq-inv';
+        $filePath = isset($data['file']) ? $this->storeFile($data['file'], $folder) : null;
+
+        return BoqInvItem::create([
+            'project_id'    => $project->id,
+            'document_info' => $data['document_info'],
+            'type'          => $data['type'],
+            'date_received' => $data['date_received'],
+            'amount'        => $data['amount'] ?? null,
+            'file_path'     => $filePath,
+            'remarks'       => $data['remarks'] ?? null,
+            'updated_by'    => $user->id,
+        ]);
+    }
+
+    // Officer/admin updates Section 3 fields on an existing row.
+    // If a new file is provided, it overwrites the contractor's original.
+    public function updateBoqInvItem(array $data, Project $project, BoqInvItem $item, User $user): BoqInvItem
+    {
+        $folder = 'projects/' . $project->id . '/boq-inv';
+
+        $payload = [
+            'document_info'  => $data['document_info'] ?? $item->document_info,
+            'type'           => $data['type'] ?? $item->type,
+            'date_received'  => $data['date_received'] ?? $item->date_received,
+            'amount'         => $data['amount'] ?? $item->amount,
+            'eds_no'         => $data['eds_no'] ?? $item->eds_no,
+            'payment_status' => $data['payment_status'] ?? $item->payment_status,
+            'remarks'        => $data['remarks'] ?? $item->remarks,
+            'updated_by'     => $user->id,
         ];
 
-        // Only update endorsed_file if a new file was provided — preserves existing file otherwise.
-        if (isset($data['endorsed_file'])) {
-            $invPayload['endorsed_file'] = $data['endorsed_file'];
+        // Officer/admin overwrites file if a new one is uploaded.
+        if (isset($data['file'])) {
+            $payload['file_path']    = $this->storeFile($data['file'], $folder);
+            $payload['endorsed_by']  = $user->id;
         }
 
-        return InvEndorsement::updateOrCreate(
-            ['bq_inv_file_id' => $bqInvFile->id],
-            $invPayload
-        );
+        $item->update($payload);
+
+        return $item;
     }
 
-    // ── Step 6: Wayleave PBT Upload (Contractor) ──────────────────────────────
+    // ── Section 4: Wayleave PBT Upload (Contractor) ───────────────────────────
 
     public function storeWayleavePhbt(array $data, Project $project, User $user): WayleavePhbt
     {
         $folder       = 'projects/' . $project->id . '/wayleave-pbts';
-        $wayleaveFile = $this->storeFile($data['wayleave_file'], $folder);
+        $wayleaveFile = isset($data['wayleave_file']) ? $this->storeFile($data['wayleave_file'], $folder) : null;
 
         return WayleavePhbt::create([
             'project_id'             => $project->id,
@@ -172,62 +231,105 @@ class ProjectService
             'pbt_name'               => $data['pbt_name'],
             'pbt_name_other'         => $data['pbt_name_other'] ?? null,
             'wayleave_file'          => $wayleaveFile,
-            'wayleave_received_date' => $data['wayleave_received_date'],
+            'wayleave_received_date' => $data['wayleave_received_date'] ?? null,
         ]);
     }
 
-    // ── Step 6 (Officer): Overwrite Wayleave File ─────────────────────────────
+    // Contractor replaces their own wayleave file. Does not touch endorsed_by.
+    public function replaceWayleavePhbt(array $data, Project $project, WayleavePhbt $pbt): WayleavePhbt
+    {
+        $folder       = 'projects/' . $project->id . '/wayleave-pbts';
+        $wayleaveFile = $this->storeFile($data['wayleave_file'], $folder);
+        $pbt->update(['wayleave_file' => $wayleaveFile]);
+
+        return $pbt;
+    }
+
+    // ── Section 5: Officer Endorses Wayleave File ─────────────────────────────
 
     // Officer uploads the endorsed version, overwriting the contractor's file.
-    // endorsement_remarks is automatically set to "Endorsed" on upload.
+    // Sets endorsed_by to mark which officer endorsed this PBT.
     public function endorseWayleavePhbt(array $data, Project $project, WayleavePhbt $pbt, User $user): WayleavePhbt
     {
         $folder       = 'projects/' . $project->id . '/wayleave-pbts';
         $wayleaveFile = $this->storeFile($data['wayleave_file'], $folder);
 
         $pbt->update([
-            'wayleave_file'       => $wayleaveFile,
-            'endorsement_remarks' => 'Endorsed',
-            'endorsed_by'         => $user->id,
+            'wayleave_file' => $wayleaveFile,
+            'endorsed_by'   => $user->id,
         ]);
 
         return $pbt;
     }
 
-    // ── Step 3 (Contractor): Replace Wayleave File ────────────────────────────
+    // ── Section 6: Wayleave Payment (Officer) ─────────────────────────────────
 
-    // Contractor replaces their own wayleave file before officer endorsement.
-    // Does not touch endorsed_by or endorsement_remarks.
-    public function replaceWayleavePhbt(array $data, Project $project, WayleavePhbt $pbt): WayleavePhbt
-    {
-        $folder       = 'projects/' . $project->id . '/wayleave-pbts';
-        $wayleaveFile = $this->storeFile($data['wayleave_file'], $folder);
-
-        $pbt->update(['wayleave_file' => $wayleaveFile]);
-
-        return $pbt;
-    }
-
-    // ── Step 7: Wayleave Payment (Officer) ────────────────────────────────────
-
+    // Creates or updates one payment row (FI or Deposit) per PBT.
     public function storeWayleavePayment(array $data, Project $project, User $user): WayleavePayment
     {
         return WayleavePayment::updateOrCreate(
-            ['project_id' => $project->id, 'wayleave_pbt_id' => $data['wayleave_pbt_id']],
             [
-                'fi_payment'               => $data['fi_payment'] ?? null,
-                'fi_eds_no'                => $data['fi_eds_no'] ?? null,
-                'fi_application_date'      => $data['fi_application_date'] ?? null,
-                'deposit_payment'          => $data['deposit_payment'] ?? null,
-                'deposit_eds_no'           => $data['deposit_eds_no'] ?? null,
-                'deposit_payment_type'     => $data['deposit_payment_type'] ?? null,
-                'deposit_application_date' => $data['deposit_application_date'] ?? null,
-                'recorded_by'              => $user->id,
+                'project_id'      => $project->id,
+                'wayleave_pbt_id' => $data['wayleave_pbt_id'],
+                'payment_type'    => $data['payment_type'],
+            ],
+            [
+                'status'            => $data['status'] ?? null,
+                'amount'            => $data['amount'] ?? null,
+                'eds_no'            => $data['eds_no'] ?? null,
+                'method_of_payment' => $data['method_of_payment'] ?? null,
+                'application_date'  => $data['application_date'] ?? null,
+                'recorded_by'       => $user->id,
             ]
         );
     }
 
-    // ── Step 8: Permit Submission to KUTT (Contractor) ────────────────────────
+    // Creates or updates both FI and Deposit rows for one PBT in a single call.
+    // Called from storePbt — receives fi[*] and deposit[*] grouped data.
+    public function storePbtWayleavePayments(array $data, Project $project, User $user): void
+    {
+        foreach (['fi' => 'FI', 'deposit' => 'Deposit'] as $key => $paymentType) {
+            $group = $data[$key] ?? [];
+            WayleavePayment::updateOrCreate(
+                [
+                    'project_id'      => $project->id,
+                    'wayleave_pbt_id' => $data['wayleave_pbt_id'],
+                    'payment_type'    => $paymentType,
+                ],
+                [
+                    'status'            => $group['status'] ?? null,
+                    'amount'            => $group['amount'] ?? null,
+                    'eds_no'            => $group['eds_no'] ?? null,
+                    'method_of_payment' => $group['method_of_payment'] ?? null,
+                    'application_date'  => $group['application_date'] ?? null,
+                    'recorded_by'       => $user->id,
+                ]
+            );
+        }
+    }
+
+    // ── Section 7: BG & BD Received from FINSSO (Officer) ─────────────────────
+
+    // Updates received_posted_date and/or bg_bd_file on an existing payment row.
+    public function updateWayleavePaymentReceived(array $data, Project $project, WayleavePayment $payment, User $user): WayleavePayment
+    {
+        $folder = 'projects/' . $project->id . '/bg-bd-docs';
+
+        $payload = [
+            'received_posted_date' => $data['received_posted_date'] ?? $payment->received_posted_date,
+            'recorded_by'          => $user->id,
+        ];
+
+        if (isset($data['bg_bd_file'])) {
+            $payload['bg_bd_file_path'] = $this->storeFile($data['bg_bd_file'], $folder);
+        }
+
+        $payment->update($payload);
+
+        return $payment;
+    }
+
+    // ── Section 8: Permit Submission to KUTT (Contractor) ─────────────────────
 
     public function storePermitSubmission(array $data, Project $project, User $user): PermitSubmission
     {
@@ -248,7 +350,7 @@ class ProjectService
         );
     }
 
-    // ── Step 9: Permit Received (Contractor) ──────────────────────────────────
+    // ── Section 9: Permit Received (Contractor/Officer) ───────────────────────
 
     public function storePermitReceived(array $data, Project $project, User $user): PermitReceived
     {
@@ -269,26 +371,45 @@ class ProjectService
         );
     }
 
-    // ── Step 10: Work Notices (Contractor) ────────────────────────────────────
+    // ── Section 10: Notis Mula Kerja (Contractor) ─────────────────────────────
 
-    // Gambar (site photos) has been removed from the system.
-    // Only Notis Mula and Notis Siap are stored.
-    public function storeWorkNotice(array $data, Project $project, User $user): WorkNotice
+    public function storeNotisMula(array $data, Project $project, User $user): WorkNotice
     {
         $folder   = 'projects/' . $project->id . '/work-notices';
         $existing = $project->workNotice;
 
+        $filePath = $this->storeFile($data['notis_mula_file'], $folder);
+
         return WorkNotice::updateOrCreate(
             ['project_id' => $project->id],
             [
-                'notis_mula_file' => isset($data['notis_mula_file']) ? $this->storeFile($data['notis_mula_file'], $folder) : $existing?->notis_mula_file,
-                'notis_siap_file' => isset($data['notis_siap_file']) ? $this->storeFile($data['notis_siap_file'], $folder) : $existing?->notis_siap_file,
+                'notis_mula_file' => $filePath,
+                'notis_siap_file' => $existing?->notis_siap_file,  // Preserve existing notis siap
                 'uploaded_by'     => $user->id,
             ]
         );
     }
 
-    // ── Step 11: CPC Application (Contractor) ─────────────────────────────────
+    // ── Section 11: Notis Siap Kerja (Contractor) ─────────────────────────────
+
+    public function storeNotisSiap(array $data, Project $project, User $user): WorkNotice
+    {
+        $folder   = 'projects/' . $project->id . '/work-notices';
+        $existing = $project->workNotice;
+
+        $filePath = $this->storeFile($data['notis_siap_file'], $folder);
+
+        return WorkNotice::updateOrCreate(
+            ['project_id' => $project->id],
+            [
+                'notis_mula_file' => $existing?->notis_mula_file,  // Preserve existing notis mula
+                'notis_siap_file' => $filePath,
+                'uploaded_by'     => $user->id,
+            ]
+        );
+    }
+
+    // ── Section 12: CPC Application (Contractor) ──────────────────────────────
 
     public function storeCpcApplication(array $data, Project $project, User $user): CpcApplication
     {
@@ -308,7 +429,7 @@ class ProjectService
         );
     }
 
-    // ── Step 12: CPC Received → Project Completed (Contractor) ───────────────
+    // ── Section 13: CPC Received → Project Completed (Contractor) ─────────────
 
     public function storeCpcReceived(array $data, Project $project, User $user): CpcReceived
     {

@@ -3,43 +3,60 @@
 namespace App\Http\Controllers\Steps;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Steps\EndorseBqInvFileRequest;
-use App\Http\Requests\Steps\StoreBqInvFileRequest;
-use App\Models\BqInvFile;
+use App\Http\Requests\Steps\StoreBoqInvItemRequest;
+use App\Http\Requests\Steps\UpdateBoqInvItemRequest;
+use App\Models\BoqInvItem;
 use App\Models\Project;
 use App\Services\ProjectService;
-use Illuminate\Support\Facades\Storage;
 
-// Step 4 (contractor uploads BQ/INV file) and Step 5 (officer endorses each file).
-// Supports up to 6 files per project, each identified by file_number (1-6).
-// Endorsement type is determined by the file's payment_type (BQ or INV).
+// Section 2 & 3: BOQ/INV items shared table.
+// store()  — Contractor adds a new BOQ/INV row (visible in both Section 2 and Section 3).
+// update() — Officer/admin updates Section 3 fields (eds_no, payment_status, endorsed file).
+//            If a new file is uploaded, it overwrites the contractor's original.
 class BqInvController extends Controller
 {
     public function __construct(private ProjectService $projectService) {}
 
-    // Step 4: contractor uploads a BQ/INV file for a specific slot (file_number 1-6).
-    public function store(StoreBqInvFileRequest $request, Project $project)
+    // Section 2/3 — "Add New BOQ/INV" button: contractor adds a new row.
+    public function store(StoreBoqInvItemRequest $request, Project $project)
     {
-        $this->projectService->storeBqInvFile($request->validated(), $project, auth()->user());
+        $this->authorize('update', $project);
 
-        return back()->with('success', 'BQ/INV file uploaded successfully.');
-    }
-
-    // Step 5: officer endorses a specific BQ/INV file.
-    // Routes to bq_endorsements or inv_endorsements based on the file payment_type.
-    // If an endorsed_file PDF is uploaded, it is stored and its path included in the data.
-    public function endorse(EndorseBqInvFileRequest $request, Project $project, BqInvFile $bqInvFile)
-    {
         $data = $request->validated();
 
-        // Store the endorsed file if provided, replacing any previous upload.
-        if ($request->hasFile('endorsed_file')) {
-            $data['endorsed_file'] = $request->file('endorsed_file')
-                ->store('projects/' . $project->id . '/bq-endorsements', config('filesystems.default'));
+        // Store the uploaded file and pass the file object to the service.
+        if ($request->hasFile('file')) {
+            $data['file'] = $request->file('file');
         }
 
-        $this->projectService->endorseBqInvFile($data, $project, $bqInvFile, auth()->user());
+        $this->projectService->storeBoqInvItem($data, $project, auth()->user());
 
-        return back()->with('success', 'Endorsement saved.');
+        return back()->with('success', 'BOQ/INV item added successfully.');
+    }
+
+    // Section 2/3 — Delete a BOQ/INV row. Anyone with project update access can delete.
+    public function destroy(Project $project, BoqInvItem $boqInvItem)
+    {
+        $this->authorize('update', $project);
+
+        $boqInvItem->delete();
+
+        return back()->with('success', 'BOQ/INV item deleted.');
+    }
+
+    // Section 3 — Officer/admin updates a row (eds_no, payment_status, endorsed file).
+    public function update(UpdateBoqInvItemRequest $request, Project $project, BoqInvItem $boqInvItem)
+    {
+        $this->authorize('update', $project);
+
+        $data = $request->validated();
+
+        if ($request->hasFile('file')) {
+            $data['file'] = $request->file('file');
+        }
+
+        $this->projectService->updateBoqInvItem($data, $project, $boqInvItem, auth()->user());
+
+        return back()->with('success', 'BOQ/INV item updated.');
     }
 }

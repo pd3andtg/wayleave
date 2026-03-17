@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Company;
+use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
-// Admin-only: view all registered users and manage Officer roles.
+// Admin-only: view, register, edit, and delete users. Manage Officer roles.
 // Contractor roles cannot be changed — only officers can be promoted/demoted.
 class AdminUserController extends Controller
 {
@@ -17,6 +20,67 @@ class AdminUserController extends Controller
             ->paginate(20);
 
         return view('admin.users.index', compact('users'));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name'       => ['required', 'string', 'max:255'],
+            'email'      => ['required', 'email', 'unique:users,email'],
+            'password'   => ['required', 'string', 'min:8'],
+            'role'       => ['required', 'in:admin,officer,contractor'],
+            'id_number'      => ['nullable', 'string', 'max:255'],
+            'contact_number' => ['nullable', 'string', 'max:50'],
+            'unit_id'        => ['nullable', 'exists:units,id'],
+            'company_id'     => ['nullable', 'exists:companies,id'],
+        ]);
+
+        $user = User::create([
+            'name'           => $request->name,
+            'email'          => $request->email,
+            'password'       => Hash::make($request->password),
+            'id_number'      => $request->id_number,
+            'contact_number' => $request->contact_number,
+            'unit_id'        => $request->role === 'officer' ? $request->unit_id : null,
+            'company_id'     => $request->role === 'contractor' ? $request->company_id : null,
+        ]);
+
+        $user->assignRole($request->role);
+
+        return back()->with('success', "User \"{$request->name}\" registered as {$request->role}.");
+    }
+
+    public function update(Request $request, User $user)
+    {
+        $request->validate([
+            'name'       => ['required', 'string', 'max:255'],
+            'email'      => ['required', 'email', 'unique:users,email,' . $user->id],
+            'id_number'      => ['nullable', 'string', 'max:255'],
+            'contact_number' => ['nullable', 'string', 'max:50'],
+            'unit_id'        => ['nullable', 'exists:units,id'],
+            'company_id'     => ['nullable', 'exists:companies,id'],
+        ]);
+
+        $user->update([
+            'name'           => $request->name,
+            'email'          => $request->email,
+            'id_number'      => $request->id_number,
+            'contact_number' => $request->contact_number,
+            'unit_id'        => $request->unit_id,
+            'company_id'     => $request->company_id,
+        ]);
+
+        return back()->with('success', "User \"{$user->name}\" updated.");
+    }
+
+    public function destroy(User $user)
+    {
+        abort_if($user->id === auth()->id(), 403, 'You cannot delete your own account.');
+
+        $name = $user->name;
+        $user->delete();
+
+        return back()->with('success', "User \"{$name}\" deleted.");
     }
 
     public function updateRole(Request $request, User $user)

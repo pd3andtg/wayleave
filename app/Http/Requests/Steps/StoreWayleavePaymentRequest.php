@@ -4,7 +4,9 @@ namespace App\Http\Requests\Steps;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-// Step 7: officer records FI and deposit payment details for a specific PBT.
+// Section 6: officer records one payment row (FI or Deposit) per PBT.
+// payment_type distinguishes FI row from Deposit row.
+// method_of_payment replaces old deposit_payment_type — now applies to both rows.
 class StoreWayleavePaymentRequest extends FormRequest
 {
     public function authorize(): bool
@@ -15,14 +17,13 @@ class StoreWayleavePaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'wayleave_pbt_id'          => ['required', 'integer', 'exists:wayleave_pbts,id'],
-            'fi_payment'               => ['nullable', 'in:required,not_required,waived'],
-            'fi_eds_no'                => ['nullable', 'string', 'max:255'],
-            'fi_application_date'      => ['nullable', 'date'],
-            'deposit_payment'          => ['nullable', 'in:required,not_required,waived'],
-            'deposit_eds_no'           => ['nullable', 'string', 'max:255'],
-            'deposit_payment_type'     => ['nullable', 'in:BG,BD'],
-            'deposit_application_date' => ['nullable', 'date'],
+            'wayleave_pbt_id'   => ['required', 'integer', 'exists:wayleave_pbts,id'],
+            'payment_type'      => ['required', 'in:FI,Deposit'],
+            'status'            => ['nullable', 'in:required,not_required,waived'],
+            'amount'            => ['nullable', 'numeric', 'min:0'],
+            'eds_no'            => ['nullable', 'string', 'max:255'],
+            'method_of_payment' => ['nullable', 'in:BG,BD_DAP,EFT_DAP'],
+            'application_date'  => ['nullable', 'date'],
         ];
     }
 }

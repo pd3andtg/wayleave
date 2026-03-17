@@ -4,9 +4,14 @@
 
 @section('content')
 
-{{-- ============================================================ --}}
-{{-- PROJECT HEADER                                               --}}
-{{-- ============================================================ --}}
+@php
+  $cancelled = $project->isCancelled();
+  $boqHidden = $project->isBoqHidden();
+@endphp
+
+{{-- ================================================================ --}}
+{{-- PROJECT HEADER                                                    --}}
+{{-- ================================================================ --}}
 <div class="row">
   <div class="col-12 grid-margin">
     <div class="card">
@@ -24,15 +29,15 @@
               @endrole
             </div>
           </div>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            @if ($project->status === 'completed')
-              <span class="badge bg-success" style="font-size: 0.75rem; padding: 0.4rem 0.75rem; line-height: 1;">Completed</span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            @if ($cancelled)
+              <span class="badge bg-danger" style="font-size:0.75rem; padding:0.4rem 0.75rem;">Cancelled</span>
+            @elseif ($project->status === 'completed')
+              <span class="badge bg-success" style="font-size:0.75rem; padding:0.4rem 0.75rem;">Completed</span>
             @else
-              <span class="badge bg-warning text-dark" style="font-size: 0.75rem; padding: 0.4rem 0.75rem; line-height: 1;">Outstanding</span>
+              <span class="badge bg-warning text-dark" style="font-size:0.75rem; padding:0.4rem 0.75rem;">Outstanding</span>
             @endif
-            <a href="{{ route('projects.index') }}" class="btn-action">
-              &larr; Back to Dashboard
-            </a>
+            <a href="{{ route('projects.index') }}" class="btn-action">&larr; Back to Dashboard</a>
           </div>
         </div>
       </div>
@@ -49,63 +54,104 @@
 @endif
 @if ($errors->any())
   <div class="alert alert-danger py-2">
-    @foreach ($errors->all() as $error)
-      <div>{{ $error }}</div>
-    @endforeach
+    @foreach ($errors->all() as $error) <div>{{ $error }}</div> @endforeach
   </div>
 @endif
 
-{{-- ============================================================ --}}
-{{-- STEP 2: Project Information (Editable)                       --}}
-{{-- Step 1 was on the create-project page. This shows the same  --}}
-{{-- data as an editable form so details can be corrected later.  --}}
-{{-- ============================================================ --}}
+{{-- ================================================================ --}}
+{{-- SECTION 1: PROJECT INFORMATION (Editable)                        --}}
+{{-- ================================================================ --}}
 <div class="row">
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
         <h3 class="card-title"><span class="me-3">1</span> Project Information</h3>
 
+        @if ($cancelled)
+          <div class="alert alert-danger mb-3">
+            <strong>Project Cancelled.</strong> {{ $project->cancellation_reason }}
+          </div>
+        @endif
+
         <div x-data="{ editing: false }">
 
-          {{-- Read-only summary --}}
-          <div x-show="!editing" x-cloak>
+          {{-- Read-only view --}}
+          <div x-show="!editing">
             <div class="row">
-              <div class="col-md-4 mb-2">
+              <div class="col-md-4 mb-3">
                 <div class="text-muted small fw-bold">KUTT Ref No / PBT Ref No</div>
                 <div>{{ $project->ref_no ?? '—' }}</div>
               </div>
-              <div class="col-md-4 mb-2">
+              <div class="col-md-4 mb-3">
                 <div class="text-muted small fw-bold">LOR No</div>
                 <div>{{ $project->lor_no ?? '—' }}</div>
               </div>
-              <div class="col-md-4 mb-2">
+              <div class="col-md-4 mb-3">
                 <div class="text-muted small fw-bold">Project No</div>
                 <div>{{ $project->project_no ?? '—' }}</div>
               </div>
-              <div class="col-md-4 mb-2">
+              <div class="col-md-4 mb-3">
                 <div class="text-muted small fw-bold">Project Description</div>
                 <div>{{ $project->project_desc }}</div>
               </div>
-              <div class="col-md-4 mb-2">
+              <div class="col-md-4 mb-3">
                 <div class="text-muted small fw-bold">ND State</div>
                 <div>{{ str_replace('_', ' ', $project->nd_state) }}</div>
               </div>
-              <div class="col-md-4 mb-2">
+              <div class="col-md-4 mb-3">
+                <div class="text-muted small fw-bold">TM Node</div>
+                <div>{{ $project->node ? $project->node->acronym . ' — ' . $project->node->full_name : '—' }}</div>
+              </div>
+              <div class="col-md-4 mb-3">
+                <div class="text-muted small fw-bold">PIC Name</div>
+                <div>{{ $project->pic_name }}</div>
+              </div>
+              <div class="col-md-4 mb-3">
+                <div class="text-muted small fw-bold">Payment to KUTT</div>
+                <div>{{ $project->payment_to_kutt ? ucfirst(str_replace('_', ' ', $project->payment_to_kutt)) : '—' }}</div>
+              </div>
+              @role('officer|admin')
+              <div class="col-md-4 mb-3">
+                <div class="text-muted small fw-bold">Company</div>
+                <div>{{ $project->company->name }}</div>
+              </div>
+              <div class="col-md-4 mb-3">
+                <div class="text-muted small fw-bold">Self Applied by TM</div>
+                <div>{{ $project->self_applied_by_tm ? 'Yes' : 'No' }}</div>
+              </div>
+              @endrole
+              <div class="col-md-4 mb-3">
                 <div class="text-muted small fw-bold">Remarks</div>
                 <div>{{ $project->remarks ?? '—' }}</div>
               </div>
             </div>
-            @can('update', $project)
-            <div class="d-flex justify-content-end mt-2">
-              <button type="button" class="btn-action" x-on:click="editing = true">Edit</button>
+            <div class="d-flex justify-content-end gap-2 mt-2">
+              @can('update', $project)
+                <button type="button" class="btn-action" x-on:click="editing = true">Edit</button>
+              @endcan
+              {{-- Cancel button — anyone can cancel --}}
+              @unless($cancelled)
+                <button type="button" class="btn-action btn-action-red"
+                        x-data x-on:click="$dispatch('open-cancel-modal')">Cancel Project</button>
+              @endunless
+              {{-- Reopen — admin only --}}
+              @if($cancelled)
+                @can('reopen', $project)
+                  <form action="{{ route('projects.reopen', $project) }}" method="POST" class="d-inline">
+                    @csrf
+                    <button type="submit" class="btn-action btn-action-green">Reopen Project</button>
+                  </form>
+                @endcan
+              @endif
             </div>
-            @endcan
           </div>
 
           {{-- Edit form --}}
           @can('update', $project)
-          <div x-show="editing" x-cloak>
+          <div x-show="editing" x-cloak
+               x-data="{
+                 selfApplied: {{ $project->self_applied_by_tm ? 'true' : 'false' }}
+               }">
             <form action="{{ route('projects.update', $project) }}" method="POST">
               @csrf @method('PUT')
               <div class="row">
@@ -121,21 +167,61 @@
                   <label class="form-label text-muted small">Project No</label>
                   <input type="text" name="project_no" class="form-control" value="{{ old('project_no', $project->project_no) }}">
                 </div>
-                <div class="col-md-8 mb-3 d-flex flex-column">
+                <div class="col-md-4 mb-3">
                   <label class="form-label text-muted small">Project Description <span class="text-danger">*</span></label>
-                  <textarea name="project_desc" class="form-control flex-grow-1" rows="2" required>{{ old('project_desc', $project->project_desc) }}</textarea>
+                  <textarea name="project_desc" class="form-control" rows="1" required>{{ old('project_desc', $project->project_desc) }}</textarea>
                 </div>
-                <div class="col-md-4 mb-3 d-flex flex-column">
+                <div class="col-md-4 mb-3">
                   <label class="form-label text-muted small">ND State <span class="text-danger">*</span></label>
-                  <select name="nd_state" class="form-control flex-grow-1" required>
+                  <select name="nd_state" class="form-control" required>
                     <option value="ND_TRG" {{ old('nd_state', $project->nd_state) === 'ND_TRG' ? 'selected' : '' }}>ND TRG</option>
                     <option value="ND_PHG" {{ old('nd_state', $project->nd_state) === 'ND_PHG' ? 'selected' : '' }}>ND PHG</option>
                     <option value="ND_KEL" {{ old('nd_state', $project->nd_state) === 'ND_KEL' ? 'selected' : '' }}>ND KEL</option>
                   </select>
                 </div>
-                <div class="col-12 mb-3">
+                <div class="col-md-4 mb-3">
+                  <label class="form-label text-muted small">TM Node</label>
+                  <select name="node_id" class="form-control">
+                    <option value="">-- None --</option>
+                    @foreach($nodes as $node)
+                      <option value="{{ $node->id }}" {{ old('node_id', $project->node_id) == $node->id ? 'selected' : '' }}>
+                        {{ $node->acronym }} — {{ $node->full_name }}
+                      </option>
+                    @endforeach
+                  </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label text-muted small">Payment to KUTT</label>
+                  <select name="payment_to_kutt" class="form-control">
+                    <option value="">-- Select --</option>
+                    <option value="charged"      {{ old('payment_to_kutt', $project->payment_to_kutt) === 'charged'      ? 'selected' : '' }}>Charged</option>
+                    <option value="waived"       {{ old('payment_to_kutt', $project->payment_to_kutt) === 'waived'       ? 'selected' : '' }}>Waived</option>
+                    <option value="not_required" {{ old('payment_to_kutt', $project->payment_to_kutt) === 'not_required' ? 'selected' : '' }}>Not Required</option>
+                  </select>
+                </div>
+                @role('officer|admin')
+                <div class="col-md-4 mb-3">
+                  <label class="form-label text-muted small">Self Applied by TM</label>
+                  <select name="self_applied_by_tm" class="form-control"
+                          @change="selfApplied = $event.target.value === '1'">
+                    <option value="0" {{ !$project->self_applied_by_tm ? 'selected' : '' }}>No</option>
+                    <option value="1" {{ $project->self_applied_by_tm  ? 'selected' : '' }}>Yes</option>
+                  </select>
+                </div>
+                <div class="col-md-4 mb-3" x-show="!selfApplied" x-cloak>
+                  <label class="form-label text-muted small">Company</label>
+                  <select name="company_id" class="form-control">
+                    @foreach($companies as $company)
+                      <option value="{{ $company->id }}" {{ old('company_id', $project->company_id) == $company->id ? 'selected' : '' }}>
+                        {{ $company->name }}
+                      </option>
+                    @endforeach
+                  </select>
+                </div>
+                @endrole
+                <div class="col-md-4 mb-3">
                   <label class="form-label text-muted small">Remarks</label>
-                  <textarea name="remarks" class="form-control" rows="2" placeholder="Optional">{{ old('remarks', $project->remarks) }}</textarea>
+                  <textarea name="remarks" class="form-control" rows="1">{{ old('remarks', $project->remarks) }}</textarea>
                 </div>
               </div>
               <div class="d-flex justify-content-end gap-2">
@@ -148,28 +234,48 @@
           @endcan
 
         </div>
-
       </div>
     </div>
   </div>
 </div>
 
-{{-- ============================================================ --}}
-{{-- STEP 3: Project Timeline (Read-Only Visual Indicator)        --}}
-{{-- No database table — reads completion state from all records.  --}}
-{{-- ============================================================ --}}
+{{-- Cancel modal --}}
+@unless($cancelled)
+<div x-data="{ open: false }" x-on:open-cancel-modal.window="open = true">
+  <div x-show="open" x-cloak
+       style="position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; display:flex; align-items:center; justify-content:center;">
+    <div class="card" style="max-width:480px; width:100%; margin:1rem;" @click.outside="open = false">
+      <div class="card-body">
+        <h5 class="fw-bold mb-3">Cancel Project</h5>
+        <form action="{{ route('projects.cancel', $project) }}" method="POST">
+          @csrf
+          <div class="mb-3">
+            <label class="form-label">Reason for Cancellation <span class="text-danger">*</span></label>
+            <textarea name="cancellation_reason" class="form-control" rows="3" required minlength="5"
+                      placeholder="State the reason for cancellation"></textarea>
+          </div>
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn-action" style="background:#6c757d; border-color:#6c757d;"
+                    x-on:click="open = false">Cancel</button>
+            <button type="submit" class="btn-action btn-action-red">Confirm Cancellation</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+@endunless
+
+{{-- ================================================================ --}}
+{{-- PROJECT TIMELINE (Read-Only)                                      --}}
+{{-- ================================================================ --}}
 @php
-$timelineStages = [
-    ['label' => 'Project Info',      'step' => 1,  'done' => true],
-    ['label' => 'BQ/INV Upload',     'step' => 2,  'done' => $project->bqInvFiles->isNotEmpty()],
-    ['label' => 'BQ/INV Endorsed',   'step' => 3,  'done' => $project->bqInvFiles->filter(fn($f) => $f->bqEndorsement || $f->invEndorsement)->isNotEmpty()],
-    ['label' => 'Wayleave',          'step' => 4,  'done' => $project->wayleavePhbts->isNotEmpty()],
-    ['label' => 'Wayleave Payment',  'step' => 5,  'done' => $project->wayleavePayments->isNotEmpty()],
-    ['label' => 'Permit Submitted',  'step' => 6,  'done' => $project->permitSubmission !== null],
-    ['label' => 'Permit Received',   'step' => 7,  'done' => $project->permitReceived !== null],
-    ['label' => 'Work Notices',      'step' => 8,  'done' => $project->workNotice !== null],
-    ['label' => 'CPC Application',   'step' => 9,  'done' => $project->cpcApplication !== null],
-    ['label' => 'CPC Received',      'step' => 10, 'done' => $project->cpcReceived !== null],
+$tl = $timelineStatus;
+$tlLabels = [
+    1 => 'Project Info', 2 => 'BOQ/INV Filed', 3 => 'BOQ/INV Endorsed',
+    4 => 'Wayleave', 5 => 'Wayleave Endorsed', 6 => 'WL Payment',
+    7 => 'BG/BD Received', 8 => 'Permit Submitted', 9 => 'Permit Received',
+    10 => 'Notis Mula', 11 => 'Notis Siap', 12 => 'CPC Application', 13 => 'CPC Received',
 ];
 @endphp
 <div class="row">
@@ -178,33 +284,30 @@ $timelineStages = [
       <div class="card-body">
         <h3 class="card-title">Project Timeline</h3>
         <div class="d-flex align-items-start" style="overflow-x:auto; padding-bottom:0.5rem;">
-          @foreach ($timelineStages as $i => $stage)
-            <div class="d-flex flex-column align-items-center" style="min-width:72px; flex:1;">
+          @foreach (range(1, 13) as $i)
+            <div class="d-flex flex-column align-items-center" style="min-width:64px; flex:1;">
               <div class="d-flex align-items-center w-100">
-                {{-- Left connector --}}
-                @if ($i > 0)
-                  <div style="flex:1; height:2px; background:{{ $timelineStages[$i-1]['done'] ? '#28a745' : '#dee2e6' }};"></div>
+                @if ($i > 1)
+                  <div style="flex:1; height:2px; background:{{ $tl[$i-1] ? '#28a745' : '#dee2e6' }};"></div>
                 @else
                   <div style="flex:1;"></div>
                 @endif
-                {{-- Circle --}}
-                <div style="
-                  width:30px; height:30px; border-radius:50%; flex-shrink:0;
-                  background:{{ $stage['done'] ? '#28a745' : '#dee2e6' }};
-                  color:{{ $stage['done'] ? '#fff' : '#6c757d' }};
-                  display:flex; align-items:center; justify-content:center;
-                  font-size:0.7rem; font-weight:700;
-                ">
-                  @if ($stage['done']) &#10003; @else {{ $stage['step'] }} @endif
+                <div style="width:28px; height:28px; border-radius:50%; flex-shrink:0;
+                            background:{{ $tl[$i] ? '#28a745' : '#dee2e6' }};
+                            color:{{ $tl[$i] ? '#fff' : '#6c757d' }};
+                            display:flex; align-items:center; justify-content:center;
+                            font-size:0.65rem; font-weight:700;">
+                  @if ($tl[$i]) &#10003; @else {{ $i }} @endif
                 </div>
-                {{-- Right connector --}}
-                @if (!$loop->last)
-                  <div style="flex:1; height:2px; background:{{ $stage['done'] ? '#28a745' : '#dee2e6' }};"></div>
+                @if ($i < 13)
+                  <div style="flex:1; height:2px; background:{{ $tl[$i] ? '#28a745' : '#dee2e6' }};"></div>
                 @else
                   <div style="flex:1;"></div>
                 @endif
               </div>
-              <div class="text-center mt-1" style="font-size:0.65rem; color:#6c757d; line-height:1.2;">{{ $stage['label'] }}</div>
+              <div class="text-center mt-1" style="font-size:0.6rem; color:#6c757d; line-height:1.2;">
+                {{ $tlLabels[$i] }}
+              </div>
             </div>
           @endforeach
         </div>
@@ -213,1468 +316,1044 @@ $timelineStages = [
   </div>
 </div>
 
-{{-- ============================================================ --}}
-{{-- STEP 4: BOQ/INV File Upload (up to 6 files per project)     --}}
-{{-- Contractor uploads each file with full metadata.             --}}
-{{-- Use the file_number dropdown to add or replace any slot.     --}}
-{{-- ============================================================ --}}
+@if($cancelled)
+  <div class="alert alert-warning">This project is cancelled. All sections are locked.</div>
+@else
+
+{{-- ================================================================ --}}
+{{-- SECTION 2: BOQ/INV FILES (Contractor view — no eds_no/status)    --}}
+{{-- ================================================================ --}}
 <div class="row">
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title">
-          <span class="me-3">2</span> BOQ / Invoice Files
-          @if ($project->bqInvFiles->isNotEmpty())
-            <span class="badge bg-success ms-2">&#10003; {{ $project->bqInvFiles->count() }} file(s) uploaded</span>
-          @endif
-        </h3>
-
-        @php
-          $usedNumbers  = $project->bqInvFiles->pluck('file_number')->toArray();
-          $nextNumber   = collect(range(1, 6))->first(fn($n) => !in_array($n, $usedNumbers)) ?? null;
-          $allSlotsFull = count($usedNumbers) >= 6;
-        @endphp
-
-        {{-- Table of uploaded files, each row has an inline Replace toggle --}}
-        @if ($project->bqInvFiles->isNotEmpty())
-          <div class="table-responsive mb-3">
-            <table class="table table-sm table-borderless align-middle">
+        <h3 class="card-title"><span class="me-3">2</span> BOQ/INV Files</h3>
+        @if($boqHidden)
+          <p class="text-muted mb-0"><em>Payment to KUTT is {{ ucfirst(str_replace('_', ' ', $project->payment_to_kutt)) }} — BOQ/INV section not applicable.</em></p>
+        @else
+          <div class="table-responsive">
+            <table class="table table-borderless mb-0">
               <thead>
-                <tr class="text-muted small">
-                  <th>#</th>
-                  <th>Document Info</th>
-                  <th>Type</th>
-                  <th>Date</th>
-                  <th>Amount (RM)</th>
-                  <th>EDS No</th>
-                  <th>Remarks</th>
-                  <th></th>
+                <tr>
+                  <th style="font-weight:600; color:#07326A;">#</th>
+                  <th style="font-weight:600; color:#07326A;">Document Info</th>
+                  <th style="font-weight:600; color:#07326A;">Type</th>
+                  <th style="font-weight:600; color:#07326A;">Date Received</th>
+                  <th style="font-weight:600; color:#07326A;">Amount (RM)</th>
+                  <th style="font-weight:600; color:#07326A;">Remarks</th>
+                  <th style="font-weight:600; color:#07326A;">Last Updated By</th>
+                  <th style="font-weight:600; color:#07326A;">Date Updated</th>
+                  <th style="font-weight:600; color:#07326A;">File</th>
+                  @can('update', $project) <th style="font-weight:600; color:#07326A;">Action</th> @endcan
                 </tr>
               </thead>
-
-              {{-- Each file gets its own tbody so Alpine x-data wraps both the data row and the replace row --}}
-              @foreach ($project->bqInvFiles->sortBy('file_number') as $file)
-                <tbody x-data="{ editing: false, fileName: 'No file chosen' }">
-                  <tr>
-                    <td class="text-muted small fw-bold">{{ $file->file_number }}</td>
-                    <td>{{ $file->document_info }}</td>
-                    <td>{{ $file->payment_type }}</td>
-                    <td>{{ $file->date?->format('d M Y') }}</td>
-                    <td>{{ number_format($file->amount, 2) }}</td>
-                    <td>{{ $file->eds_no }}</td>
-                    <td>{{ $file->remarks ?? '—' }}</td>
-                    <td style="white-space:nowrap;">
-                      <div class="d-flex gap-1 justify-content-end align-items-center">
-                        <a href="{{ route('projects.download', ['project' => $project, 'path' => $file->file_path]) }}"
-                           class="btn-action" style="font-size:0.8rem; padding:0.3rem 0.6rem; line-height:1;">
-                          <i class="ti-download"></i>
-                        </a>
-                        @can('update', $project)
-                          <button type="button" class="btn-action"
-                                  style="font-size:0.8rem; padding:0.3rem 0.6rem; line-height:1;"
-                                  x-on:click="editing = !editing"
-                                  x-text="editing ? 'Cancel' : 'Edit'">Edit</button>
-                        @endcan
-                      </div>
-                    </td>
-                  </tr>
-
-                  {{-- Inline edit form — revealed by clicking Edit --}}
+              @forelse ($project->boqInvItems as $item)
+              <tbody x-data="{ editing: false }">
+                <tr>
+                  <td>{{ $loop->iteration }}</td>
+                  <td>{{ $item->document_info }}</td>
+                  <td>{{ $item->type }}</td>
+                  <td>{{ $item->date_received?->format('d/m/Y') }}</td>
+                  <td>{{ $item->amount ? number_format($item->amount, 2) : '—' }}</td>
+                  <td>{{ $item->remarks ?? '—' }}</td>
+                  <td>{{ $item->updatedBy?->name ?? '—' }}</td>
+                  <td>{{ $item->updated_at->format('d/m/Y') }}</td>
+                  <td>
+                    @if($item->file_path)
+                      <a href="{{ route('projects.download', ['project' => $project, 'path' => $item->file_path]) }}"
+                         class="btn-action btn-action-sm">Download</a>
+                    @else
+                      —
+                    @endif
+                  </td>
                   @can('update', $project)
-                    <tr x-show="editing" x-cloak style="background:#f8f9fa;">
-                      <td colspan="8" class="py-3 px-3">
-                        <form action="{{ route('projects.bq-inv-files.store', $project) }}" method="POST" enctype="multipart/form-data">
-                          @csrf
-                          <input type="hidden" name="file_number" value="{{ $file->file_number }}">
-                          <div class="row mb-2 align-items-start">
-                            <div class="col-md-4 mb-2">
-                              <label class="form-label text-muted small">Replace File (PDF) <span class="text-muted">— leave blank to keep existing</span></label>
-                              <div class="d-flex align-items-center" style="gap:8px;">
-                                <input type="file" name="file_path" id="bq_file_{{ $file->id }}" accept=".pdf" style="display:none;"
-                                       x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'">
-                                <label for="bq_file_{{ $file->id }}" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
-                                  <i class="ti-upload"></i> Choose File
-                                </label>
-                                <span x-text="fileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
-                              </div>
-                            </div>
-                            <div class="col-md-4 mb-2">
-                              <label class="form-label text-muted small">Document Info <span class="text-danger">*</span></label>
-                              <input type="text" name="document_info" class="form-control" style="height:38px;"
-                                     value="{{ $file->document_info }}" required>
-                            </div>
-                            <div class="col-md-4 mb-2">
-                              <label class="form-label text-muted small">Type <span class="text-danger">*</span></label>
-                              <select name="payment_type" class="form-control" style="height:38px;" required>
-                                <option value="BQ" {{ $file->payment_type === 'BQ' ? 'selected' : '' }}>BQ</option>
-                                <option value="INV" {{ $file->payment_type === 'INV' ? 'selected' : '' }}>INV</option>
-                              </select>
-                            </div>
-                          </div>
-                          <div class="row mb-2 align-items-end">
-                            <div class="col-md-3 mb-2">
-                              <label class="form-label text-muted small">Date <span class="text-danger">*</span></label>
-                              <input type="date" name="date" class="form-control" style="height:38px;"
-                                     value="{{ $file->date?->format('Y-m-d') }}" required>
-                            </div>
-                            <div class="col-md-3 mb-2">
-                              <label class="form-label text-muted small">Amount (RM) <span class="text-danger">*</span></label>
-                              <input type="number" name="amount" step="0.01" min="0" class="form-control" style="height:38px;"
-                                     value="{{ $file->amount }}" required>
-                            </div>
-                            <div class="col-md-3 mb-2">
-                              <label class="form-label text-muted small">EDS No <span class="text-danger">*</span></label>
-                              <input type="text" name="eds_no" class="form-control" style="height:38px;"
-                                     value="{{ $file->eds_no }}" required>
-                            </div>
-                            <div class="col-md-3 mb-2">
-                              <label class="form-label text-muted small">Remarks</label>
-                              <input type="text" name="remarks" class="form-control" style="height:38px;"
-                                     value="{{ $file->remarks }}">
-                            </div>
-                          </div>
-                          <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn-action">Save</button>
-                          </div>
-                        </form>
-                      </td>
-                    </tr>
+                  <td>
+                    <button type="button" class="btn-action btn-action-sm"
+                            x-on:click="editing = !editing">Edit</button>
+                    <form action="{{ route('projects.boq-inv-items.destroy', [$project, $item]) }}" method="POST" class="d-inline ms-1"
+                          onsubmit="return confirm('Delete this BOQ/INV row? This cannot be undone.')">
+                      @csrf @method('DELETE')
+                      <button type="submit" class="btn-action btn-action-red btn-action-sm">Delete</button>
+                    </form>
+                  </td>
                   @endcan
-                </tbody>
-              @endforeach
+                </tr>
+                @can('update', $project)
+                <tr x-show="editing" x-cloak style="background:#f8f9fa;">
+                  <td colspan="10" class="py-3 px-3">
+                    <form action="{{ route('projects.boq-inv-items.update', [$project, $item]) }}" method="POST" enctype="multipart/form-data">
+                      @csrf
+                      <div class="row g-2">
+                        <div class="col-md-3">
+                          <label class="form-label small">Document Info <span class="text-danger">*</span></label>
+                          <input type="text" name="document_info" class="form-control form-control-sm" value="{{ $item->document_info }}" required>
+                        </div>
+                        <div class="col-md-2">
+                          <label class="form-label small">Type <span class="text-danger">*</span></label>
+                          <select name="type" class="form-control form-control-sm" required>
+                            <option value="BQ"  {{ $item->type === 'BQ'  ? 'selected' : '' }}>BQ</option>
+                            <option value="INV" {{ $item->type === 'INV' ? 'selected' : '' }}>INV</option>
+                          </select>
+                        </div>
+                        <div class="col-md-2">
+                          <label class="form-label small">Date Received <span class="text-danger">*</span></label>
+                          <input type="date" name="date_received" class="form-control form-control-sm" value="{{ $item->date_received?->format('Y-m-d') }}" required>
+                        </div>
+                        <div class="col-md-2">
+                          <label class="form-label small">Amount (RM)</label>
+                          <input type="number" name="amount" step="0.01" class="form-control form-control-sm" value="{{ $item->amount }}">
+                        </div>
+                        <div class="col-md-3">
+                          <label class="form-label small">Remarks</label>
+                          <input type="text" name="remarks" class="form-control form-control-sm" value="{{ $item->remarks }}" placeholder="e.g. BOQ/INV No">
+                        </div>
+                        <div class="col-md-4">
+                          <label class="form-label small">Replace File (PDF, max 10MB)</label>
+                          <input type="file" name="file" class="form-control form-control-sm" accept="application/pdf">
+                        </div>
+                        <div class="col-md-8 d-flex align-items-end gap-2">
+                          <button type="submit" class="btn-action btn-action-sm">Save</button>
+                          <button type="button" class="btn-action btn-action-sm" style="background:#6c757d; border-color:#6c757d;"
+                                  x-on:click="editing = false">Cancel</button>
+                        </div>
+                      </div>
+                    </form>
+                  </td>
+                </tr>
+                @endcan
+              </tbody>
+              @empty
+              <tbody>
+                <tr><td colspan="10" class="text-center text-muted py-3">No BOQ/INV items yet.</td></tr>
+              </tbody>
+              @endforelse
+            </table>
+          </div>
 
+          {{-- Add New BOQ/INV — visible to contractor, officer, and admin --}}
+          @can('update', $project)
+          <div class="mt-3" x-data="{ open: false }">
+            <button type="button" class="btn-action" x-on:click="open = !open">+ Add New BOQ/INV</button>
+            <div x-show="open" x-cloak class="mt-3 p-3 border rounded bg-light">
+              <form action="{{ route('projects.boq-inv-items.store', $project) }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="row g-2">
+                  <div class="col-md-3">
+                    <label class="form-label small">Document Info <span class="text-danger">*</span></label>
+                    <input type="text" name="document_info" class="form-control form-control-sm" required>
+                  </div>
+                  <div class="col-md-2">
+                    <label class="form-label small">Type <span class="text-danger">*</span></label>
+                    <select name="type" class="form-control form-control-sm" required>
+                      <option value="BQ">BQ</option>
+                      <option value="INV">INV</option>
+                    </select>
+                  </div>
+                  <div class="col-md-2">
+                    <label class="form-label small">Date Received <span class="text-danger">*</span></label>
+                    <input type="date" name="date_received" class="form-control form-control-sm" required>
+                  </div>
+                  <div class="col-md-2">
+                    <label class="form-label small">Amount (RM)</label>
+                    <input type="number" name="amount" step="0.01" class="form-control form-control-sm">
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label small">Remarks</label>
+                    <input type="text" name="remarks" class="form-control form-control-sm" placeholder="BOQ/Invoice No">
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label small">File (PDF, max 10MB)</label>
+                    <input type="file" name="file" class="form-control form-control-sm" accept="application/pdf">
+                  </div>
+                </div>
+                <div class="mt-2">
+                  <button type="submit" class="btn-action btn-action-sm">Add Row</button>
+                </div>
+              </form>
+            </div>
+          </div>
+          @endcan
+        @endif
+      </div>
+    </div>
+  </div>
+</div>
+
+{{-- ================================================================ --}}
+{{-- SECTION 3: TM BOQ/INVOICE ENDORSEMENT                            --}}
+{{-- ================================================================ --}}
+<div class="row">
+  <div class="col-12 grid-margin">
+    <div class="card">
+      <div class="card-body">
+        <h3 class="card-title"><span class="me-3">3</span> TM BOQ/Invoice Endorsement</h3>
+        @if($boqHidden)
+          <p class="text-muted mb-0"><em>Payment to KUTT is {{ ucfirst(str_replace('_', ' ', $project->payment_to_kutt)) }} — BOQ/INV section not applicable.</em></p>
+        @else
+          <div class="table-responsive">
+            <table class="table table-borderless mb-0">
+              <thead>
+                <tr>
+                  <th style="font-weight:600; color:#07326A;">#</th>
+                  <th style="font-weight:600; color:#07326A;">Document Info</th>
+                  <th style="font-weight:600; color:#07326A;">Type</th>
+                  <th style="font-weight:600; color:#07326A;">Date Received</th>
+                  <th style="font-weight:600; color:#07326A;">Amount (RM)</th>
+                  <th style="font-weight:600; color:#07326A;">EDS No</th>
+                  <th style="font-weight:600; color:#07326A;">Payment Status</th>
+                  <th style="font-weight:600; color:#07326A;">Endorsed By</th>
+                  <th style="font-weight:600; color:#07326A;">Remarks</th>
+                  <th style="font-weight:600; color:#07326A;">File</th>
+                  @role('officer|admin') <th style="font-weight:600; color:#07326A;">Action</th> @endrole
+                </tr>
+              </thead>
+              @forelse ($project->boqInvItems as $item)
+              <tbody x-data="{ editing: false, endorsing: false }">
+                <tr>
+                  <td>{{ $loop->iteration }}</td>
+                  <td>{{ $item->document_info }}</td>
+                  <td>{{ $item->type }}</td>
+                  <td>{{ $item->date_received?->format('d/m/Y') }}</td>
+                  <td>{{ $item->amount ? number_format($item->amount, 2) : '—' }}</td>
+                  <td>{{ $item->eds_no ?? '—' }}</td>
+                  <td>
+                    {{ $item->payment_status ? ucfirst(str_replace('_', ' ', $item->payment_status)) : '—' }}
+                  </td>
+                  <td>{{ $item->endorsedBy?->name ?? '—' }}</td>
+                  <td>{{ $item->remarks ?? '—' }}</td>
+                  <td>
+                    @if($item->file_path)
+                      <a href="{{ route('projects.download', ['project' => $project, 'path' => $item->file_path]) }}"
+                         class="btn-action btn-action-sm">Download</a>
+                    @else
+                      —
+                    @endif
+                  </td>
+                  @role('officer|admin')
+                  <td>
+                    <button type="button" class="btn-action btn-action-sm"
+                            x-on:click="editing = !editing; endorsing = false">Edit</button>
+                    <button type="button" class="btn-action btn-action-green btn-action-sm ms-1"
+                            x-on:click="endorsing = !endorsing; editing = false">Endorse</button>
+                    <form action="{{ route('projects.boq-inv-items.destroy', [$project, $item]) }}" method="POST" class="d-inline ms-1"
+                          onsubmit="return confirm('Delete this BOQ/INV row? This cannot be undone.')">
+                      @csrf @method('DELETE')
+                      <button type="submit" class="btn-action btn-action-red btn-action-sm">Delete</button>
+                    </form>
+                  </td>
+                  @endrole
+                </tr>
+                @role('officer|admin')
+                {{-- Inline edit row: all Section 3 fields --}}
+                <tr x-show="editing" x-cloak style="background:#f8f9fa;">
+                  <td colspan="11" class="py-3 px-3">
+                    <form action="{{ route('projects.boq-inv-items.update', [$project, $item]) }}" method="POST" enctype="multipart/form-data">
+                      @csrf
+                      <div class="row g-2">
+                        <div class="col-md-4">
+                          <label class="form-label small">Document Info</label>
+                          <input type="text" name="document_info" class="form-control form-control-sm" value="{{ $item->document_info }}">
+                        </div>
+                        <div class="col-md-2">
+                          <label class="form-label small">Type</label>
+                          <select name="type" class="form-control form-control-sm">
+                            <option value="BQ"  {{ $item->type === 'BQ'  ? 'selected' : '' }}>BQ</option>
+                            <option value="INV" {{ $item->type === 'INV' ? 'selected' : '' }}>INV</option>
+                          </select>
+                        </div>
+                        <div class="col-md-3">
+                          <label class="form-label small">Date Received</label>
+                          <input type="date" name="date_received" class="form-control form-control-sm" value="{{ $item->date_received?->format('Y-m-d') }}">
+                        </div>
+                        <div class="col-md-3">
+                          <label class="form-label small">Amount (RM)</label>
+                          <input type="number" name="amount" step="0.01" class="form-control form-control-sm" value="{{ $item->amount }}">
+                        </div>
+                        <div class="col-md-4">
+                          <label class="form-label small">EDS No</label>
+                          <input type="text" name="eds_no" class="form-control form-control-sm" value="{{ $item->eds_no }}">
+                        </div>
+                        <div class="col-md-4">
+                          <label class="form-label small">Payment Status</label>
+                          <select name="payment_status" class="form-control form-control-sm">
+                            <option value="">— Select —</option>
+                            <option value="pending_endorsement" {{ $item->payment_status === 'pending_endorsement' ? 'selected' : '' }}>Pending Endorsement</option>
+                            <option value="endorsed"            {{ $item->payment_status === 'endorsed'            ? 'selected' : '' }}>Endorsed</option>
+                            <option value="endorsed_and_paid"   {{ $item->payment_status === 'endorsed_and_paid'   ? 'selected' : '' }}>Endorsed and Paid</option>
+                            <option value="waived"              {{ $item->payment_status === 'waived'              ? 'selected' : '' }}>Waived</option>
+                            <option value="cancelled"           {{ $item->payment_status === 'cancelled'           ? 'selected' : '' }}>Cancelled</option>
+                          </select>
+                        </div>
+                        <div class="col-md-4">
+                          <label class="form-label small">Remarks</label>
+                          <input type="text" name="remarks" class="form-control form-control-sm" value="{{ $item->remarks }}">
+                        </div>
+                        <div class="col-12">
+                          <label class="form-label small">Replace File (overwrites original)</label>
+                          <input type="file" name="file" class="form-control form-control-sm" accept="application/pdf">
+                        </div>
+                      </div>
+                      <div class="d-flex gap-2 mt-3">
+                        <button type="submit" class="btn-action">Save</button>
+                        <button type="button" class="btn-action" style="background:#6c757d; border-color:#6c757d;"
+                                x-on:click="editing = false">Cancel</button>
+                      </div>
+                    </form>
+                  </td>
+                </tr>
+                {{-- Inline endorse row: file upload only --}}
+                <tr x-show="endorsing" x-cloak style="background:#f0fff4;">
+                  <td colspan="11" class="py-3 px-3">
+                    <form action="{{ route('projects.boq-inv-items.update', [$project, $item]) }}" method="POST" enctype="multipart/form-data">
+                      @csrf
+                      <div class="row g-2 align-items-end">
+                        <div class="col-md-5">
+                          <label class="form-label small fw-semibold">Upload Endorsed File <span class="text-danger">*</span></label>
+                          <input type="file" name="file" class="form-control form-control-sm" accept="application/pdf" required>
+                        </div>
+                        <div class="col-md-7 d-flex gap-2">
+                          <button type="submit" class="btn-action btn-action-green">Endorse</button>
+                          <button type="button" class="btn-action" style="background:#6c757d; border-color:#6c757d;"
+                                  x-on:click="endorsing = false">Cancel</button>
+                        </div>
+                      </div>
+                    </form>
+                  </td>
+                </tr>
+                @endrole
+              </tbody>
+              @empty
+              <tbody>
+                <tr><td colspan="11" class="text-center text-muted py-3">No BOQ/INV items yet.</td></tr>
+              </tbody>
+              @endforelse
             </table>
           </div>
         @endif
-
-        {{-- Add new file — toggle button when files already exist, direct form when first upload --}}
-        @can('update', $project)
-          @if ($allSlotsFull)
-            <p class="text-muted small mb-0 mt-2">All 6 slots used — use the Edit button on any row to update a file.</p>
-          @elseif ($project->bqInvFiles->isNotEmpty())
-            {{-- Existing files present: hide form behind a toggle button --}}
-            <div x-data="{ adding: false, fileName: 'No file chosen' }">
-              <div x-show="!adding" x-cloak>
-                <button type="button" class="btn-action" x-on:click="adding = true">+ Add New BOQ/Invoice File</button>
-              </div>
-              <div x-show="adding" x-cloak>
-                <form action="{{ route('projects.bq-inv-files.store', $project) }}" method="POST" enctype="multipart/form-data">
-                  @csrf
-                  <input type="hidden" name="file_number" value="{{ $nextNumber }}">
-                  <div class="row mb-2 align-items-start">
-                    <div class="col-md-4 mb-2">
-                      <label class="form-label text-muted small">File (PDF) <span class="text-danger">*</span></label>
-                      <div class="d-flex align-items-center" style="gap:8px;">
-                        <input type="file" name="file_path" id="bq_file_add" accept=".pdf" style="display:none;" required
-                               x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'">
-                        <label for="bq_file_add" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
-                          <i class="ti-upload"></i> Choose File
-                        </label>
-                        <span x-text="fileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
-                      </div>
-                    </div>
-                    <div class="col-md-4 mb-2">
-                      <label class="form-label text-muted small">Document Info <span class="text-danger">*</span></label>
-                      <input type="text" name="document_info" class="form-control" style="height:38px;" required>
-                    </div>
-                    <div class="col-md-4 mb-2">
-                      <label class="form-label text-muted small">Type <span class="text-danger">*</span></label>
-                      <select name="payment_type" class="form-control" style="height:38px;" required>
-                        <option value="">--</option>
-                        <option value="BQ">BQ</option>
-                        <option value="INV">INV</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="row mb-2 align-items-end">
-                    <div class="col-md-3 mb-2">
-                      <label class="form-label text-muted small">Date <span class="text-danger">*</span></label>
-                      <input type="date" name="date" class="form-control" style="height:38px;" required>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                      <label class="form-label text-muted small">Amount (RM) <span class="text-danger">*</span></label>
-                      <input type="number" name="amount" step="0.01" min="0" class="form-control" style="height:38px;" required>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                      <label class="form-label text-muted small">EDS No <span class="text-danger">*</span></label>
-                      <input type="text" name="eds_no" class="form-control" style="height:38px;" required>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                      <label class="form-label text-muted small">Remarks</label>
-                      <input type="text" name="remarks" class="form-control" style="height:38px;">
-                    </div>
-                  </div>
-                  <div class="d-flex justify-content-end gap-2">
-                    <button type="button" class="btn-action" style="background:#6c757d; border-color:#6c757d;"
-                            x-on:click="adding = false">Cancel</button>
-                    <button type="submit" class="btn-action">Upload File</button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          @else
-            {{-- No files yet: show form directly --}}
-            <form action="{{ route('projects.bq-inv-files.store', $project) }}" method="POST" enctype="multipart/form-data"
-                  x-data="{ fileName: 'No file chosen' }">
-              @csrf
-              <input type="hidden" name="file_number" value="{{ $nextNumber }}">
-              <div class="row mb-2 align-items-start">
-                <div class="col-md-4 mb-2">
-                  <label class="form-label text-muted small">File (PDF) <span class="text-danger">*</span></label>
-                  <div class="d-flex align-items-center" style="gap:8px;">
-                    <input type="file" name="file_path" id="bq_file_first" accept=".pdf" style="display:none;" required
-                           x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'">
-                    <label for="bq_file_first" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
-                      <i class="ti-upload"></i> Choose File
-                    </label>
-                    <span x-text="fileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
-                  </div>
-                </div>
-                <div class="col-md-4 mb-2">
-                  <label class="form-label text-muted small">Document Info <span class="text-danger">*</span></label>
-                  <input type="text" name="document_info" class="form-control" style="height:38px;" required>
-                </div>
-                <div class="col-md-4 mb-2">
-                  <label class="form-label text-muted small">Type <span class="text-danger">*</span></label>
-                  <select name="payment_type" class="form-control" style="height:38px;" required>
-                    <option value="">--</option>
-                    <option value="BQ">BQ</option>
-                    <option value="INV">INV</option>
-                  </select>
-                </div>
-              </div>
-              <div class="row mb-2 align-items-end">
-                <div class="col-md-3 mb-2">
-                  <label class="form-label text-muted small">Date <span class="text-danger">*</span></label>
-                  <input type="date" name="date" class="form-control" style="height:38px;" required>
-                </div>
-                <div class="col-md-3 mb-2">
-                  <label class="form-label text-muted small">Amount (RM) <span class="text-danger">*</span></label>
-                  <input type="number" name="amount" step="0.01" min="0" class="form-control" style="height:38px;" required>
-                </div>
-                <div class="col-md-3 mb-2">
-                  <label class="form-label text-muted small">EDS No <span class="text-danger">*</span></label>
-                  <input type="text" name="eds_no" class="form-control" style="height:38px;" required>
-                </div>
-                <div class="col-md-3 mb-2">
-                  <label class="form-label text-muted small">Remarks</label>
-                  <input type="text" name="remarks" class="form-control" style="height:38px;">
-                </div>
-              </div>
-              <div class="d-flex justify-content-end">
-                <button type="submit" class="btn-action">Upload File</button>
-              </div>
-            </form>
-          @endif
-        @endcan
-
       </div>
     </div>
   </div>
 </div>
 
-{{-- ============================================================ --}}
-{{-- STEP 5: Officer Endorsement for each BQ/INV File            --}}
-{{-- BQ endorsement: document_info, date, remarks.               --}}
-{{-- INV endorsement: above + amount, eds_no, payment_status.    --}}
-{{-- Only shown when at least one BQ/INV file exists.            --}}
-{{-- ============================================================ --}}
-@if ($project->bqInvFiles->isNotEmpty())
+{{-- ================================================================ --}}
+{{-- SECTION 4: WAYLEAVE RECEIVED (Contractor uploads per PBT)        --}}
+{{-- ================================================================ --}}
 <div class="row">
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title">
-          <span class="me-3">3</span> TM: BQ/INVOICE Endorsement
-        </h3>
+        <h3 class="card-title"><span class="me-3">4</span> Wayleave Received</h3>
 
-        @php
-          $bqFiles  = $project->bqInvFiles->where('payment_type', 'BQ')->sortBy('file_number');
-          $invFiles = $project->bqInvFiles->where('payment_type', 'INV')->sortBy('file_number');
-        @endphp
-
-        {{-- BQ Section --}}
-        <h4 class="fw-semibold mb-2 mt-1">BQ</h4>
-        @if ($bqFiles->isEmpty())
-          <p class="text-muted small mb-3">—</p>
-        @else
-          @foreach ($bqFiles as $bqInvFile)
-          @php $endorsement = $bqInvFile->bqEndorsement; @endphp
-          <div class="border rounded p-3 mb-3" x-data="{ editing: false }">
-            {{-- File header: title, badge, download + edit buttons --}}
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <div>
-                <strong>File {{ $bqInvFile->file_number }} &mdash; {{ $bqInvFile->document_info }}</strong>
-                <span class="text-muted ms-2">({{ $bqInvFile->payment_type }})</span>
-                @if ($endorsement)
-                  <span class="badge bg-success ms-1">&#10003; Endorsed</span>
-                @endif
-              </div>
-              <div class="d-flex gap-2 align-items-center">
-                @php $downloadPath = ($endorsement?->endorsed_file) ? $endorsement->endorsed_file : $bqInvFile->file_path; @endphp
-                <a href="{{ route('projects.download', ['project' => $project, 'path' => $downloadPath]) }}"
-                   class="btn-action" style="font-size:0.8rem; padding:0.3rem 0.7rem; line-height:1; display:inline-flex; align-items:center; gap:4px;">
-                  <i class="ti-download"></i> {{ $endorsement?->endorsed_file ? 'Endorsed File' : 'Download' }}
-                </a>
-                @role('officer|admin')
-                <button type="button" class="btn-action"
-                        style="font-size:0.8rem; padding:0.3rem 0.7rem; line-height:1; display:inline-flex; align-items:center;"
-                        x-on:click="editing = !editing"
-                        x-text="editing ? 'Cancel' : 'Edit'">
-                </button>
-                @endrole
-              </div>
-            </div>
-
-            @role('officer|admin')
-            {{-- Read-only BQ endorsement summary --}}
-            @if ($endorsement)
-            <div x-show="!editing" x-cloak>
-              <div class="row">
-                <div class="col-md-4 mb-2">
-                  <div class="text-muted small">Document Info</div>
-                  <div class="fw-semibold">{{ $endorsement->document_info }}</div>
-                </div>
-                <div class="col-md-4 mb-2">
-                  <div class="text-muted small">Date</div>
-                  <div class="fw-semibold">{{ $endorsement->date?->format('d M Y') ?? '—' }}</div>
-                </div>
-                <div class="col-md-4 mb-2">
-                  <div class="text-muted small">Remarks</div>
-                  <div class="fw-semibold">{{ $endorsement->remarks ?? '—' }}</div>
-                </div>
-              </div>
-            </div>
+        @forelse ($project->wayleavePhbts as $pbt)
+        <div class="border rounded p-3 mb-3">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <strong>{{ $pbt->pbt_number }} — {{ str_replace('_', ' ', $pbt->pbt_name === 'Others' ? $pbt->pbt_name_other : $pbt->pbt_name) }}</strong>
+            @if($pbt->endorsed_by)
+              <span class="badge bg-success">Endorsed by {{ $pbt->endorsedBy?->name }}</span>
             @endif
-            {{-- BQ edit form --}}
-            <div @if ($endorsement) x-show="editing" x-cloak @endif>
-              <form action="{{ route('projects.bq-inv-files.endorse', [$project, $bqInvFile]) }}" method="POST" enctype="multipart/form-data"
-                    x-data="{ endorsedFileName: 'No file chosen' }">
-                @csrf
-                <div class="row mb-2 align-items-end">
-                  <div class="col-md-4 mb-2">
-                    <label class="form-label text-muted small">Document Info <span class="text-danger">*</span></label>
-                    <input type="text" name="document_info" class="form-control" style="height:38px;"
-                           value="{{ old('document_info', $endorsement?->document_info) }}" required>
-                  </div>
-                  <div class="col-md-4 mb-2">
-                    <label class="form-label text-muted small">Date <span class="text-danger">*</span></label>
-                    <input type="date" name="date" class="form-control" style="height:38px;"
-                           value="{{ old('date', $endorsement?->date?->format('Y-m-d')) }}" required>
-                  </div>
-                  <div class="col-md-4 mb-2">
-                    <label class="form-label text-muted small">Remarks</label>
-                    <input type="text" name="remarks" class="form-control" style="height:38px;"
-                           value="{{ old('remarks', $endorsement?->remarks) }}">
-                  </div>
-                </div>
-                <div class="row mb-2 align-items-end">
-                  <div class="col-md-12 mb-2">
-                    <label class="form-label text-muted small">Endorsed File (PDF)</label>
-                    <div class="d-flex align-items-center" style="gap:8px;">
-                      <input type="file" id="endorsed_file_{{ $bqInvFile->id }}" name="endorsed_file" accept=".pdf" class="d-none"
-                             x-on:change="endorsedFileName = $event.target.files[0]?.name ?? 'No file chosen'">
-                      <label for="endorsed_file_{{ $bqInvFile->id }}" class="btn-action mb-0"
-                             style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
-                        Choose File
-                      </label>
-                      <span x-text="endorsedFileName" class="text-muted" style="font-size:0.8rem; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
-                    </div>
-                    <div class="text-muted" style="font-size:0.7rem; margin-top:0.1rem;">PDF only, max 10MB. Leave blank to keep existing file.</div>
-                  </div>
-                </div>
-                <div class="d-flex justify-content-end">
-                  <button type="submit" class="btn-action">
-                    {{ $endorsement ? 'Update' : 'Save Endorsement' }}
-                  </button>
-                </div>
-              </form>
-            </div>
-            @else
-            {{-- Contractor: read-only BQ endorsement --}}
-            @if ($endorsement)
-              <div class="row">
-                <div class="col-md-4 mb-2">
-                  <div class="text-muted small">Document Info</div>
-                  <div class="fw-semibold">{{ $endorsement->document_info }}</div>
-                </div>
-                <div class="col-md-4 mb-2">
-                  <div class="text-muted small">Date</div>
-                  <div class="fw-semibold">{{ $endorsement->date?->format('d M Y') ?? '—' }}</div>
-                </div>
-                <div class="col-md-4 mb-2">
-                  <div class="text-muted small">Remarks</div>
-                  <div class="fw-semibold">{{ $endorsement->remarks ?? '—' }}</div>
-                </div>
-              </div>
-            @else
-              <p class="text-muted small mb-0">Pending officer endorsement.</p>
-            @endif
-            @endrole
           </div>
-          @endforeach
-        @endif
-
-        {{-- INV Section --}}
-        <h4 class="fw-semibold mb-2 mt-3">INV</h4>
-        @if ($invFiles->isEmpty())
-          <p class="text-muted small mb-3">—</p>
-        @else
-          @foreach ($invFiles as $bqInvFile)
-          @php $endorsement = $bqInvFile->invEndorsement; @endphp
-          <div class="border rounded p-3 mb-3" x-data="{ editing: false }">
-            {{-- File header --}}
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <div>
-                <strong>File {{ $bqInvFile->file_number }} &mdash; {{ $bqInvFile->document_info }}</strong>
-                <span class="text-muted ms-2">({{ $bqInvFile->payment_type }})</span>
-                @if ($endorsement)
-                  <span class="badge bg-success ms-1">&#10003; Endorsed</span>
-                @endif
-              </div>
-              <div class="d-flex gap-2 align-items-center">
-                @php $downloadPath = ($endorsement?->endorsed_file) ? $endorsement->endorsed_file : $bqInvFile->file_path; @endphp
-                <a href="{{ route('projects.download', ['project' => $project, 'path' => $downloadPath]) }}"
-                   class="btn-action" style="font-size:0.8rem; padding:0.3rem 0.7rem; line-height:1; display:inline-flex; align-items:center; gap:4px;">
-                  <i class="ti-download"></i> {{ $endorsement?->endorsed_file ? 'Endorsed File' : 'Download' }}
-                </a>
-                @role('officer|admin')
-                <button type="button" class="btn-action"
-                        style="font-size:0.8rem; padding:0.3rem 0.7rem; line-height:1; display:inline-flex; align-items:center;"
-                        x-on:click="editing = !editing"
-                        x-text="editing ? 'Cancel' : 'Edit'">
-                </button>
-                @endrole
-              </div>
+          <div class="row">
+            <div class="col-md-3 mb-2">
+              <div class="text-muted small">Date Received</div>
+              <div>{{ $pbt->wayleave_received_date?->format('d/m/Y') ?? '—' }}</div>
             </div>
-
-            @role('officer|admin')
-            @if ($endorsement)
-            <div x-show="!editing" x-cloak>
-              <div class="row">
-                <div class="col-md-4 mb-2">
-                  <div class="text-muted small">Document Info</div>
-                  <div class="fw-semibold">{{ $endorsement->document_info }}</div>
-                </div>
-                <div class="col-md-4 mb-2">
-                  <div class="text-muted small">Date</div>
-                  <div class="fw-semibold">{{ $endorsement->date?->format('d M Y') ?? '—' }}</div>
-                </div>
-                <div class="col-md-4 mb-2">
-                  <div class="text-muted small">Amount (RM)</div>
-                  <div class="fw-semibold">{{ $endorsement->amount ? number_format($endorsement->amount, 2) : '—' }}</div>
-                </div>
-                <div class="col-md-4 mb-2">
-                  <div class="text-muted small">EDS No</div>
-                  <div class="fw-semibold">{{ $endorsement->eds_no ?? '—' }}</div>
-                </div>
-                <div class="col-md-4 mb-2">
-                  <div class="text-muted small">Payment Status</div>
-                  <div class="fw-semibold">{{ ucfirst($endorsement->payment_status ?? '—') }}</div>
-                </div>
-                <div class="col-md-4 mb-2">
-                  <div class="text-muted small">Remarks</div>
-                  <div class="fw-semibold">{{ $endorsement->remarks ?? '—' }}</div>
-                </div>
-              </div>
-            </div>
-            @endif
-            <div @if ($endorsement) x-show="editing" x-cloak @endif>
-              <form action="{{ route('projects.bq-inv-files.endorse', [$project, $bqInvFile]) }}" method="POST" enctype="multipart/form-data"
-                    x-data="{ endorsedFileName: 'No file chosen' }">
-                @csrf
-                <div class="row mb-2 align-items-end">
-                  <div class="col-md-4 mb-2">
-                    <label class="form-label text-muted small">Document Info <span class="text-danger">*</span></label>
-                    <input type="text" name="document_info" class="form-control" style="height:38px;"
-                           value="{{ old('document_info', $endorsement?->document_info) }}" required>
-                  </div>
-                  <div class="col-md-4 mb-2">
-                    <label class="form-label text-muted small">Date <span class="text-danger">*</span></label>
-                    <input type="date" name="date" class="form-control" style="height:38px;"
-                           value="{{ old('date', $endorsement?->date?->format('Y-m-d')) }}" required>
-                  </div>
-                  <div class="col-md-4 mb-2">
-                    <label class="form-label text-muted small">Amount (RM)</label>
-                    <input type="number" name="amount" step="0.01" min="0" class="form-control" style="height:38px;"
-                           value="{{ old('amount', $endorsement?->amount) }}">
-                  </div>
-                </div>
-                <div class="row mb-2 align-items-end">
-                  <div class="col-md-4 mb-2">
-                    <label class="form-label text-muted small">EDS No</label>
-                    <input type="text" name="eds_no" class="form-control" style="height:38px;"
-                           value="{{ old('eds_no', $endorsement?->eds_no) }}">
-                  </div>
-                  <div class="col-md-4 mb-2">
-                    <label class="form-label text-muted small">Payment Status</label>
-                    <select name="payment_status" class="form-control" style="height:38px;">
-                      <option value="">-- Select --</option>
-                      @foreach (['paid', 'outstanding', 'waived'] as $opt)
-                        <option value="{{ $opt }}" {{ ($endorsement?->payment_status ?? '') === $opt ? 'selected' : '' }}>
-                          {{ ucfirst($opt) }}
-                        </option>
-                      @endforeach
-                    </select>
-                  </div>
-                  <div class="col-md-4 mb-2">
-                    <label class="form-label text-muted small">Remarks</label>
-                    <input type="text" name="remarks" class="form-control" style="height:38px;"
-                           value="{{ old('remarks', $endorsement?->remarks) }}">
-                  </div>
-                </div>
-                <div class="row mb-2 align-items-end">
-                  <div class="col-md-12 mb-2">
-                    <label class="form-label text-muted small">Endorsed File (PDF)</label>
-                    <div class="d-flex align-items-center" style="gap:8px;">
-                      <input type="file" id="endorsed_file_{{ $bqInvFile->id }}" name="endorsed_file" accept=".pdf" class="d-none"
-                             x-on:change="endorsedFileName = $event.target.files[0]?.name ?? 'No file chosen'">
-                      <label for="endorsed_file_{{ $bqInvFile->id }}" class="btn-action mb-0"
-                             style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
-                        Choose File
-                      </label>
-                      <span x-text="endorsedFileName" class="text-muted" style="font-size:0.8rem; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
-                    </div>
-                    <div class="text-muted" style="font-size:0.7rem; margin-top:0.1rem;">PDF only, max 10MB. Leave blank to keep existing file.</div>
-                  </div>
-                </div>
-                <div class="d-flex justify-content-end">
-                  <button type="submit" class="btn-action">
-                    {{ $endorsement ? 'Update' : 'Save Endorsement' }}
-                  </button>
-                </div>
-              </form>
-            </div>
-            @else
-            {{-- Contractor read-only --}}
-            @if ($endorsement)
-              <div class="row">
-                <div class="col-md-4 mb-2">
-                  <div class="text-muted small">Document Info</div>
-                  <div class="fw-semibold">{{ $endorsement->document_info }}</div>
-                </div>
-                <div class="col-md-4 mb-2">
-                  <div class="text-muted small">Date</div>
-                  <div class="fw-semibold">{{ $endorsement->date?->format('d M Y') ?? '—' }}</div>
-                </div>
-                <div class="col-md-4 mb-2">
-                  <div class="text-muted small">Amount (RM)</div>
-                  <div class="fw-semibold">{{ $endorsement->amount ? number_format($endorsement->amount, 2) : '—' }}</div>
-                </div>
-                <div class="col-md-4 mb-2">
-                  <div class="text-muted small">EDS No</div>
-                  <div class="fw-semibold">{{ $endorsement->eds_no ?? '—' }}</div>
-                </div>
-                <div class="col-md-4 mb-2">
-                  <div class="text-muted small">Payment Status</div>
-                  <div class="fw-semibold">{{ ucfirst($endorsement->payment_status ?? '—') }}</div>
-                </div>
-                <div class="col-md-4 mb-2">
-                  <div class="text-muted small">Remarks</div>
-                  <div class="fw-semibold">{{ $endorsement->remarks ?? '—' }}</div>
-                </div>
-              </div>
-            @else
-              <p class="text-muted small mb-0">Pending officer endorsement.</p>
-            @endif
-            @endrole
-          </div>
-          @endforeach
-        @endif
-
-      </div>
-    </div>
-  </div>
-</div>
-@endif
-
-{{-- ============================================================ --}}
-{{-- STEP 6: Wayleave Received (Contractor) + Officer Endorsement --}}
-{{-- Contractor uploads wayleave file per PBT (up to 3 PBTs).   --}}
-{{-- Officer overwrites the file — endorsement_remarks is        --}}
-{{-- auto-set to "Endorsed" in the service layer, not manually.  --}}
-{{-- Both actions are in this same step section.                 --}}
-{{-- ============================================================ --}}
-<div class="row">
-  <div class="col-12 grid-margin">
-    <div class="card">
-      <div class="card-body">
-        <h3 class="card-title">
-          <span class="me-3">4</span> Wayleave Received (KUTT/PBT)
-          @if ($project->wayleavePhbts->count() > 0)
-            <span class="badge bg-success ms-2">&#10003; {{ $project->wayleavePhbts->count() }} PBT(s) added</span>
-          @endif
-        </h3>
-
-        {{-- List existing PBTs with officer endorsement sub-form --}}
-        @foreach ($project->wayleavePhbts as $pbt)
-          <div class="border rounded p-3 mb-3" x-data="{ endorsing: false, fileName: 'No file chosen', replacing: false, replaceFileName: 'No file chosen' }">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <div>
-                <strong>{{ $pbt->pbt_number }} &mdash; {{ $pbt->pbt_name === 'Others' ? $pbt->pbt_name_other : str_replace('_', ' ', $pbt->pbt_name) }}</strong>
-                <div class="text-muted small mt-1">Received: {{ $pbt->wayleave_received_date?->format('d M Y') ?? '—' }}</div>
-                @if ($pbt->endorsed_by)
-                  <div class="text-success small">&#10003; Endorsed by {{ $pbt->endorsedBy?->name }}</div>
-                @endif
-              </div>
-              <div class="d-flex gap-2 align-items-center">
+            <div class="col-md-3 mb-2">
+              <div class="text-muted small">File</div>
+              @if($pbt->wayleave_file)
                 <a href="{{ route('projects.download', ['project' => $project, 'path' => $pbt->wayleave_file]) }}"
-                   class="btn-action" style="font-size:0.8rem; padding:0.3rem 0.7rem; line-height:1; display:inline-flex; align-items:center; gap:4px;">
-                  <i class="ti-download"></i> Wayleave File
-                </a>
-                @role('officer|admin')
-                <button type="button" class="btn-action"
-                        style="font-size:0.8rem; padding:0.3rem 0.7rem; line-height:1; display:inline-flex; align-items:center;"
-                        x-on:click="endorsing = !endorsing"
-                        x-text="endorsing ? 'Cancel' : '{{ $pbt->endorsed_by ? 'Replace Endorsed' : 'Add Endorsed' }}'">
-                </button>
-                @endrole
-                @role('contractor')
-                @if (!$pbt->endorsed_by)
-                <button type="button" class="btn-action"
-                        style="font-size:0.8rem; padding:0.3rem 0.7rem; line-height:1; display:inline-flex; align-items:center;"
-                        x-on:click="replacing = !replacing"
-                        x-text="replacing ? 'Cancel' : 'Replace File'">
-                </button>
-                @endif
-                @endrole
-              </div>
-            </div>
-
-            {{-- Officer section (embedded in Step 6): replace file with endorsed version --}}
-            @role('officer|admin')
-            <div x-show="endorsing" x-cloak class="mt-2 pt-2 border-top">
-              <form action="{{ route('projects.wayleave-pbts.endorse', [$project, $pbt]) }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <label class="form-label text-muted small mb-1">
-                  {{ $pbt->endorsed_by ? 'Replace with Updated Endorsed File (PDF)' : 'Upload Endorsed Wayleave File (PDF) *' }}
-                </label>
-                <div class="d-flex align-items-center" style="gap:8px;">
-                  <input type="file" name="wayleave_file" id="wayleave_file_{{ $pbt->id }}" accept=".pdf" style="display:none;"
-                         x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'"
-                         {{ !$pbt->endorsed_by ? 'required' : '' }}>
-                  <label for="wayleave_file_{{ $pbt->id }}" class="btn-action mb-0"
-                         style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
-                    <i class="ti-upload"></i> Choose File
-                  </label>
-                  <span x-text="fileName" class="text-muted" style="font-size:0.8rem; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
-                  <button type="submit" class="btn-action" style="display:inline-flex; align-items:center;">
-                    {{ $pbt->endorsed_by ? 'Replace File' : 'Upload & Endorse' }}
-                  </button>
-                </div>
-                <div class="text-muted" style="font-size:0.7rem; margin-top:0.1rem;">
-                  Uploading replaces the wayleave file and marks it as "Endorsed" automatically.
-                </div>
-              </form>
-            </div>
-            @endrole
-
-            {{-- Contractor: replace file before endorsement --}}
-            @role('contractor')
-            @if (!$pbt->endorsed_by)
-            <div x-show="replacing" x-cloak class="mt-2 pt-2 border-top">
-              <form action="{{ route('projects.wayleave-pbts.replace', [$project, $pbt]) }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <label class="form-label text-muted small mb-1">Replace Wayleave File (PDF) *</label>
-                <div class="d-flex align-items-center" style="gap:8px;">
-                  <input type="file" name="wayleave_file" id="replace_wayleave_file_{{ $pbt->id }}" accept=".pdf" style="display:none;" required
-                         x-on:change="replaceFileName = $event.target.files[0]?.name ?? 'No file chosen'">
-                  <label for="replace_wayleave_file_{{ $pbt->id }}" class="btn-action mb-0"
-                         style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
-                    <i class="ti-upload"></i> Choose File
-                  </label>
-                  <span x-text="replaceFileName" class="text-muted" style="font-size:0.8rem; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
-                  <button type="submit" class="btn-action" style="display:inline-flex; align-items:center;">Replace File</button>
-                </div>
-              </form>
-            </div>
-            @endif
-            @endrole
-
-          </div>
-        @endforeach
-
-        {{-- Add new PBT form (up to 3) — available to anyone with update permission --}}
-        @can('update', $project)
-          @php $nextPbt = ['PBT1','PBT2','PBT3'][$project->wayleavePhbts->count()] ?? null; @endphp
-          @if ($nextPbt)
-            <form action="{{ route('projects.wayleave-pbts.store', $project) }}" method="POST" enctype="multipart/form-data"
-                  x-data="{ pbtName: '', wayleaveFileName: 'No file chosen' }">
-              @csrf
-              @if ($project->wayleavePhbts->count() > 0)
-                <hr class="my-3">
+                   class="btn-action btn-action-sm">Download</a>
+              @else
+                <span class="text-muted">—</span>
               @endif
-              <p class="text-muted small mb-3">Add {{ $nextPbt }}</p>
-              <input type="hidden" name="pbt_number" value="{{ $nextPbt }}">
-              <div class="row mb-2 align-items-start">
-                <div class="col-md-4 mb-2">
-                  <label class="form-label text-muted small">PBT Name <span class="text-danger">*</span></label>
-                  <select name="pbt_name" class="form-control" style="height:38px;" x-model="pbtName" required>
-                    <option value="">-- Select PBT --</option>
-                    @foreach (['MBKT','MPK','MDS','MDB','MPD','JKR_HT','JKR_KN','JKR_DN','JKR_KT','JKR_KM','JKR_ST','Others'] as $opt)
-                      <option value="{{ $opt }}">{{ str_replace('_', ' ', $opt) }}</option>
+            </div>
+          </div>
+          {{-- Contractor: replace file --}}
+          @role('contractor')
+          <div class="mt-2" x-data="{ open: false }">
+            <button type="button" class="btn-action btn-action-sm" x-on:click="open = !open">Replace File</button>
+            <div x-show="open" x-cloak class="mt-2">
+              <form action="{{ route('projects.wayleave-pbts.replace', [$project, $pbt]) }}" method="POST" enctype="multipart/form-data" class="d-flex gap-2 align-items-end">
+                @csrf
+                <input type="file" name="wayleave_file" class="form-control form-control-sm" accept="application/pdf" required>
+                <button type="submit" class="btn-action btn-action-sm">Upload</button>
+              </form>
+            </div>
+          </div>
+          @endrole
+        </div>
+        @empty
+          <p class="text-muted">No wayleave PBT records yet.</p>
+        @endforelse
+
+        {{-- Add new PBT --}}
+        @can('update', $project)
+        @if($project->wayleavePhbts->count() < 3)
+        <div x-data="{ open: false }">
+          <button type="button" class="btn-action" x-on:click="open = !open">+ Add Wayleave PBT</button>
+          <div x-show="open" x-cloak class="mt-3 p-3 border rounded bg-light">
+            <form action="{{ route('projects.wayleave-pbts.store', $project) }}" method="POST" enctype="multipart/form-data">
+              @csrf
+              <div class="row g-2">
+                <div class="col-md-2">
+                  <label class="form-label small">PBT Number <span class="text-danger">*</span></label>
+                  <select name="pbt_number" class="form-control form-control-sm" required>
+                    @php $usedPbts = $project->wayleavePhbts->pluck('pbt_number')->toArray(); @endphp
+                    @foreach(['PBT1','PBT2','PBT3'] as $p)
+                      @if(!in_array($p, $usedPbts))
+                        <option value="{{ $p }}">{{ $p }}</option>
+                      @endif
                     @endforeach
                   </select>
-                  <div x-show="pbtName === 'Others'" x-cloak class="mt-2">
-                    <label class="form-label text-muted small">Specify PBT Name <span class="text-danger">*</span></label>
-                    <input type="text" name="pbt_name_other" class="form-control" style="height:38px;" :required="pbtName === 'Others'">
-                  </div>
                 </div>
-                <div class="col-md-4 mb-2">
-                  <label class="form-label text-muted small">Wayleave Received Date <span class="text-danger">*</span></label>
-                  <input type="date" name="wayleave_received_date" class="form-control" style="height:38px;" required>
+                <div class="col-md-3" x-data="{ showOther: false }">
+                  <label class="form-label small">PBT Name <span class="text-danger">*</span></label>
+                  <select name="pbt_name" class="form-control form-control-sm" required
+                          @change="showOther = $event.target.value === 'Others'">
+                    @foreach(['MBKT','MPK','MDS','MDB','MPD','JKR_HT','JKR_KN','JKR_DN','JKR_KT','JKR_KM','JKR_ST','Others'] as $pn)
+                      <option value="{{ $pn }}">{{ $pn }}</option>
+                    @endforeach
+                  </select>
+                  <input type="text" name="pbt_name_other" class="form-control form-control-sm mt-1"
+                         placeholder="Specify other PBT name" x-show="showOther" x-cloak>
                 </div>
-                <div class="col-md-4 mb-2">
-                  <label class="form-label text-muted small">Wayleave File (PDF) <span class="text-danger">*</span></label>
-                  <div class="d-flex align-items-center" style="gap:8px;">
-                    <input type="file" name="wayleave_file" id="wayleave_file_{{ $nextPbt }}" accept=".pdf" style="display:none;" required
-                           x-on:change="wayleaveFileName = $event.target.files[0]?.name ?? 'No file chosen'">
-                    <label for="wayleave_file_{{ $nextPbt }}" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
-                      <i class="ti-upload"></i> Choose File
-                    </label>
-                    <span x-text="wayleaveFileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
-                  </div>
+                <div class="col-md-2">
+                  <label class="form-label small">Date Received</label>
+                  <input type="date" name="wayleave_received_date" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label small">Wayleave File (PDF)</label>
+                  <input type="file" name="wayleave_file" class="form-control form-control-sm" accept="application/pdf">
                 </div>
               </div>
-              <div class="d-flex justify-content-center">
-                <button type="submit" class="btn-action">Add {{ $nextPbt }}</button>
+              <div class="mt-2">
+                <button type="submit" class="btn-action btn-action-sm">Add PBT</button>
               </div>
             </form>
-          @elseif ($project->wayleavePhbts->count() >= 3)
-            <p class="text-muted small mb-0 mt-2">Maximum of 3 PBTs reached.</p>
-          @endif
+          </div>
+        </div>
+        @endif
         @endcan
-
       </div>
     </div>
   </div>
 </div>
 
-{{-- ============================================================ --}}
-{{-- STEP 7: Officer Records FI and Deposit Payment per PBT      --}}
-{{-- Separate from Step 6 so timeline can detect completion       --}}
-{{-- independently. Uses the wayleave_payments table.            --}}
-{{-- Only shown when at least one PBT exists.                    --}}
-{{-- ============================================================ --}}
-@if ($project->wayleavePhbts->count() > 0)
+{{-- ================================================================ --}}
+{{-- SECTION 5: TM WAYLEAVE ENDORSEMENT (Officer file upload only)    --}}
+{{-- ================================================================ --}}
 <div class="row">
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title">
-          <span class="me-3">5</span> TM: Wayleave Payment Details (FI &amp; Deposit)
-        </h3>
-
-        @foreach ($project->wayleavePhbts as $pbt)
-          @php $payment = $pbt->payment; @endphp
+        <h3 class="card-title"><span class="me-3">5</span> TM Wayleave Endorsement</h3>
+        @if($project->wayleavePhbts->isEmpty())
+          <p class="text-muted">No wayleave PBT records yet (Section 4 must be filled first).</p>
+        @else
+          @foreach($project->wayleavePhbts as $pbt)
           <div class="border rounded p-3 mb-3">
-
-            {{-- PBT header --}}
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <div>
-                <strong>{{ $pbt->pbt_number }} &mdash; {{ $pbt->pbt_name === 'Others' ? $pbt->pbt_name_other : str_replace('_', ' ', $pbt->pbt_name) }}</strong>
-                @if ($payment)
-                  <span class="badge bg-success ms-2">&#10003; Recorded</span>
-                @endif
-              </div>
-              @role('officer|admin')
-                @if ($payment)
-                  {{-- Edit button rendered via Alpine below --}}
-                @endif
-              @endrole
-            </div>
-
-            @role('officer|admin')
-            <div x-data="{ editing: false }">
-
-              {{-- Read-only summary (shown when payment exists and not editing) --}}
-              @if ($payment)
-                <div x-show="!editing">
-                  <div class="row mb-1">
-                    <div class="col-md-3 mb-2">
-                      <div class="text-muted small">FI Payment</div>
-                      <div class="fw-semibold">{{ ucfirst(str_replace('_', ' ', $payment->fi_payment ?? '—')) }}</div>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                      <div class="text-muted small">FI EDS No</div>
-                      <div class="fw-semibold">{{ $payment->fi_payment === 'required' ? ($payment->fi_eds_no ?? '—') : '—' }}</div>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                      <div class="text-muted small">FI Application Date</div>
-                      <div class="fw-semibold">{{ $payment->fi_payment === 'required' ? ($payment->fi_application_date?->format('d M Y') ?? '—') : '—' }}</div>
-                    </div>
-                    <div class="col-md-3 mb-2"></div>
-                    <div class="col-md-3 mb-2">
-                      <div class="text-muted small">Deposit Payment</div>
-                      <div class="fw-semibold">{{ ucfirst(str_replace('_', ' ', $payment->deposit_payment ?? '—')) }}</div>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                      <div class="text-muted small">Deposit EDS No</div>
-                      <div class="fw-semibold">{{ $payment->deposit_payment === 'required' ? ($payment->deposit_eds_no ?? '—') : '—' }}</div>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                      <div class="text-muted small">Deposit Type</div>
-                      <div class="fw-semibold">{{ $payment->deposit_payment === 'required' ? ($payment->deposit_payment_type ?? '—') : '—' }}</div>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                      <div class="text-muted small">Deposit Application Date</div>
-                      <div class="fw-semibold">{{ $payment->deposit_payment === 'required' ? ($payment->deposit_application_date?->format('d M Y') ?? '—') : '—' }}</div>
-                    </div>
-                  </div>
-                  <div class="d-flex justify-content-end">
-                    <button type="button" class="btn-action" x-on:click="editing = true">Edit</button>
-                  </div>
-                </div>
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <strong>{{ $pbt->pbt_number }} — {{ str_replace('_', ' ', $pbt->pbt_name === 'Others' ? $pbt->pbt_name_other : $pbt->pbt_name) }}</strong>
+              @if($pbt->endorsed_by)
+                <span class="badge bg-success">Endorsed by {{ $pbt->endorsedBy?->name }}</span>
+              @else
+                <span class="badge bg-warning text-dark">Pending Endorsement</span>
               @endif
-
-              {{-- Form (always visible when no payment yet; toggled by Edit when payment exists) --}}
-              <div @if($payment) x-show="editing" x-cloak @endif>
-                <form action="{{ route('projects.wayleave-payments.store', $project) }}" method="POST"
-                      x-data="{
-                        fiPayment: '{{ old('fi_payment', $payment?->fi_payment ?? '') }}',
-                        depositPayment: '{{ old('deposit_payment', $payment?->deposit_payment ?? '') }}'
-                      }">
+            </div>
+            @if($pbt->wayleave_file)
+              <a href="{{ route('projects.download', ['project' => $project, 'path' => $pbt->wayleave_file]) }}"
+                 class="btn-action btn-action-sm">Download Current File</a>
+            @endif
+            {{-- Officer/admin: upload endorsed file --}}
+            @role('officer|admin')
+            <div class="mt-2" x-data="{ open: false }">
+              <button type="button" class="btn-action btn-action-sm" x-on:click="open = !open">Upload Endorsed File</button>
+              <div x-show="open" x-cloak class="mt-2">
+                <form action="{{ route('projects.wayleave-pbts.endorse', [$project, $pbt]) }}" method="POST" enctype="multipart/form-data"
+                      class="d-flex gap-2 align-items-end">
                   @csrf
-                  <input type="hidden" name="wayleave_pbt_id" value="{{ $pbt->id }}">
-                  {{-- FI row --}}
-                  <div class="row mb-2 align-items-end">
-                    <div class="col-md-3 mb-2">
-                      <label class="form-label text-muted small">FI Payment</label>
-                      <select name="fi_payment" class="form-control" style="height:38px;" x-model="fiPayment">
-                        <option value="">-- Select --</option>
-                        @foreach (['required', 'not_required', 'waived'] as $opt)
-                          <option value="{{ $opt }}" {{ ($payment?->fi_payment ?? '') === $opt ? 'selected' : '' }}>
-                            {{ ucfirst(str_replace('_', ' ', $opt)) }}
-                          </option>
-                        @endforeach
-                      </select>
-                    </div>
-                    <div class="col-md-3 mb-2" x-show="fiPayment === 'required'" x-cloak>
-                      <label class="form-label text-muted small">FI EDS No</label>
-                      <input type="text" name="fi_eds_no" class="form-control" style="height:38px;"
-                             value="{{ old('fi_eds_no', $payment?->fi_eds_no) }}">
-                    </div>
-                    <div class="col-md-3 mb-2" x-show="fiPayment === 'required'" x-cloak>
-                      <label class="form-label text-muted small">FI Application Date</label>
-                      <input type="date" name="fi_application_date" class="form-control" style="height:38px;"
-                             value="{{ old('fi_application_date', $payment?->fi_application_date?->format('Y-m-d')) }}">
-                    </div>
-                  </div>
-                  {{-- Deposit row --}}
-                  <div class="row mb-2 align-items-end">
-                    <div class="col-md-3 mb-2">
-                      <label class="form-label text-muted small">Deposit Payment</label>
-                      <select name="deposit_payment" class="form-control" style="height:38px;" x-model="depositPayment">
-                        <option value="">-- Select --</option>
-                        @foreach (['required', 'not_required', 'waived'] as $opt)
-                          <option value="{{ $opt }}" {{ ($payment?->deposit_payment ?? '') === $opt ? 'selected' : '' }}>
-                            {{ ucfirst(str_replace('_', ' ', $opt)) }}
-                          </option>
-                        @endforeach
-                      </select>
-                    </div>
-                    <div class="col-md-3 mb-2" x-show="depositPayment === 'required'" x-cloak>
-                      <label class="form-label text-muted small">Deposit EDS No</label>
-                      <input type="text" name="deposit_eds_no" class="form-control" style="height:38px;"
-                             value="{{ old('deposit_eds_no', $payment?->deposit_eds_no) }}">
-                    </div>
-                    <div class="col-md-2 mb-2" x-show="depositPayment === 'required'" x-cloak>
-                      <label class="form-label text-muted small">Deposit Type</label>
-                      <select name="deposit_payment_type" class="form-control" style="height:38px;">
-                        <option value="">--</option>
-                        <option value="BG" {{ ($payment?->deposit_payment_type ?? '') === 'BG' ? 'selected' : '' }}>BG</option>
-                        <option value="BD" {{ ($payment?->deposit_payment_type ?? '') === 'BD' ? 'selected' : '' }}>BD</option>
-                      </select>
-                    </div>
-                    <div class="col-md-4 mb-2" x-show="depositPayment === 'required'" x-cloak>
-                      <label class="form-label text-muted small">Deposit Application Date</label>
-                      <input type="date" name="deposit_application_date" class="form-control" style="height:38px;"
-                             value="{{ old('deposit_application_date', $payment?->deposit_application_date?->format('Y-m-d')) }}">
-                    </div>
-                  </div>
-                  <div class="d-flex justify-content-end gap-2">
-                    @if ($payment)
-                      <button type="button" class="btn-action" style="background:#6c757d;"
-                              x-on:click="editing = false">Cancel</button>
-                    @endif
-                    <button type="submit" class="btn-action">{{ $payment ? 'Update' : 'Save' }}</button>
-                  </div>
+                  <input type="file" name="wayleave_file" class="form-control form-control-sm" accept="application/pdf" required>
+                  <button type="submit" class="btn-action btn-action-sm">Endorse</button>
                 </form>
               </div>
-
             </div>
-            @else
-            {{-- Contractor: read-only view --}}
-            @if ($payment)
-              <div class="row mb-1">
-                <div class="col-md-3 mb-2">
-                  <div class="text-muted small">FI Payment</div>
-                  <div class="fw-semibold">{{ ucfirst(str_replace('_', ' ', $payment->fi_payment ?? '—')) }}</div>
-                </div>
-                <div class="col-md-3 mb-2">
-                  <div class="text-muted small">FI EDS No</div>
-                  <div class="fw-semibold">{{ $payment->fi_payment === 'required' ? ($payment->fi_eds_no ?? '—') : '—' }}</div>
-                </div>
-                <div class="col-md-3 mb-2">
-                  <div class="text-muted small">FI Application Date</div>
-                  <div class="fw-semibold">{{ $payment->fi_payment === 'required' ? ($payment->fi_application_date?->format('d M Y') ?? '—') : '—' }}</div>
-                </div>
-                <div class="col-md-3 mb-2"></div>
-                <div class="col-md-3 mb-2">
-                  <div class="text-muted small">Deposit Payment</div>
-                  <div class="fw-semibold">{{ ucfirst(str_replace('_', ' ', $payment->deposit_payment ?? '—')) }}</div>
-                </div>
-                <div class="col-md-3 mb-2">
-                  <div class="text-muted small">Deposit EDS No</div>
-                  <div class="fw-semibold">{{ $payment->deposit_payment === 'required' ? ($payment->deposit_eds_no ?? '—') : '—' }}</div>
-                </div>
-                <div class="col-md-3 mb-2">
-                  <div class="text-muted small">Deposit Type</div>
-                  <div class="fw-semibold">{{ $payment->deposit_payment === 'required' ? ($payment->deposit_payment_type ?? '—') : '—' }}</div>
-                </div>
-                <div class="col-md-3 mb-2">
-                  <div class="text-muted small">Deposit Application Date</div>
-                  <div class="fw-semibold">{{ $payment->deposit_payment === 'required' ? ($payment->deposit_application_date?->format('d M Y') ?? '—') : '—' }}</div>
-                </div>
-              </div>
-            @else
-              <p class="text-muted small mb-0">Pending officer payment details.</p>
-            @endif
             @endrole
           </div>
-        @endforeach
-
+          @endforeach
+        @endif
       </div>
     </div>
   </div>
 </div>
-@endif
 
-{{-- ============================================================ --}}
-{{-- STEP 8: Permit Submission to KUTT                           --}}
-{{-- ============================================================ --}}
+{{-- ================================================================ --}}
+{{-- SECTION 6: TM WAYLEAVE PAYMENT DETAILS (FI & DEPOSIT)            --}}
+{{-- ================================================================ --}}
 <div class="row">
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title">
-          <span class="me-3">6</span> Permit Submission to KUTT
-          @if ($project->permitSubmission)
-            <span class="badge bg-success ms-2">&#10003; Submitted</span>
-          @endif
-        </h3>
-
-        @if ($project->permitSubmission)
-        <div x-data="{ editing: false, fileName: 'No file chosen' }">
-          <div x-show="!editing" x-cloak>
-            <div class="row mb-2">
-              <div class="col-md-3">
-                <div class="text-muted small">Submit Date</div>
-                <div>{{ $project->permitSubmission->submit_date?->format('d M Y') }}</div>
-              </div>
-              <div class="col-md-4">
-                <div class="text-muted small">Submission File</div>
-                <a href="{{ route('projects.download', ['project' => $project, 'path' => $project->permitSubmission->submission_file]) }}"
-                   class="btn-action mt-1"><i class="ti-download"></i> Download</a>
-              </div>
-            </div>
-            @can('update', $project)
-            <div class="d-flex justify-content-end mt-2">
-              <button type="button" class="btn-action" x-on:click="editing = true">Edit</button>
-            </div>
-            @endcan
+        <h3 class="card-title"><span class="me-3">6</span> TM: Wayleave Payment Details (FI &amp; Deposit)</h3>
+        @if($project->wayleavePhbts->isEmpty())
+          <p class="text-muted">No PBT records yet.</p>
+        @else
+          <div class="table-responsive">
+            <table class="table table-borderless mb-0">
+              <thead>
+                <tr>
+                  <th style="font-weight:600; color:#07326A;">PBT</th>
+                  <th style="font-weight:600; color:#07326A;">Payment Type</th>
+                  <th style="font-weight:600; color:#07326A;">Status</th>
+                  <th style="font-weight:600; color:#07326A;">Amount (RM)</th>
+                  <th style="font-weight:600; color:#07326A;">EDS No</th>
+                  <th style="font-weight:600; color:#07326A;">Method of Payment</th>
+                  <th style="font-weight:600; color:#07326A;">Application Date</th>
+                  @role('officer|admin') <th style="font-weight:600; color:#07326A;">Action</th> @endrole
+                </tr>
+              </thead>
+              @foreach($project->wayleavePhbts as $pbt)
+                @php
+                  $pbtLabel   = str_replace('_', ' ', $pbt->pbt_name === 'Others' ? $pbt->pbt_name_other : $pbt->pbt_name);
+                  $paymentFI  = $pbt->payments->firstWhere('payment_type', 'FI');
+                  $paymentDep = $pbt->payments->firstWhere('payment_type', 'Deposit');
+                @endphp
+                @php
+                  $fiShowDetails  = $paymentFI?->status  === 'required';
+                  $depShowDetails = $paymentDep?->status === 'required';
+                  $methodLabels   = [
+                      'BG'      => 'BG - Bank Guarantee',
+                      'BD_DAP'  => 'BD - DAP - Bank Draft',
+                      'EFT_DAP' => 'EFT - DAP - Electronic Fund Transfer',
+                  ];
+                @endphp
+                <tbody x-data="{ editing: false, fiStatus: '{{ $paymentFI?->status ?? '' }}', depStatus: '{{ $paymentDep?->status ?? '' }}' }">
+                  {{-- FI row --}}
+                  <tr>
+                    <td rowspan="2" style="vertical-align:middle;">{{ $pbtLabel }}</td>
+                    <td>FI</td>
+                    <td>{{ $paymentFI?->status ? ucfirst(str_replace('_', ' ', $paymentFI->status)) : '—' }}</td>
+                    <td>{{ $fiShowDetails && $paymentFI?->amount ? number_format($paymentFI->amount, 2) : '—' }}</td>
+                    <td>{{ $fiShowDetails ? ($paymentFI?->eds_no ?? '—') : '—' }}</td>
+                    <td>{{ $fiShowDetails ? ($methodLabels[$paymentFI?->method_of_payment] ?? '—') : '—' }}</td>
+                    <td>{{ $fiShowDetails ? ($paymentFI?->application_date?->format('d/m/Y') ?? '—') : '—' }}</td>
+                    @role('officer|admin')
+                    <td rowspan="2" style="vertical-align:middle;">
+                      <button type="button" class="btn-action btn-action-sm"
+                              x-on:click="editing = !editing">Edit</button>
+                    </td>
+                    @endrole
+                  </tr>
+                  {{-- Deposit row --}}
+                  <tr>
+                    <td>Deposit</td>
+                    <td>{{ $paymentDep?->status ? ucfirst(str_replace('_', ' ', $paymentDep->status)) : '—' }}</td>
+                    <td>{{ $depShowDetails && $paymentDep?->amount ? number_format($paymentDep->amount, 2) : '—' }}</td>
+                    <td>{{ $depShowDetails ? ($paymentDep?->eds_no ?? '—') : '—' }}</td>
+                    <td>{{ $depShowDetails ? ($methodLabels[$paymentDep?->method_of_payment] ?? '—') : '—' }}</td>
+                    <td>{{ $depShowDetails ? ($paymentDep?->application_date?->format('d/m/Y') ?? '—') : '—' }}</td>
+                  </tr>
+                  @role('officer|admin')
+                  {{-- Combined FI + Deposit edit row (single form, single Save) --}}
+                  <tr x-show="editing" x-cloak style="background:#f8f9fa;">
+                    <td colspan="8" class="py-3 px-3">
+                      <form action="{{ route('projects.wayleave-payments.store-pbt', $project) }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="wayleave_pbt_id" value="{{ $pbt->id }}">
+                        {{-- FI fields --}}
+                        <div class="fw-semibold small mb-2" style="color:#07326A;">FI Payment — {{ $pbtLabel }}</div>
+                        <div class="row g-2 mb-3">
+                          <div class="col-md-3">
+                            <label class="form-label small">Status</label>
+                            <select name="fi[status]" x-model="fiStatus" class="form-control form-control-sm">
+                              <option value="">— Select —</option>
+                              <option value="required"     {{ $paymentFI?->status === 'required'     ? 'selected' : '' }}>Required</option>
+                              <option value="not_required" {{ $paymentFI?->status === 'not_required' ? 'selected' : '' }}>Not Required</option>
+                              <option value="waived"       {{ $paymentFI?->status === 'waived'       ? 'selected' : '' }}>Waived</option>
+                            </select>
+                          </div>
+                          <template x-if="fiStatus === 'required'">
+                            <div class="col-md-9 row g-2 m-0 p-0">
+                              <div class="col-md-3">
+                                <label class="form-label small">Amount (RM)</label>
+                                <input type="number" name="fi[amount]" step="0.01" class="form-control form-control-sm" value="{{ $paymentFI?->amount }}">
+                              </div>
+                              <div class="col-md-3">
+                                <label class="form-label small">EDS No</label>
+                                <input type="text" name="fi[eds_no]" class="form-control form-control-sm" value="{{ $paymentFI?->eds_no }}">
+                              </div>
+                              <div class="col-md-3">
+                                <label class="form-label small">Method of Payment</label>
+                                <select name="fi[method_of_payment]" class="form-control form-control-sm">
+                                  <option value="">— Select —</option>
+                                  <option value="BG"      {{ $paymentFI?->method_of_payment === 'BG'      ? 'selected' : '' }}>BG - Bank Guarantee</option>
+                                  <option value="BD_DAP"  {{ $paymentFI?->method_of_payment === 'BD_DAP'  ? 'selected' : '' }}>BD - DAP - Bank Draft</option>
+                                  <option value="EFT_DAP" {{ $paymentFI?->method_of_payment === 'EFT_DAP' ? 'selected' : '' }}>EFT - DAP - Electronic Fund Transfer</option>
+                                </select>
+                              </div>
+                              <div class="col-md-3">
+                                <label class="form-label small">Application Date</label>
+                                <input type="date" name="fi[application_date]" class="form-control form-control-sm" value="{{ $paymentFI?->application_date?->format('Y-m-d') }}">
+                              </div>
+                            </div>
+                          </template>
+                        </div>
+                        {{-- Deposit fields --}}
+                        <div class="fw-semibold small mb-2" style="color:#07326A; border-top:1px dashed #dee2e6; padding-top:0.75rem;">Deposit — {{ $pbtLabel }}</div>
+                        <div class="row g-2">
+                          <div class="col-md-3">
+                            <label class="form-label small">Status</label>
+                            <select name="deposit[status]" x-model="depStatus" class="form-control form-control-sm">
+                              <option value="">— Select —</option>
+                              <option value="required"     {{ $paymentDep?->status === 'required'     ? 'selected' : '' }}>Required</option>
+                              <option value="not_required" {{ $paymentDep?->status === 'not_required' ? 'selected' : '' }}>Not Required</option>
+                              <option value="waived"       {{ $paymentDep?->status === 'waived'       ? 'selected' : '' }}>Waived</option>
+                            </select>
+                          </div>
+                          <template x-if="depStatus === 'required'">
+                            <div class="col-md-9 row g-2 m-0 p-0">
+                              <div class="col-md-3">
+                                <label class="form-label small">Amount (RM)</label>
+                                <input type="number" name="deposit[amount]" step="0.01" class="form-control form-control-sm" value="{{ $paymentDep?->amount }}">
+                              </div>
+                              <div class="col-md-3">
+                                <label class="form-label small">EDS No</label>
+                                <input type="text" name="deposit[eds_no]" class="form-control form-control-sm" value="{{ $paymentDep?->eds_no }}">
+                              </div>
+                              <div class="col-md-3">
+                                <label class="form-label small">Method of Payment</label>
+                                <select name="deposit[method_of_payment]" class="form-control form-control-sm">
+                                  <option value="">— Select —</option>
+                                  <option value="BG"      {{ $paymentDep?->method_of_payment === 'BG'      ? 'selected' : '' }}>BG - Bank Guarantee</option>
+                                  <option value="BD_DAP"  {{ $paymentDep?->method_of_payment === 'BD_DAP'  ? 'selected' : '' }}>BD - DAP - Bank Draft</option>
+                                  <option value="EFT_DAP" {{ $paymentDep?->method_of_payment === 'EFT_DAP' ? 'selected' : '' }}>EFT - DAP - Electronic Fund Transfer</option>
+                                </select>
+                              </div>
+                              <div class="col-md-3">
+                                <label class="form-label small">Application Date</label>
+                                <input type="date" name="deposit[application_date]" class="form-control form-control-sm" value="{{ $paymentDep?->application_date?->format('Y-m-d') }}">
+                              </div>
+                            </div>
+                          </template>
+                        </div>
+                        <div class="d-flex gap-2 mt-3">
+                          <button type="submit" class="btn-action btn-action-sm">Save</button>
+                          <button type="button" class="btn-action btn-action-sm" style="background:#6c757d; border-color:#6c757d;"
+                                  x-on:click="editing = false">Cancel</button>
+                        </div>
+                      </form>
+                    </td>
+                  </tr>
+                  @endrole
+                </tbody>
+              @endforeach
+            </table>
           </div>
-          @can('update', $project)
-          <div x-show="editing" x-cloak>
+        @endif
+      </div>
+    </div>
+  </div>
+</div>
+
+{{-- ================================================================ --}}
+{{-- SECTION 7: TM BG & BD RECEIVED FROM FINSSO                       --}}
+{{-- ================================================================ --}}
+<div class="row">
+  <div class="col-12 grid-margin">
+    <div class="card">
+      <div class="card-body">
+        <h3 class="card-title"><span class="me-3">7</span> TM: BG &amp; BD Received from FINSSO</h3>
+        @php
+          $requiredPayments = $project->wayleavePayments->where('status', 'required');
+        @endphp
+        @if($requiredPayments->isEmpty())
+          <p class="text-muted">No required payments (only rows where status = Required appear here).</p>
+        @else
+          <div class="table-responsive">
+            <table class="table table-borderless mb-0">
+              <thead>
+                <tr>
+                  <th style="font-weight:600; color:#07326A;">PBT</th>
+                  <th style="font-weight:600; color:#07326A;">Payment Type</th>
+                  <th style="font-weight:600; color:#07326A;">Amount (RM)</th>
+                  <th style="font-weight:600; color:#07326A;">EDS No</th>
+                  <th style="font-weight:600; color:#07326A;">Method</th>
+                  <th style="font-weight:600; color:#07326A;">Application Date</th>
+                  <th style="font-weight:600; color:#07326A;">Received / Posted Date</th>
+                  <th style="font-weight:600; color:#07326A;">BG/BD Document</th>
+                  @role('officer|admin') <th style="font-weight:600; color:#07326A;">Action</th> @endrole
+                </tr>
+              </thead>
+              @foreach($requiredPayments as $payment)
+              <tbody x-data="{ editing: false }">
+                <tr>
+                  <td>{{ str_replace('_', ' ', $payment->wayleavePhbt?->pbt_name === 'Others' ? $payment->wayleavePhbt?->pbt_name_other : $payment->wayleavePhbt?->pbt_name) }}</td>
+                  <td>{{ $payment->payment_type }}</td>
+                  <td>{{ $payment->amount ? number_format($payment->amount, 2) : '—' }}</td>
+                  <td>{{ $payment->eds_no ?? '—' }}</td>
+                  <td>{{ ['BG' => 'BG - Bank Guarantee', 'BD_DAP' => 'BD - DAP - Bank Draft', 'EFT_DAP' => 'EFT - DAP - Electronic Fund Transfer'][$payment->method_of_payment] ?? '—' }}</td>
+                  <td>{{ $payment->application_date?->format('d/m/Y') ?? '—' }}</td>
+                  <td>{{ $payment->received_posted_date?->format('d/m/Y') ?? '—' }}</td>
+                  <td>
+                    @if($payment->bg_bd_file_path)
+                      <a href="{{ route('projects.download', ['project' => $project, 'path' => $payment->bg_bd_file_path]) }}"
+                         class="btn-action btn-action-sm">Download</a>
+                    @else
+                      —
+                    @endif
+                  </td>
+                  @role('officer|admin')
+                  <td>
+                    <button type="button" class="btn-action btn-action-sm"
+                            x-on:click="editing = !editing">Edit</button>
+                  </td>
+                  @endrole
+                </tr>
+                @role('officer|admin')
+                <tr x-show="editing" x-cloak style="background:#f8f9fa;">
+                  <td colspan="9" class="py-3 px-3">
+                    <form action="{{ route('projects.wayleave-payments.received', [$project, $payment]) }}" method="POST" enctype="multipart/form-data">
+                      @csrf
+                      <div class="row g-2">
+                        <div class="col-md-3">
+                          <label class="form-label small">Received / Posted Date</label>
+                          <input type="date" name="received_posted_date" class="form-control form-control-sm"
+                                 value="{{ $payment->received_posted_date?->format('Y-m-d') }}">
+                        </div>
+                        <div class="col-md-5">
+                          <label class="form-label small">BG/BD Document (PDF)</label>
+                          <input type="file" name="bg_bd_file" class="form-control form-control-sm" accept="application/pdf">
+                        </div>
+                      </div>
+                      <div class="d-flex gap-2 mt-3">
+                        <button type="submit" class="btn-action">Save</button>
+                        <button type="button" class="btn-action" style="background:#6c757d; border-color:#6c757d;"
+                                x-on:click="editing = false">Cancel</button>
+                      </div>
+                    </form>
+                  </td>
+                </tr>
+                @endrole
+              </tbody>
+              @endforeach
+            </table>
+          </div>
+        @endif
+      </div>
+    </div>
+  </div>
+</div>
+
+{{-- ================================================================ --}}
+{{-- SECTION 8: DOC PERMIT APPLICATION SUBMISSION TO KUTT             --}}
+{{-- ================================================================ --}}
+<div class="row">
+  <div class="col-12 grid-margin">
+    <div class="card">
+      <div class="card-body">
+        <h3 class="card-title"><span class="me-3">8</span> Doc Permit Application Submission to KUTT</h3>
+        @php $permitSub = $project->permitSubmission; @endphp
+        @if($permitSub)
+          <div class="row mb-3">
+            <div class="col-md-3">
+              <div class="text-muted small">Submit Date</div>
+              <div>{{ $permitSub->submit_date?->format('d/m/Y') ?? '—' }}</div>
+            </div>
+            <div class="col-md-3">
+              <div class="text-muted small">File</div>
+              <a href="{{ route('projects.download', ['project' => $project, 'path' => $permitSub->submission_file]) }}"
+                 class="btn-action btn-action-sm">Download</a>
+            </div>
+            <div class="col-md-3">
+              <div class="text-muted small">Submitted By</div>
+              <div>{{ $permitSub->submittedBy?->name ?? '—' }}</div>
+            </div>
+          </div>
+        @endif
+        @can('update', $project)
+        <div x-data="{ open: {{ $permitSub ? 'false' : 'true' }} }">
+          <button type="button" class="btn-action btn-action-sm" x-on:click="open = !open">
+            {{ $permitSub ? 'Update Submission' : 'Record Submission' }}
+          </button>
+          <div x-show="open" x-cloak class="mt-3 p-3 border rounded bg-light">
             <form action="{{ route('projects.permit-submission.store', $project) }}" method="POST" enctype="multipart/form-data">
               @csrf
-              <div class="row align-items-start mb-2">
+              <div class="row g-2">
                 <div class="col-md-3">
-                  <label class="form-label text-muted small">Submit Date</label>
-                  <input type="date" name="submit_date" class="form-control" style="height:38px;"
-                         value="{{ old('submit_date', $project->permitSubmission->submit_date?->format('Y-m-d')) }}">
+                  <label class="form-label small">Submit Date <span class="text-danger">*</span></label>
+                  <input type="date" name="submit_date" class="form-control form-control-sm"
+                         value="{{ $permitSub?->submit_date?->format('Y-m-d') }}" required>
                 </div>
-                <div class="col-md-4">
-                  <label class="form-label text-muted small">Replace Submission File (PDF)</label>
-                  <div class="d-flex align-items-center" style="gap:8px;">
-                    <input type="file" name="submission_file" id="submission_file_edit" accept=".pdf" style="display:none;"
-                           x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'">
-                    <label for="submission_file_edit" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
-                      <i class="ti-upload"></i> Choose File
-                    </label>
-                    <span x-text="fileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
-                  </div>
+                <div class="col-md-5">
+                  <label class="form-label small">Submission File (PDF)</label>
+                  <input type="file" name="submission_file" class="form-control form-control-sm" accept="application/pdf"
+                         {{ $permitSub ? '' : 'required' }}>
                 </div>
               </div>
-              <div class="d-flex justify-content-end gap-2">
-                <button type="button" class="btn-action" style="background:#6c757d; border-color:#6c757d;"
-                        x-on:click="editing = false">Cancel</button>
-                <button type="submit" class="btn-action">Update</button>
-              </div>
+              <div class="mt-2"><button type="submit" class="btn-action btn-action-sm">Save</button></div>
             </form>
           </div>
-          @endcan
         </div>
-        @else
-        @can('update', $project)
-        <form action="{{ route('projects.permit-submission.store', $project) }}" method="POST" enctype="multipart/form-data"
-              x-data="{ fileName: 'No file chosen' }">
-          @csrf
-          <div class="row align-items-start mb-2">
-            <div class="col-md-3">
-              <label class="form-label text-muted small">Submit Date *</label>
-              <input type="date" name="submit_date" class="form-control" style="height:38px;"
-                     value="{{ old('submit_date') }}" required>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label text-muted small">Submission File (PDF) *</label>
-              <div class="d-flex align-items-center" style="gap:8px;">
-                <input type="file" name="submission_file" id="submission_file_new" accept=".pdf" style="display:none;" required
-                       x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'">
-                <label for="submission_file_new" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
-                  <i class="ti-upload"></i> Choose File
-                </label>
-                <span x-text="fileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
-              </div>
-            </div>
-          </div>
-          <div class="d-flex justify-content-end">
-            <button type="submit" class="btn-action">Submit</button>
-          </div>
-        </form>
         @endcan
-        @endif
-
       </div>
     </div>
   </div>
 </div>
 
-{{-- ============================================================ --}}
-{{-- STEP 9: Permit Received                                      --}}
-{{-- ============================================================ --}}
+{{-- ================================================================ --}}
+{{-- SECTION 9: PERMIT RECEIVED                                        --}}
+{{-- ================================================================ --}}
 <div class="row">
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title">
-          <span class="me-3">7</span> Permit Received
-          @if ($project->permitReceived)
-            <span class="badge bg-success ms-2">&#10003; Recorded</span>
-          @endif
-        </h3>
-
-        @if ($project->permitReceived)
-        <div x-data="{ editing: false, fileName: 'No file chosen' }">
-          <div x-show="!editing" x-cloak>
-            <div class="row mb-2">
-              <div class="col-md-3">
-                <div class="text-muted small">Permit Received Date</div>
-                <div>{{ $project->permitReceived->permit_received_date?->format('d M Y') }}</div>
-              </div>
-              <div class="col-md-4">
-                <div class="text-muted small">Permit File</div>
-                <a href="{{ route('projects.download', ['project' => $project, 'path' => $project->permitReceived->permit_file]) }}"
-                   class="btn-action mt-1"><i class="ti-download"></i> Download</a>
-              </div>
+        <h3 class="card-title"><span class="me-3">9</span> Permit Received</h3>
+        @php $permitRec = $project->permitReceived; @endphp
+        @if($permitRec)
+          <div class="row mb-3">
+            <div class="col-md-3">
+              <div class="text-muted small">Permit Received Date</div>
+              <div>{{ $permitRec->permit_received_date?->format('d/m/Y') ?? '—' }}</div>
             </div>
-            @can('update', $project)
-            <div class="d-flex justify-content-end mt-2">
-              <button type="button" class="btn-action" x-on:click="editing = true">Edit</button>
+            <div class="col-md-3">
+              <div class="text-muted small">Permit File</div>
+              <a href="{{ route('projects.download', ['project' => $project, 'path' => $permitRec->permit_file]) }}"
+                 class="btn-action btn-action-sm">Download</a>
             </div>
-            @endcan
           </div>
-          @can('update', $project)
-          <div x-show="editing" x-cloak>
+        @endif
+        @can('update', $project)
+        <div x-data="{ open: {{ $permitRec ? 'false' : 'true' }} }">
+          <button type="button" class="btn-action btn-action-sm" x-on:click="open = !open">
+            {{ $permitRec ? 'Update Permit Received' : 'Record Permit Received' }}
+          </button>
+          <div x-show="open" x-cloak class="mt-3 p-3 border rounded bg-light">
             <form action="{{ route('projects.permit-received.store', $project) }}" method="POST" enctype="multipart/form-data">
               @csrf
-              <div class="row align-items-start mb-2">
+              <div class="row g-2">
                 <div class="col-md-3">
-                  <label class="form-label text-muted small">Permit Received Date</label>
-                  <input type="date" name="permit_received_date" class="form-control" style="height:38px;"
-                         value="{{ old('permit_received_date', $project->permitReceived->permit_received_date?->format('Y-m-d')) }}">
+                  <label class="form-label small">Date Received <span class="text-danger">*</span></label>
+                  <input type="date" name="permit_received_date" class="form-control form-control-sm"
+                         value="{{ $permitRec?->permit_received_date?->format('Y-m-d') }}" required>
                 </div>
-                <div class="col-md-4">
-                  <label class="form-label text-muted small">Replace Permit File (PDF)</label>
-                  <div class="d-flex align-items-center" style="gap:8px;">
-                    <input type="file" name="permit_file" id="permit_file_edit" accept=".pdf" style="display:none;"
-                           x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'">
-                    <label for="permit_file_edit" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
-                      <i class="ti-upload"></i> Choose File
-                    </label>
-                    <span x-text="fileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
-                  </div>
+                <div class="col-md-5">
+                  <label class="form-label small">Permit File (PDF)</label>
+                  <input type="file" name="permit_file" class="form-control form-control-sm" accept="application/pdf"
+                         {{ $permitRec ? '' : 'required' }}>
                 </div>
               </div>
-              <div class="d-flex justify-content-end gap-2">
-                <button type="button" class="btn-action" style="background:#6c757d; border-color:#6c757d;"
-                        x-on:click="editing = false">Cancel</button>
-                <button type="submit" class="btn-action">Update</button>
-              </div>
+              <div class="mt-2"><button type="submit" class="btn-action btn-action-sm">Save</button></div>
             </form>
           </div>
-          @endcan
         </div>
-        @else
-        @can('update', $project)
-        <form action="{{ route('projects.permit-received.store', $project) }}" method="POST" enctype="multipart/form-data"
-              x-data="{ fileName: 'No file chosen' }">
-          @csrf
-          <div class="row align-items-start mb-2">
-            <div class="col-md-3">
-              <label class="form-label text-muted small">Permit Received Date *</label>
-              <input type="date" name="permit_received_date" class="form-control" style="height:38px;"
-                     value="{{ old('permit_received_date') }}" required>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label text-muted small">Permit File (PDF) *</label>
-              <div class="d-flex align-items-center" style="gap:8px;">
-                <input type="file" name="permit_file" id="permit_file_new" accept=".pdf" style="display:none;" required
-                       x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'">
-                <label for="permit_file_new" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
-                  <i class="ti-upload"></i> Choose File
-                </label>
-                <span x-text="fileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
-              </div>
-            </div>
-          </div>
-          <div class="d-flex justify-content-end">
-            <button type="submit" class="btn-action">Save</button>
-          </div>
-        </form>
         @endcan
-        @endif
-
       </div>
     </div>
   </div>
 </div>
 
-{{-- ============================================================ --}}
-{{-- STEP 10: Work Notices                                        --}}
-{{-- Gambar (site photos) removed from system entirely.           --}}
-{{-- Only Notis Mula Kerja and Notis Siap Kerja.                  --}}
-{{-- ============================================================ --}}
+{{-- ================================================================ --}}
+{{-- SECTION 10: NOTIS MULA KERJA                                      --}}
+{{-- ================================================================ --}}
 <div class="row">
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title">
-          <span class="me-3">8</span> Work Notices
-          @if ($project->workNotice)
-            <span class="badge bg-success ms-2">&#10003; Uploaded</span>
-          @endif
-        </h3>
-
-        @if ($project->workNotice)
-        <div x-data="{ editing: false }">
-          <div x-show="!editing" x-cloak>
-            <div class="row mb-2">
-              @foreach (['notis_mula_file' => 'Notis Mula Kerja', 'notis_siap_file' => 'Notis Siap Kerja'] as $field => $label)
-                <div class="col-md-3">
-                  <div class="text-muted small">{{ $label }}</div>
-                  @if ($project->workNotice->$field)
-                    <a href="{{ route('projects.download', ['project' => $project, 'path' => $project->workNotice->$field]) }}"
-                       class="btn-action mt-1"><i class="ti-download"></i> Download</a>
-                  @else
-                    <div>—</div>
-                  @endif
-                </div>
-              @endforeach
-            </div>
-            @can('update', $project)
-            <div class="d-flex justify-content-end mt-2">
-              <button type="button" class="btn-action" x-on:click="editing = true">Edit</button>
-            </div>
-            @endcan
+        <h3 class="card-title"><span class="me-3">10</span> Notis Mula Kerja</h3>
+        @php $workNotice = $project->workNotice; @endphp
+        @if($workNotice?->notis_mula_file)
+          <div class="mb-3">
+            <a href="{{ route('projects.download', ['project' => $project, 'path' => $workNotice->notis_mula_file]) }}"
+               class="btn-action btn-action-sm">Download Notis Mula</a>
           </div>
-          @can('update', $project)
-          <div x-show="editing" x-cloak>
-            <form action="{{ route('projects.work-notice.store', $project) }}" method="POST" enctype="multipart/form-data">
+        @endif
+        @can('update', $project)
+        <div x-data="{ open: {{ $workNotice?->notis_mula_file ? 'false' : 'true' }} }">
+          <button type="button" class="btn-action btn-action-sm" x-on:click="open = !open">
+            {{ $workNotice?->notis_mula_file ? 'Replace Notis Mula' : 'Upload Notis Mula Kerja' }}
+          </button>
+          <div x-show="open" x-cloak class="mt-3 p-3 border rounded bg-light">
+            <form action="{{ route('projects.notis-mula.store', $project) }}" method="POST" enctype="multipart/form-data">
               @csrf
-              <div class="row mb-2">
-                @foreach (['notis_mula_file' => 'Notis Mula Kerja', 'notis_siap_file' => 'Notis Siap Kerja'] as $field => $label)
-                  <div class="col-md-4 mb-2" x-data="{ fileName: 'No file chosen' }">
-                    <label class="form-label text-muted small">
-                      {{ $project->workNotice->$field ? 'Replace ' : 'Upload ' }}{{ $label }} (PDF)
-                      @if (!$project->workNotice->$field)<span class="text-danger">*</span>@endif
-                    </label>
-                    <div class="d-flex align-items-center" style="gap:8px;">
-                      <input type="file" name="{{ $field }}" id="wn_edit_{{ $field }}" accept=".pdf" style="display:none;"
-                             {{ !$project->workNotice->$field ? 'required' : '' }}
-                             x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'">
-                      <label for="wn_edit_{{ $field }}" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
-                        <i class="ti-upload"></i> Choose File
-                      </label>
-                      <span x-text="fileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
-                    </div>
-                  </div>
-                @endforeach
-              </div>
-              <div class="d-flex justify-content-end gap-2">
-                <button type="button" class="btn-action" style="background:#6c757d; border-color:#6c757d;"
-                        x-on:click="editing = false">Cancel</button>
-                <button type="submit" class="btn-action">Update</button>
-              </div>
+              <input type="file" name="notis_mula_file" class="form-control form-control-sm mb-2" accept="application/pdf" required>
+              <button type="submit" class="btn-action btn-action-sm">Upload</button>
             </form>
           </div>
-          @endcan
         </div>
-        @else
-        @can('update', $project)
-        <form action="{{ route('projects.work-notice.store', $project) }}" method="POST" enctype="multipart/form-data">
-          @csrf
-          <div class="row mb-2">
-            @foreach (['notis_mula_file' => 'Notis Mula Kerja', 'notis_siap_file' => 'Notis Siap Kerja'] as $field => $label)
-              <div class="col-md-4 mb-2" x-data="{ fileName: 'No file chosen' }">
-                <label class="form-label text-muted small">{{ $label }} (PDF) *</label>
-                <div class="d-flex align-items-center" style="gap:8px;">
-                  <input type="file" name="{{ $field }}" id="wn_new_{{ $field }}" accept=".pdf" style="display:none;" required
-                         x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'">
-                  <label for="wn_new_{{ $field }}" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
-                    <i class="ti-upload"></i> Choose File
-                  </label>
-                  <span x-text="fileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
-                </div>
-              </div>
-            @endforeach
-          </div>
-          <div class="d-flex justify-content-end">
-            <button type="submit" class="btn-action">Upload</button>
-          </div>
-        </form>
         @endcan
-        @endif
-
       </div>
     </div>
   </div>
 </div>
 
-{{-- ============================================================ --}}
-{{-- STEP 11: CPC Application                                     --}}
-{{-- ============================================================ --}}
+{{-- ================================================================ --}}
+{{-- SECTION 11: NOTIS SIAP KERJA                                      --}}
+{{-- ================================================================ --}}
 <div class="row">
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title">
-          <span class="me-3">9</span> CPC Application
-          @if ($project->cpcApplication)
-            <span class="badge bg-success ms-2">&#10003; Submitted</span>
-          @endif
-        </h3>
-
-        @if ($project->cpcApplication)
-        {{-- Read-only summary + edit toggle --}}
-        <div x-data="{ editing: false }">
-
-          {{-- Summary row (hidden when editing) --}}
-          <div x-show="!editing" x-cloak>
-            <div class="row mb-2">
-              <div class="col-md-3">
-                <div class="text-muted small">Date Submitted to KUTT</div>
-                <div>{{ $project->cpcApplication->date_submit_to_kutt?->format('d M Y') ?? '—' }}</div>
-              </div>
-              @foreach (['surat_serahan_file' => 'Surat Serahan', 'laporan_bergambar_file' => 'Laporan Bergambar', 'salinan_coa_file' => 'Salinan COA', 'salinan_permit_file' => 'Salinan Permit'] as $field => $label)
-                <div class="col-md-2">
-                  <div class="text-muted small">{{ $label }}</div>
-                  @if ($project->cpcApplication->$field)
-                    <a href="{{ route('projects.download', ['project' => $project, 'path' => $project->cpcApplication->$field]) }}"
-                       class="btn-action mt-1"><i class="ti-download"></i> Download</a>
-                  @else
-                    <div>—</div>
-                  @endif
-                </div>
-              @endforeach
-            </div>
-            @can('update', $project)
-            <div class="d-flex justify-content-end mt-2">
-              <button type="button" class="btn-action" x-on:click="editing = true">Edit</button>
-            </div>
-            @endcan
+        <h3 class="card-title"><span class="me-3">11</span> Notis Siap Kerja</h3>
+        @if($workNotice?->notis_siap_file)
+          <div class="mb-3">
+            <a href="{{ route('projects.download', ['project' => $project, 'path' => $workNotice->notis_siap_file]) }}"
+               class="btn-action btn-action-sm">Download Notis Siap</a>
           </div>
+        @endif
+        @can('update', $project)
+        <div x-data="{ open: {{ $workNotice?->notis_siap_file ? 'false' : 'true' }} }">
+          <button type="button" class="btn-action btn-action-sm" x-on:click="open = !open">
+            {{ $workNotice?->notis_siap_file ? 'Replace Notis Siap' : 'Upload Notis Siap Kerja' }}
+          </button>
+          <div x-show="open" x-cloak class="mt-3 p-3 border rounded bg-light">
+            <form action="{{ route('projects.notis-siap.store', $project) }}" method="POST" enctype="multipart/form-data">
+              @csrf
+              <input type="file" name="notis_siap_file" class="form-control form-control-sm mb-2" accept="application/pdf" required>
+              <button type="submit" class="btn-action btn-action-sm">Upload</button>
+            </form>
+          </div>
+        </div>
+        @endcan
+      </div>
+    </div>
+  </div>
+</div>
 
-          {{-- Edit form (shown when editing) --}}
-          @can('update', $project)
-          <div x-show="editing" x-cloak>
+{{-- ================================================================ --}}
+{{-- SECTION 12: PERMOHONAN SIJIL PERAKUAN SIAP KERJA (CPC)            --}}
+{{-- ================================================================ --}}
+<div class="row">
+  <div class="col-12 grid-margin">
+    <div class="card">
+      <div class="card-body">
+        <h3 class="card-title"><span class="me-3">12</span> Permohonan Sijil Perakuan Siap Kerja (CPC)</h3>
+        @php $cpcApp = $project->cpcApplication; @endphp
+        @if($cpcApp)
+          <div class="row mb-3">
+            <div class="col-md-3">
+              <div class="text-muted small">Date Submitted to KUTT</div>
+              <div>{{ $cpcApp->date_submit_to_kutt?->format('d/m/Y') ?? '—' }}</div>
+            </div>
+            <div class="col-md-9">
+              <div class="text-muted small">Documents</div>
+              <div class="d-flex flex-wrap gap-2 mt-1">
+                @if($cpcApp->surat_serahan_file)
+                  <a href="{{ route('projects.download', ['project' => $project, 'path' => $cpcApp->surat_serahan_file]) }}" class="btn-action btn-action-sm">Surat Serahan</a>
+                @endif
+                @if($cpcApp->laporan_bergambar_file)
+                  <a href="{{ route('projects.download', ['project' => $project, 'path' => $cpcApp->laporan_bergambar_file]) }}" class="btn-action btn-action-sm">Laporan Bergambar</a>
+                @endif
+                @if($cpcApp->salinan_coa_file)
+                  <a href="{{ route('projects.download', ['project' => $project, 'path' => $cpcApp->salinan_coa_file]) }}" class="btn-action btn-action-sm">Salinan COA</a>
+                @endif
+                @if($cpcApp->salinan_permit_file)
+                  <a href="{{ route('projects.download', ['project' => $project, 'path' => $cpcApp->salinan_permit_file]) }}" class="btn-action btn-action-sm">Salinan Permit</a>
+                @endif
+              </div>
+            </div>
+          </div>
+        @endif
+        @can('update', $project)
+        <div x-data="{ open: {{ $cpcApp ? 'false' : 'true' }} }">
+          <button type="button" class="btn-action btn-action-sm" x-on:click="open = !open">
+            {{ $cpcApp ? 'Update CPC Application' : 'Submit CPC Application' }}
+          </button>
+          <div x-show="open" x-cloak class="mt-3 p-3 border rounded bg-light">
             <form action="{{ route('projects.cpc-application.store', $project) }}" method="POST" enctype="multipart/form-data">
               @csrf
-              <div class="row mb-2">
-                <div class="col-md-4 mb-2">
-                  <label class="form-label text-muted small">Date Submitted to KUTT</label>
-                  <input type="date" name="date_submit_to_kutt" class="form-control" style="height:38px;"
-                         value="{{ old('date_submit_to_kutt', $project->cpcApplication->date_submit_to_kutt?->format('Y-m-d')) }}">
-                </div>
-                @foreach (['surat_serahan_file' => 'Surat Serahan', 'laporan_bergambar_file' => 'Laporan Bergambar', 'salinan_coa_file' => 'Salinan COA', 'salinan_permit_file' => 'Salinan Permit'] as $field => $label)
-                  <div class="col-md-4 mb-2" x-data="{ fileName: 'No file chosen' }">
-                    <label class="form-label text-muted small">
-                      {{ $project->cpcApplication->$field ? 'Replace ' : 'Upload ' }}{{ $label }} (PDF)
-                      @if (!$project->cpcApplication->$field)<span class="text-danger">*</span>@endif
-                    </label>
-                    <div class="d-flex align-items-center" style="gap:8px;">
-                      <input type="file" name="{{ $field }}" id="cpc_edit_{{ $field }}" accept=".pdf" style="display:none;"
-                             {{ !$project->cpcApplication->$field ? 'required' : '' }}
-                             x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'">
-                      <label for="cpc_edit_{{ $field }}" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
-                        <i class="ti-upload"></i> Choose File
-                      </label>
-                      <span x-text="fileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
-                    </div>
-                  </div>
-                @endforeach
-              </div>
-              <div class="d-flex justify-content-end gap-2">
-                <button type="button" class="btn-action" style="background:#6c757d; border-color:#6c757d;"
-                        x-on:click="editing = false">Cancel</button>
-                <button type="submit" class="btn-action">Update</button>
-              </div>
-            </form>
-          </div>
-          @endcan
-
-        </div>
-
-        @else
-        {{-- First-time submission form --}}
-        @can('update', $project)
-        <form action="{{ route('projects.cpc-application.store', $project) }}" method="POST" enctype="multipart/form-data">
-          @csrf
-          <div class="row mb-2">
-            <div class="col-md-4 mb-2">
-              <label class="form-label text-muted small">Date Submitted to KUTT *</label>
-              <input type="date" name="date_submit_to_kutt" class="form-control" style="height:38px;"
-                     value="{{ old('date_submit_to_kutt') }}" required>
-            </div>
-            @foreach (['surat_serahan_file' => 'Surat Serahan', 'laporan_bergambar_file' => 'Laporan Bergambar', 'salinan_coa_file' => 'Salinan COA', 'salinan_permit_file' => 'Salinan Permit'] as $field => $label)
-              <div class="col-md-4 mb-2" x-data="{ fileName: 'No file chosen' }">
-                <label class="form-label text-muted small">{{ $label }} (PDF) *</label>
-                <div class="d-flex align-items-center" style="gap:8px;">
-                  <input type="file" name="{{ $field }}" id="cpc_new_{{ $field }}" accept=".pdf" style="display:none;" required
-                         x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'">
-                  <label for="cpc_new_{{ $field }}" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
-                    <i class="ti-upload"></i> Choose File
-                  </label>
-                  <span x-text="fileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
-                </div>
-              </div>
-            @endforeach
-          </div>
-          <div class="d-flex justify-content-end">
-            <button type="submit" class="btn-action">Submit</button>
-          </div>
-        </form>
-        @endcan
-        @endif
-
-      </div>
-    </div>
-  </div>
-</div>
-
-{{-- ============================================================ --}}
-{{-- STEP 12: CPC Received → Project Completed                   --}}
-{{-- Uploading the CPC triggers status → completed.              --}}
-{{-- cpc_date field added per CHANGELOG [8].                     --}}
-{{-- ============================================================ --}}
-<div class="row">
-  <div class="col-12 grid-margin">
-    <div class="card {{ $project->cpcReceived ? 'border-success' : '' }}">
-      <div class="card-body">
-        <h3 class="card-title">
-          <span class="me-3">10</span> CPC Received
-          @if ($project->cpcReceived)
-            <span class="badge bg-success ms-2">&#10003; Project Completed</span>
-          @endif
-        </h3>
-
-        @if ($project->cpcReceived)
-        <div x-data="{ editing: false, fileName: 'No file chosen' }">
-          <div x-show="!editing" x-cloak>
-            <div class="row mb-2">
-              <div class="col-md-3">
-                <div class="text-muted small">CPC Date</div>
-                <div>{{ $project->cpcReceived->cpc_date?->format('d M Y') ?? '—' }}</div>
-              </div>
-              <div class="col-md-4">
-                <div class="text-muted small">CPC File</div>
-                <a href="{{ route('projects.download', ['project' => $project, 'path' => $project->cpcReceived->cpc_file]) }}"
-                   class="btn-action mt-1"><i class="ti-download"></i> Download</a>
-              </div>
-            </div>
-            @can('update', $project)
-            <div class="d-flex justify-content-end mt-2">
-              <button type="button" class="btn-action" x-on:click="editing = true">Edit</button>
-            </div>
-            @endcan
-          </div>
-          @can('update', $project)
-          <div x-show="editing" x-cloak>
-            <form action="{{ route('projects.cpc-received.store', $project) }}" method="POST" enctype="multipart/form-data">
-              @csrf
-              <div class="row align-items-start mb-2">
+              <div class="row g-2">
                 <div class="col-md-3">
-                  <label class="form-label text-muted small">CPC Date</label>
-                  <input type="date" name="cpc_date" class="form-control" style="height:38px;"
-                         value="{{ old('cpc_date', $project->cpcReceived->cpc_date?->format('Y-m-d')) }}">
+                  <label class="form-label small">Date Submitted to KUTT <span class="text-danger">*</span></label>
+                  <input type="date" name="date_submit_to_kutt" class="form-control form-control-sm"
+                         value="{{ $cpcApp?->date_submit_to_kutt?->format('Y-m-d') }}" required>
                 </div>
                 <div class="col-md-4">
-                  <label class="form-label text-muted small">Replace CPC File (PDF)</label>
-                  <div class="d-flex align-items-center" style="gap:8px;">
-                    <input type="file" name="cpc_file" id="cpc_file_edit" accept=".pdf" style="display:none;"
-                           x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'">
-                    <label for="cpc_file_edit" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
-                      <i class="ti-upload"></i> Choose File
-                    </label>
-                    <span x-text="fileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
-                  </div>
+                  <label class="form-label small">Surat Serahan</label>
+                  <input type="file" name="surat_serahan_file" class="form-control form-control-sm" accept="application/pdf">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label small">Laporan Bergambar</label>
+                  <input type="file" name="laporan_bergambar_file" class="form-control form-control-sm" accept="application/pdf">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label small">Salinan COA</label>
+                  <input type="file" name="salinan_coa_file" class="form-control form-control-sm" accept="application/pdf">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label small">Salinan Permit</label>
+                  <input type="file" name="salinan_permit_file" class="form-control form-control-sm" accept="application/pdf">
                 </div>
               </div>
-              <div class="d-flex justify-content-end gap-2">
-                <button type="button" class="btn-action" style="background:#6c757d; border-color:#6c757d;"
-                        x-on:click="editing = false">Cancel</button>
-                <button type="submit" class="btn-action">Update</button>
-              </div>
+              <div class="mt-2"><button type="submit" class="btn-action btn-action-sm">Save</button></div>
             </form>
           </div>
-          @endcan
         </div>
-        @else
-        @can('update', $project)
-          <div class="alert alert-info py-2 mb-3">
-            Uploading the CPC will mark this project as <strong>Completed</strong>.
-          </div>
-          <form action="{{ route('projects.cpc-received.store', $project) }}" method="POST" enctype="multipart/form-data"
-                x-data="{ fileName: 'No file chosen' }">
-            @csrf
-            <div class="row align-items-start mb-2">
-              <div class="col-md-3">
-                <label class="form-label text-muted small">CPC Date *</label>
-                <input type="date" name="cpc_date" class="form-control" style="height:38px;"
-                       value="{{ old('cpc_date') }}" required>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label text-muted small">CPC File (PDF) *</label>
-                <div class="d-flex align-items-center" style="gap:8px;">
-                  <input type="file" name="cpc_file" id="cpc_file_new" accept=".pdf" style="display:none;" required
-                         x-on:change="fileName = $event.target.files[0]?.name ?? 'No file chosen'">
-                  <label for="cpc_file_new" class="btn-action mb-0" style="cursor:pointer; white-space:nowrap; height:38px !important; line-height:38px !important;">
-                    <i class="ti-upload"></i> Choose File
-                  </label>
-                  <span x-text="fileName" class="text-muted" style="font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
-                </div>
-              </div>
-            </div>
-            <div class="d-flex justify-content-end">
-              <button type="submit" class="btn-action">Upload CPC</button>
-            </div>
-          </form>
         @endcan
-        @endif
-
       </div>
     </div>
   </div>
 </div>
+
+{{-- ================================================================ --}}
+{{-- SECTION 13: SIJIL PERAKUAN SIAP KERJA                             --}}
+{{-- Uploading CPC sets project status to Completed                    --}}
+{{-- ================================================================ --}}
+<div class="row">
+  <div class="col-12 grid-margin">
+    <div class="card">
+      <div class="card-body">
+        <h3 class="card-title"><span class="me-3">13</span> Sijil Perakuan Siap Kerja</h3>
+        @php $cpcRec = $project->cpcReceived; @endphp
+        @if($cpcRec)
+          <div class="row mb-3">
+            <div class="col-md-3">
+              <div class="text-muted small">CPC Date</div>
+              <div>{{ $cpcRec->cpc_date?->format('d/m/Y') ?? '—' }}</div>
+            </div>
+            <div class="col-md-3">
+              <div class="text-muted small">CPC File</div>
+              <a href="{{ route('projects.download', ['project' => $project, 'path' => $cpcRec->cpc_file]) }}"
+                 class="btn-action btn-action-sm">Download CPC</a>
+            </div>
+            <div class="col-md-3">
+              <div class="text-muted small">Uploaded By</div>
+              <div>{{ $cpcRec->uploadedBy?->name ?? '—' }}</div>
+            </div>
+          </div>
+          <div class="alert alert-success py-2">Project marked as <strong>Completed</strong>.</div>
+        @endif
+        @can('update', $project)
+        <div x-data="{ open: {{ $cpcRec ? 'false' : 'true' }} }">
+          <button type="button" class="btn-action btn-action-sm" x-on:click="open = !open">
+            {{ $cpcRec ? 'Update CPC' : 'Upload Received CPC' }}
+          </button>
+          <div x-show="open" x-cloak class="mt-3 p-3 border rounded bg-light">
+            <form action="{{ route('projects.cpc-received.store', $project) }}" method="POST" enctype="multipart/form-data">
+              @csrf
+              <div class="row g-2">
+                <div class="col-md-3">
+                  <label class="form-label small">CPC Date <span class="text-danger">*</span></label>
+                  <input type="date" name="cpc_date" class="form-control form-control-sm"
+                         value="{{ $cpcRec?->cpc_date?->format('Y-m-d') }}" required>
+                </div>
+                <div class="col-md-5">
+                  <label class="form-label small">CPC File (PDF)</label>
+                  <input type="file" name="cpc_file" class="form-control form-control-sm" accept="application/pdf"
+                         {{ $cpcRec ? '' : 'required' }}>
+                </div>
+              </div>
+              <div class="mt-2">
+                <button type="submit" class="btn-action btn-action-sm btn-action-green">
+                  Upload &amp; Mark Completed
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+        @endcan
+      </div>
+    </div>
+  </div>
+</div>
+
+@endif {{-- end if not cancelled --}}
 
 @endsection
