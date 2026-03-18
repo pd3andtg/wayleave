@@ -24,7 +24,7 @@ class WayleavePhbtController extends Controller
 
         $this->projectService->storeWayleavePhbt($request->validated(), $project, auth()->user());
 
-        return back()->with('success', 'Wayleave PBT added successfully.');
+        return redirect(route('projects.show', $project) . '#section-4')->with('success', 'Wayleave PBT added successfully.');
     }
 
     // Section 4 (Contractor): replace their own wayleave file before officer endorsement.
@@ -34,7 +34,7 @@ class WayleavePhbtController extends Controller
 
         $this->projectService->replaceWayleavePhbt($request->validated(), $project, $wayleavePhbt);
 
-        return back()->with('success', 'Wayleave file replaced successfully.');
+        return redirect(route('projects.show', $project) . '#section-4')->with('success', 'Wayleave file replaced successfully.');
     }
 
     // Section 5 (Officer/Admin): upload endorsed file, sets endorsed_by.
@@ -45,6 +45,6 @@ class WayleavePhbtController extends Controller
 
         $this->projectService->endorseWayleavePhbt($request->validated(), $project, $wayleavePhbt, auth()->user());
 
-        return back()->with('success', 'Wayleave endorsed successfully.');
+        return redirect(route('projects.show', $project) . '#section-5')->with('success', 'Wayleave endorsed successfully.');
     }
 }

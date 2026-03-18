@@ -31,7 +31,7 @@ class BqInvController extends Controller
 
         $this->projectService->storeBoqInvItem($data, $project, auth()->user());
 
-        return back()->with('success', 'BOQ/INV item added successfully.');
+        return redirect(route('projects.show', $project) . '#section-2')->with('success', 'BOQ/INV item added successfully.');
     }
 
     // Section 2/3 — Delete a BOQ/INV row. Anyone with project update access can delete.
@@ -41,7 +41,7 @@ class BqInvController extends Controller
 
         $boqInvItem->delete();
 
-        return back()->with('success', 'BOQ/INV item deleted.');
+        return redirect(route('projects.show', $project) . '#section-3')->with('success', 'BOQ/INV item deleted.');
     }
 
     // Section 3 — Officer/admin updates a row (eds_no, payment_status, endorsed file).
@@ -57,6 +57,6 @@ class BqInvController extends Controller
 
         $this->projectService->updateBoqInvItem($data, $project, $boqInvItem, auth()->user());
 
-        return back()->with('success', 'BOQ/INV item updated.');
+        return redirect(route('projects.show', $project) . '#section-3')->with('success', 'BOQ/INV item updated.');
     }
 }

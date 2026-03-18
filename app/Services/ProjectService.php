@@ -31,7 +31,18 @@ class ProjectService
 
     public function getProjectList(User $user, array $filters): LengthAwarePaginator
     {
-        $query = Project::with('company')->latest();
+        // Eager load all relationships needed for the timeline progress bar on the list page.
+        $query = Project::with([
+            'company',
+            'boqInvItems',
+            'wayleavePhbts',
+            'wayleavePayments',
+            'permitSubmission',
+            'permitReceived',
+            'workNotice',
+            'cpcApplication',
+            'cpcReceived',
+        ])->latest();
 
         // Contractors are always scoped to their own company_id.
         // Officers and Admins bypass this filter to see all projects.
@@ -48,8 +59,16 @@ class ProjectService
             });
         }
 
+        // Status filter maps the three display states to the two DB columns.
         if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
+            if ($filters['status'] === 'completed') {
+                $query->where('status', 'completed');
+            } elseif ($filters['status'] === 'cancelled') {
+                $query->where('application_status', 'cancelled');
+            } elseif ($filters['status'] === 'in_progress') {
+                $query->where('application_status', 'in_progress')
+                      ->where('status', '!=', 'completed');
+            }
         }
 
         if (!empty($filters['nd_state'])) {
@@ -57,6 +76,35 @@ class ProjectService
         }
 
         return $query->paginate(15)->withQueryString();
+    }
+
+    // Returns the label for the first incomplete timeline stage.
+    // Used on the project list page to show the next action required.
+    public function getNextStepLabel(array $timelineStatus): string
+    {
+        $labels = [
+            1  => '01 | NF | PROJECT INFORMATION',
+            2  => '02 | NF | UPLOAD BQ/INV',
+            3  => '03 | TM | UPLOAD ENDORSED BQ/INV AND UPDATE PAYMENT STATUS',
+            4  => '04 | NF | UPLOAD WAYLEAVE',
+            5  => '05 | TM | UPLOAD ENDORSED WAYLEAVE',
+            6  => '06 | TM | UPDATE BG APPLICATION DATE (DEPOSIT) & FI PAYMENT STATUS',
+            7  => '07 | TM | UPLOAD BG & BD RECEIVED FROM FINSSO',
+            8  => '08 | NF | UPLOAD PERMIT DOCUMENT SUBMISSION TO PBT/KUTT',
+            9  => '09 | TM | UPLOAD PERMIT RECEIVED FROM KUTT/PBT',
+            10 => '10 | NF | UPLOAD "NOTIS MULA KERJA"',
+            11 => '11 | NF | UPLOAD "NOTIS SIAP KERJA"',
+            12 => '12 | NF | UPLOAD PERMOHONAN SIJIL PERAKUAN SIAP KERJA (CPC)',
+            13 => '13 | NF | UPLOAD SIJIL PERAKUAN SIAP KERJA',
+        ];
+
+        foreach ($labels as $step => $label) {
+            if (!$timelineStatus[$step]) {
+                return $label;
+            }
+        }
+
+        return 'ALL STEPS COMPLETED';
     }
 
     // ── Section 1: Create / Update Project ────────────────────────────────────

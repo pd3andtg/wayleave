@@ -26,7 +26,7 @@ class WayleavePaymentController extends Controller
 
         $this->projectService->storeWayleavePayment($request->validated(), $project, auth()->user());
 
-        return back()->with('success', 'Payment details saved.');
+        return redirect(route('projects.show', $project) . '#section-6')->with('success', 'Payment details saved.');
     }
 
     // Section 6 (combined): saves both FI and Deposit for one PBT in a single request.
@@ -36,7 +36,7 @@ class WayleavePaymentController extends Controller
 
         $this->projectService->storePbtWayleavePayments($request->validated(), $project, auth()->user());
 
-        return back()->with('success', 'Payment details saved.');
+        return redirect(route('projects.show', $project) . '#section-6')->with('success', 'Payment details saved.');
     }
 
     // Section 7: update received_posted_date and/or bg_bd_file on an existing payment row.
@@ -52,6 +52,6 @@ class WayleavePaymentController extends Controller
 
         $this->projectService->updateWayleavePaymentReceived($data, $project, $wayleavePayment, auth()->user());
 
-        return back()->with('success', 'BG/BD received details saved.');
+        return redirect(route('projects.show', $project) . '#section-7')->with('success', 'BG/BD received details saved.');
     }
 }

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 // Searchable by acronym or full_name in project forms.
 class Node extends Model
 {
-    protected $fillable = ['acronym', 'full_name'];
+    protected $fillable = ['acronym', 'full_name', 'nd', 'state'];
 
     public function projects()
     {

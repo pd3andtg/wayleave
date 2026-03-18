@@ -16,6 +16,6 @@ class CpcApplicationController extends Controller
     {
         $this->projectService->storeCpcApplication($request->validated(), $project, auth()->user());
 
-        return back()->with('success', 'CPC application submitted.');
+        return redirect(route('projects.show', $project) . '#section-12')->with('success', 'CPC application submitted.');
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AdminUnitController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\ExampleImageController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\Steps\BqInvController;
@@ -99,6 +100,13 @@ Route::middleware('auth')->group(function () {
 
     // ── Section 13: CPC Received → Project Completed (Contractor) ────────────
     Route::post('/projects/{project}/cpc-received',      [CpcReceivedController::class, 'store'])->name('projects.cpc-received.store');
+
+    // ── Example/reference images (shown as visual guides on project detail) ───
+    // View: all authenticated users. Upload/replace: admin + officer only.
+    Route::get('/example-images/{key}',  [ExampleImageController::class, 'show'])->name('example-images.show');
+    Route::middleware('role:admin|officer')->group(function () {
+        Route::post('/example-images/{key}', [ExampleImageController::class, 'upload'])->name('example-images.upload');
+    });
 
     // ── User Approval Queue (admin + officer) ────────────────────────────────
     Route::middleware('role:admin|officer')->group(function () {

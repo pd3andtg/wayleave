@@ -137,10 +137,17 @@
       <nav class="sidebar sidebar-offcanvas" id="sidebar">
         <ul class="nav">
 
-          <li class="nav-item {{ request()->routeIs('projects.*') ? 'active' : '' }}">
+          <li class="nav-item {{ request()->routeIs('projects.index') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('projects.index') }}">
               <i class="ti-home menu-icon"></i>
               <span class="menu-title">Dashboard</span>
+            </a>
+          </li>
+
+          <li class="nav-item {{ request()->routeIs('projects.create') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('projects.create') }}">
+              <i class="ti-plus menu-icon"></i>
+              <span class="menu-title">Register New Project</span>
             </a>
           </li>
 
@@ -183,7 +190,7 @@
                 </li>
                 <li class="nav-item">
                   <a class="nav-link {{ request()->routeIs('admin.nodes.*') ? 'active' : '' }}"
-                     href="{{ route('admin.nodes.index') }}">Node Management</a>
+                     href="{{ route('admin.nodes.index') }}">TM Node Management</a>
                 </li>
               </ul>
             </div>

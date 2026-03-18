@@ -24,7 +24,7 @@ class WorkNoticeController extends Controller
 
         $this->projectService->storeNotisMula($request->validated(), $project, auth()->user());
 
-        return back()->with('success', 'Notis Mula Kerja uploaded successfully.');
+        return redirect(route('projects.show', $project) . '#section-10')->with('success', 'Notis Mula Kerja uploaded successfully.');
     }
 
     // Section 11: upload Notis Siap Kerja.
@@ -34,6 +34,6 @@ class WorkNoticeController extends Controller
 
         $this->projectService->storeNotisSiap($request->validated(), $project, auth()->user());
 
-        return back()->with('success', 'Notis Siap Kerja uploaded successfully.');
+        return redirect(route('projects.show', $project) . '#section-11')->with('success', 'Notis Siap Kerja uploaded successfully.');
     }
 }

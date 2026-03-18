@@ -22,7 +22,7 @@ return new class extends Migration
             $table->enum('pbt_number', ['PBT1', 'PBT2', 'PBT3']);
             $table->enum('pbt_name', [
                 'MBKT', 'MPK', 'MDS', 'MDB', 'MPD',
-                'JKR_HT', 'JKR_KN', 'JKR_DN', 'JKR_KT', 'JKR_KM', 'JKR_ST',
+                'JKR HT', 'JKR KN', 'JKR DN', 'JKR KT', 'JKR KM', 'JKR ST',
                 'Others',
             ]);
             $table->string('pbt_name_other')->nullable();

@@ -17,6 +17,6 @@ class CpcReceivedController extends Controller
     {
         $this->projectService->storeCpcReceived($request->validated(), $project, auth()->user());
 
-        return back()->with('success', 'CPC uploaded. Project is now Completed.');
+        return redirect(route('projects.show', $project) . '#section-13')->with('success', 'CPC uploaded. Project is now Completed.');
     }
 }

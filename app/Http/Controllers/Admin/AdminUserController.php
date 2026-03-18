@@ -53,12 +53,13 @@ class AdminUserController extends Controller
     public function update(Request $request, User $user)
     {
         $request->validate([
-            'name'       => ['required', 'string', 'max:255'],
-            'email'      => ['required', 'email', 'unique:users,email,' . $user->id],
+            'name'           => ['required', 'string', 'max:255'],
+            'email'          => ['required', 'email', 'unique:users,email,' . $user->id],
             'id_number'      => ['nullable', 'string', 'max:255'],
             'contact_number' => ['nullable', 'string', 'max:50'],
             'unit_id'        => ['nullable', 'exists:units,id'],
             'company_id'     => ['nullable', 'exists:companies,id'],
+            'role'           => ['nullable', 'in:officer,admin'],
         ]);
 
         $user->update([
@@ -69,6 +70,11 @@ class AdminUserController extends Controller
             'unit_id'        => $request->unit_id,
             'company_id'     => $request->company_id,
         ]);
+
+        // Only update role if submitted and user is not a contractor (contractor roles are fixed).
+        if ($request->filled('role') && ! $user->hasRole('contractor')) {
+            $user->syncRoles([$request->role]);
+        }
 
         return back()->with('success', "User \"{$user->name}\" updated.");
     }

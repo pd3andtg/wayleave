@@ -17,7 +17,7 @@ class StoreWayleavePhbtRequest extends FormRequest
     {
         return [
             'pbt_number'             => ['required', 'in:PBT1,PBT2,PBT3'],
-            'pbt_name'               => ['required', 'in:MBKT,MPK,MDS,MDB,MPD,JKR_HT,JKR_KN,JKR_DN,JKR_KT,JKR_KM,JKR_ST,Others'],
+            'pbt_name'               => ['required', 'in:MBKT,MPK,MDS,MDB,MPD,JKR HT,JKR KN,JKR DN,JKR KT,JKR KM,JKR ST,Others'],
             'pbt_name_other'         => ['nullable', 'required_if:pbt_name,Others', 'string', 'max:255'],
             'wayleave_received_date' => ['required', 'date'],
             'wayleave_file'          => ['required', 'file', 'mimes:pdf', 'max:10240'],

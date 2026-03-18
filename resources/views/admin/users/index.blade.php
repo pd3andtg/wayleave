@@ -102,9 +102,6 @@
                 <th>ID Number</th>
                 <th>Contact No</th>
                 <th>Registered</th>
-                <th>Status</th>
-                <th>Account</th>
-                <th style="padding-left: 1.25rem; padding-right: 1.25rem;">Change Role</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -132,48 +129,6 @@
                   <td>{{ $user->contact_number ?? '—' }}</td>
                   <td>{{ $user->created_at->format('d M Y') }}</td>
                   <td>
-                    @if ($user->is_suspended)
-                      <span class="text-danger small fw-semibold">Suspended</span>
-                    @else
-                      <span class="text-success small fw-semibold">Active</span>
-                    @endif
-                  </td>
-                  <td>
-                    @if ($user->id !== auth()->id())
-                      @if ($user->is_suspended)
-                        <form action="{{ route('admin.users.reactivate', $user) }}" method="POST" class="d-inline">
-                          @csrf
-                          <button type="submit" class="btn-action btn-action-green btn-action-sm">Reactivate</button>
-                        </form>
-                      @else
-                        <form action="{{ route('admin.users.suspend', $user) }}" method="POST" class="d-inline"
-                              onsubmit="return confirm('Suspend {{ addslashes($user->name) }}? They will be logged out immediately.')">
-                          @csrf
-                          <button type="submit" class="btn-action btn-action-red btn-action-sm">Suspend</button>
-                        </form>
-                      @endif
-                    @else
-                      <span class="text-muted small">—</span>
-                    @endif
-                  </td>
-                  @if ($role !== 'contractor')
-                    <td style="padding-left: 1.25rem; padding-right: 1.25rem;">
-                      <form action="{{ route('admin.users.update-role', $user) }}" method="POST"
-                            class="d-inline" style="margin: 0;">
-                        @csrf
-                        <select name="role" class="form-select form-select-sm"
-                                style="width: 7rem; vertical-align: middle;">
-                          <option value="officer" {{ $role === 'officer' ? 'selected' : '' }}>Officer</option>
-                          <option value="admin"   {{ $role === 'admin'   ? 'selected' : '' }}>Admin</option>
-                        </select>
-                        <button type="submit" class="btn-action btn-action-sm"
-                                style="width: 7rem; vertical-align: middle;">Save</button>
-                      </form>
-                    </td>
-                  @else
-                    <td style="padding-left: 1.25rem; padding-right: 1.25rem;"><span class="text-muted small">Fixed</span></td>
-                  @endif
-                  <td>
                     <button type="button" class="btn-action btn-action-sm"
                             x-data x-on:click="$dispatch('open-edit-user-{{ $user->id }}')">Edit</button>
                     @if ($user->id !== auth()->id())
@@ -187,7 +142,7 @@
                 </tr>
               @empty
                 <tr>
-                  <td colspan="12" class="text-center text-muted py-4">No users found.</td>
+                  <td colspan="9" class="text-center text-muted py-4">No users found.</td>
                 </tr>
               @endforelse
             </tbody>
@@ -202,8 +157,9 @@
     <div x-data="{ open: false, role: '{{ $editRole }}' }"
          x-on:open-edit-user-{{ $editUser->id }}.window="open = true">
       <div x-show="open" x-cloak
-           style="position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; display:flex; align-items:center; justify-content:center;">
-        <div class="card" style="max-width:560px; width:100%; margin:1rem;" @click.outside="open = false">
+           style="position:fixed; inset:0; z-index:9999;"
+           x-on:click.self="open = false">
+        <div class="card" style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); max-width:560px; width:calc(100% - 2rem); z-index:10000; max-height:90vh; overflow-y:auto;" @click.stop>
           <div class="card-body">
             <h5 class="fw-bold mb-3">Edit User: {{ $editUser->name }}</h5>
             <form action="{{ route('admin.users.update', $editUser) }}" method="POST">
@@ -225,6 +181,15 @@
                   <label class="form-label small">Contact Number</label>
                   <input type="text" name="contact_number" class="form-control form-control-sm" value="{{ $editUser->contact_number }}">
                 </div>
+                @if ($editRole !== 'contractor')
+                <div class="col-md-6">
+                  <label class="form-label small">Role</label>
+                  <select name="role" x-model="role" class="form-control form-control-sm">
+                    <option value="officer" {{ $editRole === 'officer' ? 'selected' : '' }}>Officer</option>
+                    <option value="admin"   {{ $editRole === 'admin'   ? 'selected' : '' }}>Admin</option>
+                  </select>
+                </div>
+                @endif
                 <div class="col-md-6" x-show="role === 'officer'" x-cloak>
                   <label class="form-label small">Unit</label>
                   <select name="unit_id" class="form-control form-control-sm">

@@ -17,6 +17,8 @@ return new class extends Migration
             $table->id();
             $table->string('acronym');       // Short name shown in search (e.g. KT, KBR)
             $table->string('full_name');     // Full node name for display
+            $table->string('nd')->nullable();    // Network district (e.g. ND_TRG, ND_PHG)
+            $table->string('state')->nullable(); // Malaysian state (e.g. Terengganu, Pahang)
             $table->timestamps();
         });
     }

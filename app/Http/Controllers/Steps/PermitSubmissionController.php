@@ -16,6 +16,6 @@ class PermitSubmissionController extends Controller
     {
         $this->projectService->storePermitSubmission($request->validated(), $project, auth()->user());
 
-        return back()->with('success', 'Permit submission recorded.');
+        return redirect(route('projects.show', $project) . '#section-8')->with('success', 'Permit submission recorded.');
     }
 }

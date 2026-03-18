@@ -23,11 +23,15 @@ class AdminNodeController extends Controller
         $request->validate([
             'acronym'   => ['required', 'string', 'max:50', 'unique:nodes,acronym'],
             'full_name' => ['required', 'string', 'max:255'],
+            'nd'        => ['nullable', 'string', 'max:50'],
+            'state'     => ['nullable', 'string', 'max:100'],
         ]);
 
         Node::create([
             'acronym'   => strtoupper(trim($request->acronym)),
             'full_name' => trim($request->full_name),
+            'nd'        => $request->nd    ? strtoupper(trim($request->nd))    : null,
+            'state'     => $request->state ? trim($request->state) : null,
         ]);
 
         return back()->with('success', "Node \"{$request->acronym}\" added.");
@@ -38,11 +42,15 @@ class AdminNodeController extends Controller
         $request->validate([
             'acronym'   => ['required', 'string', 'max:50', 'unique:nodes,acronym,' . $node->id],
             'full_name' => ['required', 'string', 'max:255'],
+            'nd'        => ['nullable', 'string', 'max:50'],
+            'state'     => ['nullable', 'string', 'max:100'],
         ]);
 
         $node->update([
             'acronym'   => strtoupper(trim($request->acronym)),
             'full_name' => trim($request->full_name),
+            'nd'        => $request->nd    ? strtoupper(trim($request->nd))    : null,
+            'state'     => $request->state ? trim($request->state) : null,
         ]);
 
         return back()->with('success', "Node updated.");

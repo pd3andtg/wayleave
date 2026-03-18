@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\ExampleImageController;
 use App\Http\Requests\CancelProjectRequest;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
@@ -28,7 +29,18 @@ class ProjectController extends Controller
             $request->only('search', 'status', 'nd_state')
         );
 
-        return view('projects.project-list', compact('projects'));
+        // Compute timeline progress count and next step label for each project on this page.
+        // Relationships are already eager-loaded by getProjectList — no N+1 queries here.
+        $timelineData = [];
+        foreach ($projects as $project) {
+            $status = $this->projectService->getTimelineStatus($project);
+            $timelineData[$project->id] = [
+                'count'    => count(array_filter($status)),
+                'nextStep' => $this->projectService->getNextStepLabel($status),
+            ];
+        }
+
+        return view('projects.project-list', compact('projects', 'timelineData'));
     }
 
     public function create()
@@ -87,7 +99,13 @@ class ProjectController extends Controller
 
         $nodes = Node::orderBy('acronym')->get();
 
-        return view('projects.project-detail', compact('project', 'timelineStatus', 'companies', 'nodes'));
+        // Global example/reference images — same across all projects.
+        // Resolved here so Blade templates contain no storage logic.
+        $exampleImages = [
+            'section8' => ExampleImageController::exists('section8'),
+        ];
+
+        return view('projects.project-detail', compact('project', 'timelineStatus', 'companies', 'nodes', 'exampleImages'));
     }
 
     // Section 1: update project information (editable by anyone with access).
@@ -97,7 +115,7 @@ class ProjectController extends Controller
 
         $this->projectService->updateProject($request->validated(), $project, auth()->user());
 
-        return back()->with('success', 'Project updated successfully.');
+        return redirect(route('projects.show', $project) . '#section-1')->with('success', 'Project updated successfully.');
     }
 
     // Cancel a project — anyone (contractor, officer, admin) can cancel.

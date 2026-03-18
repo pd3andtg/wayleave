@@ -16,6 +16,6 @@ class PermitReceivedController extends Controller
     {
         $this->projectService->storePermitReceived($request->validated(), $project, auth()->user());
 
-        return back()->with('success', 'Permit received recorded.');
+        return redirect(route('projects.show', $project) . '#section-9')->with('success', 'Permit received recorded.');
     }
 }

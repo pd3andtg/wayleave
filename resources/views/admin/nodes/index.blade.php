@@ -33,21 +33,39 @@
         <form action="{{ route('admin.nodes.store') }}" method="POST">
           @csrf
           <div class="row g-3 mb-3">
-            <div class="col-md-4">
+            <div class="col-md-2">
               <label for="acronym" class="form-label">Acronym <span class="text-danger">*</span></label>
               <input type="text" id="acronym" name="acronym"
                      class="form-control @error('acronym') is-invalid @enderror"
-                     value="{{ old('acronym') }}" placeholder="e.g. KT" required>
+                     value="{{ old('acronym') }}" placeholder="e.g. AJH" required>
               @error('acronym')
                 <div class="invalid-feedback">{{ $message }}</div>
               @enderror
             </div>
-            <div class="col-md-8">
+            <div class="col-md-4">
               <label for="full_name" class="form-label">Full Name <span class="text-danger">*</span></label>
               <input type="text" id="full_name" name="full_name"
                      class="form-control @error('full_name') is-invalid @enderror"
-                     value="{{ old('full_name') }}" placeholder="e.g. Kota Tinggi" required>
+                     value="{{ old('full_name') }}" placeholder="e.g. AIR JERNIH" required>
               @error('full_name')
+                <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
+            </div>
+            <div class="col-md-2">
+              <label for="nd" class="form-label">AND</label>
+              <input type="text" id="nd" name="nd"
+                     class="form-control @error('nd') is-invalid @enderror"
+                     value="{{ old('nd') }}" placeholder="e.g. TRG">
+              @error('nd')
+                <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
+            </div>
+            <div class="col-md-4">
+              <label for="state" class="form-label">State</label>
+              <input type="text" id="state" name="state"
+                     class="form-control @error('state') is-invalid @enderror"
+                     value="{{ old('state') }}" placeholder="e.g. Terengganu">
+              @error('state')
                 <div class="invalid-feedback">{{ $message }}</div>
               @enderror
             </div>
@@ -71,6 +89,8 @@
               <th style="padding-left: 1.25rem; font-weight: 600; color: #07326A;">#</th>
               <th style="font-weight: 600; color: #07326A;">Acronym</th>
               <th style="font-weight: 600; color: #07326A;">Full Name</th>
+              <th style="font-weight: 600; color: #07326A;">ND</th>
+              <th style="font-weight: 600; color: #07326A;">State</th>
               <th style="font-weight: 600; color: #07326A;">Action</th>
             </tr>
           </thead>
@@ -94,6 +114,18 @@
                   </span>
                 </td>
                 <td>
+                  <span x-show="!editing">{{ $node->nd ?? '—' }}</span>
+                  <span x-show="editing" x-cloak>
+                    <input type="text" name="nd" form="node-edit-{{ $node->id }}" value="{{ $node->nd }}" class="form-control form-control-sm d-inline" style="width:7rem;" placeholder="ND_TRG">
+                  </span>
+                </td>
+                <td>
+                  <span x-show="!editing">{{ $node->state ?? '—' }}</span>
+                  <span x-show="editing" x-cloak>
+                    <input type="text" name="state" form="node-edit-{{ $node->id }}" value="{{ $node->state }}" class="form-control form-control-sm d-inline" style="width:10rem;" placeholder="Terengganu">
+                  </span>
+                </td>
+                <td>
                   <span x-show="!editing">
                     <button type="button" class="btn-action btn-action-sm" x-on:click="editing = true">Edit</button>
                     <form action="{{ route('admin.nodes.destroy', $node) }}" method="POST" class="d-inline ms-1"
@@ -111,7 +143,7 @@
               </tr>
             @empty
               <tr>
-                <td colspan="4" class="text-center text-muted py-4">No nodes found.</td>
+                <td colspan="6" class="text-center text-muted py-4">No nodes found.</td>
               </tr>
             @endforelse
           </tbody>

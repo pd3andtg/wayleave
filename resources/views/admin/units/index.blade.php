@@ -35,7 +35,7 @@
           <div class="mb-3">
             <label for="name" class="form-label">Unit Name</label>
             <input type="text" id="name" name="name" class="form-control @error('name') is-invalid @enderror"
-                   value="{{ old('name') }}" placeholder="e.g. ND JHR" required>
+                   value="{{ old('name') }}" placeholder="e.g. ND TRG" required>
           </div>
           <div class="text-center">
             <button type="submit" class="btn-action">Add Unit</button>
