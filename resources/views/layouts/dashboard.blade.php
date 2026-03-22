@@ -13,9 +13,10 @@
   <link rel="stylesheet" href="{{ asset('vendors/base/vendor.bundle.base.css') }}">
   <link rel="stylesheet" href="{{ asset('css/style.css') }}">
   @vite(['resources/css/app.css', 'resources/js/app.js'])
+  @stack('page-styles')
 </head>
 
-<body>
+<body class="sidebar-icon-only">
   <div class="container-scroller">
 
     <!-- ============================================================ -->
@@ -24,21 +25,20 @@
     <nav class="navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
       <div class="text-center navbar-brand-wrapper d-flex align-items-center justify-content-center">
         <a class="navbar-brand brand-logo me-5" href="{{ route('dashboard') }}">
-          <img src="{{ asset('images/logo.png') }}" class="me-2" alt="{{ config('app.name') }}" style="height:52px;width:auto;" />
+          <img src="{{ asset('images/waytrack.png') }}" class="me-2" alt="{{ config('app.name') }}" style="height:52px;width:auto;" />
         </a>
         <a class="navbar-brand brand-logo-mini" href="{{ route('dashboard') }}">
-          <img src="{{ asset('images/logo.png') }}" alt="{{ config('app.name') }}" style="height:52px;width:auto;" />
+          <img src="{{ asset('images/waytrackclosed.png') }}" alt="{{ config('app.name') }}" style="height:52px;width:auto;" />
         </a>
       </div>
       <div class="navbar-menu-wrapper d-flex align-items-center justify-content-end">
-        <button class="navbar-toggler navbar-toggler align-self-center" type="button" data-toggle="minimize">
+        <button class="navbar-toggler navbar-toggler align-self-center" type="button" data-toggle="minimize" style="background: none; border: none; padding: 0; outline: none; box-shadow: none;">
           <span style="display:flex;flex-direction:column;gap:5px;">
-            <span style="display:block;width:22px;height:2px;background:#07326A;border-radius:2px;"></span>
-            <span style="display:block;width:22px;height:2px;background:#07326A;border-radius:2px;"></span>
-            <span style="display:block;width:22px;height:2px;background:#07326A;border-radius:2px;"></span>
+            <span style="display:block;width:22px;height:2px;background:#ffffff;border-radius:2px;"></span>
+            <span style="display:block;width:22px;height:2px;background:#ffffff;border-radius:2px;"></span>
+            <span style="display:block;width:22px;height:2px;background:#ffffff;border-radius:2px;"></span>
           </span>
         </button>
-
         <ul class="navbar-nav navbar-nav-right">
 
           {{-- Notification dropdown (pending approvals for admin + officer) --}}
@@ -120,9 +120,9 @@
 
         <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button" data-toggle="offcanvas">
           <span style="display:flex;flex-direction:column;gap:5px;">
-            <span style="display:block;width:22px;height:2px;background:#07326A;border-radius:2px;"></span>
-            <span style="display:block;width:22px;height:2px;background:#07326A;border-radius:2px;"></span>
-            <span style="display:block;width:22px;height:2px;background:#07326A;border-radius:2px;"></span>
+            <span style="display:block;width:22px;height:2px;background:#ffffff;border-radius:2px;"></span>
+            <span style="display:block;width:22px;height:2px;background:#ffffff;border-radius:2px;"></span>
+            <span style="display:block;width:22px;height:2px;background:#ffffff;border-radius:2px;"></span>
           </span>
         </button>
       </div>
@@ -169,7 +169,8 @@
           {{-- Alpine.js toggle replaces Bootstrap collapse to avoid BS4/BS5 conflict --}}
           <li class="nav-item {{ request()->routeIs('admin.*') ? 'active' : '' }}"
               x-data="{ open: {{ request()->routeIs('admin.*') ? 'true' : 'false' }} }">
-            <a class="nav-link" href="javascript:void(0)" @click="open = !open">
+            <a class="nav-link" href="javascript:void(0)"
+               @click="if(document.body.classList.contains('sidebar-icon-only')){ document.body.classList.remove('sidebar-icon-only'); open = true; } else { open = !open; }">
               <i class="ti-settings menu-icon"></i>
               <span class="menu-title">Admin</span>
               <i class="menu-arrow"></i>
@@ -227,6 +228,26 @@
   <script src="{{ asset('js/off-canvas.js') }}"></script>
   <script src="{{ asset('js/hoverable-collapse.js') }}"></script>
   <script src="{{ asset('js/template.js') }}"></script>
+  <script>
+    // Fix template.js over-broad active matching (it uses last URL segment, not full path).
+    // Re-evaluate sidebar active classes using exact pathname comparison.
+    $(function () {
+      var path = window.location.pathname;
+      $('.sidebar .nav > .nav-item').each(function () {
+        var $item = $(this);
+        var $link = $item.children('a.nav-link');
+        if ($link.length && $link.attr('href') && $link.attr('href') !== 'javascript:void(0)') {
+          try {
+            var linkPath = new URL($link.attr('href'), window.location.origin).pathname;
+            if (linkPath !== path) {
+              $item.removeClass('active');
+              $link.removeClass('active');
+            }
+          } catch (e) {}
+        }
+      });
+    });
+  </script>
   @stack('scripts')
 </body>
 

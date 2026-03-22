@@ -17,24 +17,24 @@
 
 /* ============================================================
    COLOUR PALETTE — Azure theme
-   #EBEBEB  light gray      (background)
+   #ffffff  white           (background)
    #F1F7F9  light blue-white (light surfaces)
    #749DC8  steel blue      (accent / highlights)
    #0A61C9  vivid blue      (primary / navbar)
-   #064089  dark blue       (buttons, hover states)
-   #07326A  darkest navy    (sidebar, deep elements)
+   #27437d  dark blue       (buttons, hover states)
+   #27437d  darkest navy    (sidebar, deep elements)
 ============================================================ */
 
 :root {
     /* Landing template variables */
     --accent-color:    #0A61C9;
     --secondary-color: #749DC8;
-    --dark-color:      #07326A;
+    --dark-color:      #27437d;
 
     /* Dashboard Bootstrap variables */
     --bs-primary:     #0A61C9;
     --bs-primary-rgb: 10, 97, 201;
-    --bs-dark:        #07326A;
+    --bs-dark:        #27437d;
     --bs-dark-rgb:    7, 50, 106;
 }
 
@@ -50,18 +50,18 @@ small, strong, em, div, li, ul, ol,
 
 /* ── Landing page ─────────────────────────────────────── */
 body {
-    background-color: #EBEBEB;
+    background-color: #ffffff;
 }
 
 #header,
 #header-wrap {
-    background-color: #064089;
-    border-bottom-color: #07326A;
+    background-color: #27437d;
+    border-bottom-color: #215088;
 }
 
 /* Navbar font color */
 #header .menu-list a {
-    color: #EBEBEB;
+    color: #ffffff;
 }
 
 /* Active nav link color */
@@ -72,22 +72,22 @@ ul li.active a,
 
 /* Hamburger bar color */
 .hamburger .bar {
-    background-color: #EBEBEB;
+    background-color: #ffffff;
 }
 
 /* Billboard Sign In button — .btn.btn-accent needed to beat landing.css specificity */
 .btn.btn-accent,
 a.btn {
-    background: #064089 !important;
-    border-color: #064089 !important;
-    color: #EBEBEB !important;
+    background: #27437d !important;
+    border-color: #27437d !important;
+    color: #ffffff !important;
 }
 
 .btn.btn-accent:hover,
 a.btn:hover {
-    background: #07326A !important;
-    border-color: #07326A !important;
-    color: #EBEBEB !important;
+    background: #27437d !important;
+    border-color: #27437d !important;
+    color: #ffffff !important;
 }
 
 /* ── Horizontal form label alignment fix ─────────────────
@@ -107,10 +107,28 @@ a.btn:hover {
 
 /* ── Dashboard ────────────────────────────────────────── */
 
+/* Page background and footer — white */
+.page-body-wrapper,
+.main-panel,
+.content-wrapper,
+.footer {
+    background-color: #ffffff !important;
+}
+
+/* Push main panel right to account for fixed sidebar */
+.main-panel {
+    margin-left: 237px !important;
+    width: calc(100% - 237px) !important;
+}
+body.sidebar-icon-only .main-panel {
+    margin-left: 70px !important;
+    width: calc(100% - 70px) !important;
+}
+
 /* Card title — bumped to 1.15rem and darkened */
 .card .card-title {
     font-size: 1.15rem !important;
-    color: #07326A !important;
+    color: #27437d !important;
     font-weight: 600 !important;
 }
 
@@ -119,49 +137,80 @@ select.form-control {
     color: #212529 !important;
 }
 
-/* Top navbar — both logo wrapper and menu wrapper: light background, dark font */
+
+/* Hamburger icon — horizontal (≡) when sidebar closed, vertical (|||) when open */
+body:not(.sidebar-icon-only) .navbar-menu-wrapper .navbar-toggler span {
+    flex-direction: row !important;
+    align-items: center;
+    gap: 5px;
+}
+body:not(.sidebar-icon-only) .navbar-menu-wrapper .navbar-toggler span > span {
+    width: 2px !important;
+    height: 22px !important;
+}
+
+/* Top navbar — dark navy background, white icons, subtle bottom border */
 .navbar .navbar-brand-wrapper {
-    background: #E0E1DD !important;
+    background: #27437d !important;
+    border-bottom: 1px solid rgba(255,255,255,0.12) !important;
+    box-shadow: none !important;
 }
 
 .navbar .navbar-menu-wrapper {
-    background: #E0E1DD !important;
-    border-left: 1px solid #c8cac5;
+    background: #27437d !important;
+    border-left: 1px solid rgba(255,255,255,0.15) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.12) !important;
+    box-shadow: none !important;
 }
 
-/* Top navbar icons, text, dropdown toggles */
+.navbar {
+    box-shadow: 0 1px 4px rgba(0,0,0,0.18) !important;
+    border-bottom: none !important;
+}
+
+/* Top navbar icons, text, dropdown toggles — white on dark navy */
 .navbar .navbar-menu-wrapper .nav-link,
 .navbar .navbar-menu-wrapper .nav-link i,
 .navbar .navbar-menu-wrapper .navbar-toggler {
-    color: #07326A !important;
+    color: #ffffff !important;
 }
 
-/* Sidebar — light background, dark navy font */
+/* Sidebar — dark navy background, subtle right border, fixed position */
 .sidebar {
-    background: #E0E1DD !important;
+    background: #27437d !important;
+    box-shadow: 2px 0 6px rgba(0,0,0,0.18) !important;
+    border-right: none !important;
+    position: fixed !important;
+    top: 63px !important;
+    height: calc(100vh - 63px) !important;
+    overflow-y: auto !important;
 }
 
-/* Normal state — dark navy text on light background */
+/* Normal state — white text on dark navy background */
 .sidebar .nav .nav-item .nav-link,
 .sidebar .nav .nav-item .nav-link i.menu-icon,
 .sidebar .nav .nav-item .nav-link .menu-title {
-    color: #07326A !important;
+    color: #ffffff !important;
 }
 
-/* Active item — dark blue bg, light font */
+/* Active item — white bg, dark navy font, square edges */
+.sidebar .nav .nav-item.active,
 .sidebar .nav .nav-item.active > .nav-link,
 .sidebar .nav .nav-item.active > .nav-link i.menu-icon,
 .sidebar .nav .nav-item.active > .nav-link .menu-title {
-    background: #064089;
-    color: #E0E1DD !important;
+    background: #ffffff !important;
+    color: #27437d !important;
+    border-radius: 0 !important;
 }
 
-/* Hover — no background change, keep same text color */
+/* Hover — white bg, dark navy font and icon, square edges */
+.sidebar .nav .nav-item:hover,
 .sidebar .nav .nav-item:hover > .nav-link,
 .sidebar .nav .nav-item:hover > .nav-link i.menu-icon,
 .sidebar .nav .nav-item:hover > .nav-link .menu-title {
-    background: transparent !important;
-    color: #07326A !important;
+    background: #ffffff !important;
+    color: #27437d !important;
+    border-radius: 0 !important;
 }
 
 /* ── Sidebar icon-only mode: prevent Alpine sub-menu from overflowing ──
@@ -178,36 +227,47 @@ select.form-control {
     display: none !important;
 }
 
-/* Sub-menu background */
-.sidebar .nav .sub-menu {
-    background: #c8c9c5;
+/* Sub-menu background — must match sidebar dark navy.
+   Template selector is .nav.sub-menu (chained classes on the same <ul>).
+   Use background-color explicitly — shorthand 'background: transparent' can
+   compile to 'background: 0 0' which doesn't reliably reset background-color. */
+.sidebar .nav.sub-menu {
+    background-color: #27437d !important;
     width: 100%;
     list-style: none !important;
     padding-left: 0;
 }
 
-.sidebar .nav .sub-menu .nav-item {
+.sidebar .nav.sub-menu .nav-item,
+.sidebar .nav.sub-menu .nav-item:hover {
     list-style: none !important;
+    background-color: #27437d !important;
 }
 
-.sidebar .nav .sub-menu .nav-item::before,
-.sidebar .nav .sub-menu .nav-item::after {
+.sidebar .nav.sub-menu .nav-item::before,
+.sidebar .nav.sub-menu .nav-item::after {
     display: none !important;
 }
 
-/* Sub-menu normal — dark navy text, allow wrapping so text isn't clipped */
-.sidebar .nav .sub-menu .nav-item .nav-link {
-    color: #07326A !important;
+/* Sub-menu normal — white text, dark navy bg */
+.sidebar .nav.sub-menu .nav-item .nav-link {
+    color: #ffffff !important;
+    background-color: #27437d !important;
     white-space: normal !important;
     overflow: visible !important;
     text-overflow: unset !important;
 }
 
-/* Sub-menu active/hover — light text on dark blue */
-.sidebar .nav .sub-menu .nav-item .nav-link.active,
-.sidebar .nav .sub-menu .nav-item .nav-link:hover {
-    color: #E0E1DD !important;
-    background: #064089;
+/* Sub-menu hover — white bg, dark navy text */
+.sidebar .nav.sub-menu .nav-item .nav-link:hover {
+    color: #27437d !important;
+    background-color: #ffffff !important;
+}
+
+/* Sub-menu active — white bg, dark navy text */
+.sidebar .nav.sub-menu .nav-item .nav-link.active {
+    color: #27437d !important;
+    background-color: #ffffff !important;
 }
 
 /* Override template's .table { vertical-align: top } and .table > tbody { vertical-align: inherit }
@@ -227,7 +287,7 @@ input[type="file"].form-control {
     padding: 0 !important;
     line-height: 36px !important;
     overflow: hidden;
-    background-color: #07326A !important;
+    background-color: #27437d !important;
     color: #E0E1DD !important;
     font-weight: 400 !important;
 }
@@ -255,8 +315,8 @@ input[type="file"].form-control::file-selector-button {
 
 /* ── Project detail action buttons (Save, Upload, Download, Replace, etc.) ── */
 .btn-action {
-    background-color: #07326A !important;
-    border: 1px solid #07326A !important;
+    background-color: #27437d !important;
+    border: 1px solid #27437d !important;
     color: #E0E1DD !important;
     border-radius: 0 !important;
     padding: 0 1.6rem !important;
@@ -270,8 +330,8 @@ input[type="file"].form-control::file-selector-button {
 }
 
 .btn-action:hover {
-    background-color: #051f42 !important;
-    border-color: #051f42 !important;
+    background-color: #1c3260 !important;
+    border-color: #1c3260 !important;
     color: #E0E1DD !important;
     text-decoration: none;
 }
@@ -319,26 +379,32 @@ input[type="file"].form-control::file-selector-button {
     font-weight: 700;
 }
 
+/* ── Global: all buttons white text ──────────────────── */
+.btn,
+button:not(.btn-close):not(.navbar-toggler) {
+    color: #ffffff !important;
+}
+
 /* ── Dashboard button variants ────────────────────────── */
 
 /* Filter button — matches Register/View buttons */
 .btn-dashboard-filter {
-    background-color: #064089;
-    border-color: #064089;
+    background-color: #27437d;
+    border-color: #27437d;
     color: #E0E1DD;
     font-size: 0.875rem;
 }
 
 .btn-dashboard-filter:hover,
 .btn-dashboard-filter:focus {
-    background-color: #07326A;
-    border-color: #07326A;
+    background-color: #27437d;
+    border-color: #27437d;
     color: #E0E1DD;
 }
 
 /* View Project button — badge-sized, same palette */
 .btn-dashboard-view {
-    background-color: #064089;
+    background-color: #27437d;
     border: none;
     color: #E0E1DD;
     padding: 0.08em 0.35em;
@@ -353,7 +419,7 @@ input[type="file"].form-control::file-selector-button {
 }
 
 .btn-dashboard-view:hover {
-    background-color: #07326A;
+    background-color: #27437d;
     color: #E0E1DD;
     text-decoration: none;
 }

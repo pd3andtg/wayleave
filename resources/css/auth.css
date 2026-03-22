@@ -4,7 +4,7 @@
 
 .auth-wrapper {
   min-height: 100vh;
-  background-color: #EBEBEB;
+  background-color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -31,12 +31,12 @@
 }
 
 .auth-back-home a:hover {
-  color: #064089;
+  color: #27437d;
 }
 
 .auth-card h4 {
   font-weight: 600;
-  color: #064089;
+  color: #27437d;
   margin-bottom: 4px;
 }
 
@@ -77,7 +77,7 @@
   width: 16px;
   height: 16px;
   min-width: 16px;
-  border: 2px solid #EBEBEB;
+  border: 2px solid #d0d8e4;
   border-radius: 3px;
   background-color: #fff;
   cursor: pointer;
@@ -88,8 +88,8 @@
 }
 
 .auth-card .form-check-input[type="checkbox"]:checked {
-  background-color: #064089;
-  border-color: #064089;
+  background-color: #27437d;
+  border-color: #27437d;
 }
 
 .auth-card .form-check-input[type="checkbox"]:checked::after {
@@ -117,8 +117,8 @@
   display: block;
   width: 100%;
   margin: 0 auto;
-  background-color: #064089;
-  border: 1px solid #064089;
+  background-color: #27437d;
+  border: 1px solid #27437d;
   border-radius: 4px;
   font-family: 'Poppins', sans-serif;
   font-weight: 500;
@@ -136,8 +136,8 @@
 
 .auth-card button.auth-submit-btn:hover,
 .auth-card button.auth-submit-btn:focus {
-  background-color: #07326A !important;
-  border-color: #07326A !important;
+  background-color: #1c3260 !important;
+  border-color: #1c3260 !important;
   color: #ffffff !important;
   outline: none;
 }
@@ -147,5 +147,5 @@
 }
 
 .auth-card .text-primary:hover {
-  color: #064089 !important;
+  color: #27437d !important;
 }

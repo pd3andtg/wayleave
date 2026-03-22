@@ -129,6 +129,16 @@ class ProjectController extends Controller
         return back()->with('success', 'Project cancelled.');
     }
 
+    // Permanently delete a project — admin only.
+    public function destroy(Project $project)
+    {
+        $this->authorize('delete', $project);
+
+        $this->projectService->deleteProject($project);
+
+        return redirect()->route('projects.index')->with('success', 'Project deleted.');
+    }
+
     // Reopen a cancelled project — admin only.
     public function reopen(Project $project)
     {

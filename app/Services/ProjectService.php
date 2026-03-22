@@ -156,6 +156,14 @@ class ProjectService
         $project->update($data);
     }
 
+    // ── Delete Project ─────────────────────────────────────────────────────────
+
+    // Admin only — permanently deletes the project and all related records.
+    public function deleteProject(Project $project): void
+    {
+        $project->delete();
+    }
+
     // ── Cancel / Reopen Project ────────────────────────────────────────────────
 
     // Anyone (contractor, officer, admin) can cancel. Reason is compulsory.

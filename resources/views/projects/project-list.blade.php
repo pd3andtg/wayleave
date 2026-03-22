@@ -5,13 +5,12 @@
 @section('content')
 
 <div class="row">
-  <div class="col-12 grid-margin">
-    <div class="card">
-      <div class="card-body">
+  <div class="col-12" style="padding: 2rem;">
+    <div>
 
         {{-- Header --}}
         <div class="d-flex justify-content-between align-items-center mb-3">
-          <h4 class="card-title mb-0">Project List</h4>
+          <h2 class="card-title mb-0" style="font-weight: 600;">Project List</h2>
           @role('contractor')
             <a href="{{ route('projects.create') }}" class="btn btn-primary btn-sm">
               + Register New Project
@@ -58,18 +57,29 @@
 
         {{-- Table --}}
         <div class="table-responsive">
-          <table class="table table-hover w-100" style="font-size: 0.875rem;">
+          <table class="table table-hover" style="font-size: 0.875rem; table-layout: fixed; width: 100%;">
+            <colgroup>
+              <col style="width: 110px;">  {{-- Ref No --}}
+              <col style="width: 200px;">  {{-- Description --}}
+              @role('admin|officer')
+              <col style="width: 130px;">  {{-- Company --}}
+              @endrole
+              <col style="width: 100px;">  {{-- Status --}}
+              <col style="width: 150px;">  {{-- Progress --}}
+              <col>                        {{-- Next Step — takes remaining space --}}
+              <col style="width: 120px;">  {{-- Action --}}
+            </colgroup>
             <thead>
               <tr>
-                <th style="width: 10%;">Ref No</th>
-                <th style="width: 18%;">Description</th>
+                <th>Ref No</th>
+                <th>Description</th>
                 @role('admin|officer')
-                  <th style="width: 11%;">Company</th>
+                  <th>Company</th>
                 @endrole
-                <th style="width: 9%;">Status</th>
-                <th style="width: 14%;">Progress</th>
+                <th>Status</th>
+                <th>Progress</th>
                 <th>Next Step</th>
-                <th style="width: 8%; text-align: center;">Action</th>
+                <th style="text-align: center;">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -95,19 +105,21 @@
                       default      => 'bg-primary',
                   };
                 @endphp
-                <tr>
+                <tr style="cursor: pointer;" onclick="window.location='{{ route('projects.show', $project) }}'">
                   {{-- Ref No --}}
                   <td style="white-space: nowrap;">{{ $project->ref_no ?? '—' }}</td>
 
-                  {{-- Description — truncated with tooltip --}}
-                  <td style="max-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
-                      title="{{ $project->project_desc }}">
-                    {{ $project->project_desc }}
+                  {{-- Description — wraps up to 3 lines within fixed column width --}}
+                  <td style="white-space: normal; word-break: break-word;">
+                    <div style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;"
+                         title="{{ $project->project_desc }}">
+                      {{ $project->project_desc }}
+                    </div>
                   </td>
 
                   {{-- Company (admin/officer only) --}}
                   @role('admin|officer')
-                    <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 0;">
+                    <td style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                       {{ $project->company->name ?? '—' }}
                     </td>
                   @endrole
@@ -151,12 +163,22 @@
                   </td>
 
                   {{-- Action --}}
-                  <td style="text-align: center;">
+                  <td style="text-align: center; white-space: nowrap;" onclick="event.stopPropagation()">
                     <a href="{{ route('projects.show', $project) }}"
-                       class="badge"
-                       style="background-color: #064089; color: #E0E1DD; padding: calc(0.4em + 5px) 0.75em; font-size: 0.75rem; font-weight: 500; text-decoration: none; border-radius: 0;">
+                       style="display: inline-block; width: 50px; height: 30px; line-height: 30px; background-color: #144e90; color: #E0E1DD; font-size: 0.72rem; font-weight: 500; text-decoration: none; border-radius: 0; text-align: center;">
                       View
                     </a>
+                    @role('admin')
+                    <form action="{{ route('projects.destroy', $project) }}" method="POST" style="display: inline-block; margin: 0;"
+                          onsubmit="return confirm('Delete project \'{{ addslashes($project->project_desc) }}\'? This cannot be undone.')">
+                      @csrf
+                      @method('DELETE')
+                      <button type="submit"
+                              style="display: inline-block; width: 50px; height: 30px; line-height: 30px; background-color: #dc3545; color: #fff; font-size: 0.72rem; font-weight: 400; border: none; border-radius: 0; cursor: pointer; text-align: center; padding: 0; text-transform: none !important;">
+                        Delete
+                      </button>
+                    </form>
+                    @endrole
                   </td>
                 </tr>
               @empty
@@ -173,7 +195,6 @@
           {{ $projects->links() }}
         </div>
 
-      </div>
     </div>
   </div>
 </div>

@@ -89,7 +89,7 @@
       display: block;
       width: 25px;
       height: 3px;
-      background-color: #EBEBEB;
+      background-color: #ffffff;
       border-radius: 3px;
       transition: all 0.3s ease;
     }
@@ -147,7 +147,7 @@
 
           <div class="main-logo">
             <a href="{{ route('landing') }}">
-              <img src="{{ asset('images/logo.png') }}" alt="{{ config('app.name') }}">
+              <img src="{{ asset('images/waytrack.png') }}" alt="{{ config('app.name') }}">
             </a>
           </div>
 

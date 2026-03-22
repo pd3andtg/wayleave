@@ -32,6 +32,12 @@ class ProjectPolicy
         return true;
     }
 
+    // Delete a project permanently — admin only.
+    public function delete(User $user, Project $project): bool
+    {
+        return $user->hasRole('admin');
+    }
+
     // Reopen a cancelled project — admin only.
     public function reopen(User $user, Project $project): bool
     {

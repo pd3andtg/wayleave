@@ -2,6 +2,12 @@
 
 @section('title', 'Project Detail')
 
+@push('page-styles')
+<style>
+  .content-wrapper, .footer { background-color: #f0f2f5 !important; }
+</style>
+@endpush
+
 @section('content')
 
 @php
@@ -18,7 +24,7 @@
       <div class="card-body py-3">
         <div class="d-flex justify-content-between align-items-start">
           <div>
-            <h4 class="mb-1">{{ $project->project_desc }}</h4>
+            <h4 class="mb-1 text-muted fw-semibold">{{ $project->project_desc }}</h4>
             <div class="text-muted" style="font-size:0.85rem;">
               <span class="me-3">Ref No: <strong>{{ $project->ref_no ?? '—' }}</strong></span>
               <span class="me-3">LOR: <strong>{{ $project->lor_no ?? '—' }}</strong></span>
@@ -328,7 +334,7 @@ $tlLabels = [
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title"><span class="me-3">2</span> BOQ/INV Files</h3>
+        <h3 class="card-title"><span class="me-3">2</span> BOQ/Invoice Files</h3>
         @if($boqHidden)
           <p class="text-muted mb-0"><em>Payment to KUTT is {{ ucfirst(str_replace('_', ' ', $project->payment_to_kutt)) }} — BOQ/INV section not applicable.</em></p>
         @else
@@ -499,7 +505,7 @@ $tlLabels = [
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title"><span class="me-3">3</span> TM BOQ/Invoice Endorsement</h3>
+        <h3 class="card-title"><span class="me-3">3</span> TM: BOQ/Invoice Endorsement</h3>
         @if($boqHidden)
           <p class="text-muted mb-0"><em>Payment to KUTT is {{ ucfirst(str_replace('_', ' ', $project->payment_to_kutt)) }} — BOQ/INV section not applicable.</em></p>
         @else
@@ -781,7 +787,7 @@ $tlLabels = [
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title"><span class="me-3">5</span> TM Wayleave Endorsement</h3>
+        <h3 class="card-title"><span class="me-3">5</span> TM: Wayleave Endorsement</h3>
         @if($project->wayleavePhbts->isEmpty())
           <p class="text-muted">No wayleave PBT records yet (Section 4 must be filled first).</p>
         @else
