@@ -179,7 +179,7 @@
               <ul class="nav flex-column sub-menu" style="width:100%;">
                 <li class="nav-item">
                   <a class="nav-link {{ request()->routeIs('admin.companies.*') ? 'active' : '' }}"
-                     href="{{ route('admin.companies.index') }}">Company Requests</a>
+                     href="{{ route('admin.companies.index') }}">Company Management</a>
                 </li>
                 <li class="nav-item">
                   <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"
@@ -236,14 +236,32 @@
       $('.sidebar .nav > .nav-item').each(function () {
         var $item = $(this);
         var $link = $item.children('a.nav-link');
-        if ($link.length && $link.attr('href') && $link.attr('href') !== 'javascript:void(0)') {
+        if (!$link.length) return;
+        var href = $link.attr('href');
+
+        if (href && href !== 'javascript:void(0)') {
+          // Regular nav item — compare its href directly
           try {
-            var linkPath = new URL($link.attr('href'), window.location.origin).pathname;
+            var linkPath = new URL(href, window.location.origin).pathname;
             if (linkPath !== path) {
               $item.removeClass('active');
               $link.removeClass('active');
             }
           } catch (e) {}
+        } else {
+          // Dropdown nav item (href="javascript:void(0)") — only keep active
+          // if one of its sub-menu links exactly matches the current path
+          var subMatch = false;
+          $item.find('.sub-menu a.nav-link').each(function () {
+            try {
+              var subPath = new URL($(this).attr('href'), window.location.origin).pathname;
+              if (subPath === path) { subMatch = true; }
+            } catch (e) {}
+          });
+          if (!subMatch) {
+            $item.removeClass('active');
+            $link.removeClass('active');
+          }
         }
       });
     });

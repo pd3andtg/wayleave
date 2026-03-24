@@ -22,9 +22,17 @@ class ProjectService
     // ── Helpers ────────────────────────────────────────────────────────────────
 
     // Stores a file on the configured filesystem disk and returns its path/key.
-    private function storeFile($file, string $folder): string
+    // Filename is auto-generated as: "{ref_no} - {label}.{ext}" for readability.
+    // Timestamp prefix added to avoid collisions when the same section is re-uploaded.
+    private function storeFile($file, string $folder, Project $project, string $label): string
     {
-        return $file->store($folder, config('filesystems.default'));
+        $ext      = $file->getClientOriginalExtension() ?: 'pdf';
+        $ref      = $project->ref_no
+            ? preg_replace('/[^a-zA-Z0-9._-]/', '_', $project->ref_no) . ' - '
+            : '';
+        $filename = time() . '_' . $ref . $label . '.' . $ext;
+
+        return $file->storeAs($folder, $filename, config('filesystems.default'));
     }
 
     // ── Project List ──────────────────────────────────────────────────────────
@@ -45,18 +53,26 @@ class ProjectService
         ])->latest();
 
         // Contractors are always scoped to their own company_id.
-        // Officers and Admins bypass this filter to see all projects.
+        // Officers are auto-scoped to their unit's ND state (e.g. ND TRG -> ND_TRG).
+        // Admins see all projects with no restriction.
         if ($user->hasRole('contractor')) {
             $query->where('company_id', $user->company_id);
+        } elseif ($user->hasRole('officer') && $user->unit) {
+            $ndState = strtoupper(str_replace(' ', '_', $user->unit->name));
+            $query->where('nd_state', $ndState);
         }
 
         if (!empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
-                // Use 'like' for SQLite/PostgreSQL compatibility.
-                $q->where('ref_no', 'like', "%{$search}%")
-                  ->orWhere('project_desc', 'like', "%{$search}%");
+                $q->where('ref_no', 'ilike', "%{$search}%")
+                  ->orWhere('project_desc', 'ilike', "%{$search}%");
             });
+        }
+
+        // Admin can manually filter by ND state. Officers are auto-scoped above.
+        if (!empty($filters['nd_state'])) {
+            $query->where('nd_state', $filters['nd_state']);
         }
 
         // Status filter maps the three display states to the two DB columns.
@@ -69,10 +85,6 @@ class ProjectService
                 $query->where('application_status', 'in_progress')
                       ->where('status', '!=', 'completed');
             }
-        }
-
-        if (!empty($filters['nd_state'])) {
-            $query->where('nd_state', $filters['nd_state']);
         }
 
         return $query->paginate(15)->withQueryString();
@@ -232,7 +244,8 @@ class ProjectService
     public function storeBoqInvItem(array $data, Project $project, User $user): BoqInvItem
     {
         $folder   = 'projects/' . $project->id . '/boq-inv';
-        $filePath = isset($data['file']) ? $this->storeFile($data['file'], $folder) : null;
+        $boqLabel = implode('_', array_filter([$data['document_info'] ?? null, $data['type'] ?? null])) ?: 'BOQ_INV_File';
+        $filePath = isset($data['file']) ? $this->storeFile($data['file'], $folder, $project, $boqLabel) : null;
 
         return BoqInvItem::create([
             'project_id'    => $project->id,
@@ -265,7 +278,8 @@ class ProjectService
 
         // Officer/admin overwrites file if a new one is uploaded.
         if (isset($data['file'])) {
-            $payload['file_path']    = $this->storeFile($data['file'], $folder);
+            $endorsedLabel           = implode('_', array_filter([$data['document_info'] ?? $item->document_info, $data['type'] ?? $item->type, 'Endorsed'])) ?: 'BOQ_INV_Endorsed';
+            $payload['file_path']    = $this->storeFile($data['file'], $folder, $project, $endorsedLabel);
             $payload['endorsed_by']  = $user->id;
         }
 
@@ -279,7 +293,7 @@ class ProjectService
     public function storeWayleavePhbt(array $data, Project $project, User $user): WayleavePhbt
     {
         $folder       = 'projects/' . $project->id . '/wayleave-pbts';
-        $wayleaveFile = isset($data['wayleave_file']) ? $this->storeFile($data['wayleave_file'], $folder) : null;
+        $wayleaveFile = isset($data['wayleave_file']) ? $this->storeFile($data['wayleave_file'], $folder, $project, 'Wayleave_' . $data['pbt_number']) : null;
 
         return WayleavePhbt::create([
             'project_id'             => $project->id,
@@ -295,7 +309,7 @@ class ProjectService
     public function replaceWayleavePhbt(array $data, Project $project, WayleavePhbt $pbt): WayleavePhbt
     {
         $folder       = 'projects/' . $project->id . '/wayleave-pbts';
-        $wayleaveFile = $this->storeFile($data['wayleave_file'], $folder);
+        $wayleaveFile = $this->storeFile($data['wayleave_file'], $folder, $project, 'Wayleave_' . $pbt->pbt_number);
         $pbt->update(['wayleave_file' => $wayleaveFile]);
 
         return $pbt;
@@ -308,7 +322,8 @@ class ProjectService
     public function endorseWayleavePhbt(array $data, Project $project, WayleavePhbt $pbt, User $user): WayleavePhbt
     {
         $folder       = 'projects/' . $project->id . '/wayleave-pbts';
-        $wayleaveFile = $this->storeFile($data['wayleave_file'], $folder);
+        $pbtName      = $pbt->pbt_name === 'Others' ? ($pbt->pbt_name_other ?? 'Others') : $pbt->pbt_name;
+        $wayleaveFile = $this->storeFile($data['wayleave_file'], $folder, $project, 'Wayleave_' . $pbtName . '_Endorsed');
 
         $pbt->update([
             'wayleave_file' => $wayleaveFile,
@@ -377,7 +392,14 @@ class ProjectService
         ];
 
         if (isset($data['bg_bd_file'])) {
-            $payload['bg_bd_file_path'] = $this->storeFile($data['bg_bd_file'], $folder);
+            $pbt    = $payment->wayleavePhbt;
+            $parts  = array_filter([
+                $pbt?->pbt_name_other ?? $pbt?->pbt_name,
+                $payment->payment_type,
+                $payment->method_of_payment,
+            ]);
+            $label  = implode('_', $parts) ?: 'BG_BD_Document';
+            $payload['bg_bd_file_path'] = $this->storeFile($data['bg_bd_file'], $folder, $project, $label);
         }
 
         $payment->update($payload);
@@ -393,7 +415,7 @@ class ProjectService
         $existing = $project->permitSubmission;
 
         $filePath = isset($data['submission_file'])
-            ? $this->storeFile($data['submission_file'], $folder)
+            ? $this->storeFile($data['submission_file'], $folder, $project, 'Permit_Submission')
             : $existing?->submission_file;
 
         return PermitSubmission::updateOrCreate(
@@ -414,7 +436,7 @@ class ProjectService
         $existing = $project->permitReceived;
 
         $filePath = isset($data['permit_file'])
-            ? $this->storeFile($data['permit_file'], $folder)
+            ? $this->storeFile($data['permit_file'], $folder, $project, 'Permit_Received')
             : $existing?->permit_file;
 
         return PermitReceived::updateOrCreate(
@@ -434,7 +456,7 @@ class ProjectService
         $folder   = 'projects/' . $project->id . '/work-notices';
         $existing = $project->workNotice;
 
-        $filePath = $this->storeFile($data['notis_mula_file'], $folder);
+        $filePath = $this->storeFile($data['notis_mula_file'], $folder, $project, 'Notis_Mula_Kerja');
 
         return WorkNotice::updateOrCreate(
             ['project_id' => $project->id],
@@ -453,7 +475,7 @@ class ProjectService
         $folder   = 'projects/' . $project->id . '/work-notices';
         $existing = $project->workNotice;
 
-        $filePath = $this->storeFile($data['notis_siap_file'], $folder);
+        $filePath = $this->storeFile($data['notis_siap_file'], $folder, $project, 'Notis_Siap_Kerja');
 
         return WorkNotice::updateOrCreate(
             ['project_id' => $project->id],
@@ -475,10 +497,10 @@ class ProjectService
         return CpcApplication::updateOrCreate(
             ['project_id' => $project->id],
             [
-                'surat_serahan_file'     => isset($data['surat_serahan_file'])     ? $this->storeFile($data['surat_serahan_file'], $folder)     : $existing?->surat_serahan_file,
-                'laporan_bergambar_file' => isset($data['laporan_bergambar_file']) ? $this->storeFile($data['laporan_bergambar_file'], $folder) : $existing?->laporan_bergambar_file,
-                'salinan_coa_file'       => isset($data['salinan_coa_file'])       ? $this->storeFile($data['salinan_coa_file'], $folder)       : $existing?->salinan_coa_file,
-                'salinan_permit_file'    => isset($data['salinan_permit_file'])    ? $this->storeFile($data['salinan_permit_file'], $folder)    : $existing?->salinan_permit_file,
+                'surat_serahan_file'     => isset($data['surat_serahan_file'])     ? $this->storeFile($data['surat_serahan_file'], $folder, $project, 'CPC_Surat_Serahan')         : $existing?->surat_serahan_file,
+                'laporan_bergambar_file' => isset($data['laporan_bergambar_file']) ? $this->storeFile($data['laporan_bergambar_file'], $folder, $project, 'CPC_Laporan_Bergambar')  : $existing?->laporan_bergambar_file,
+                'salinan_coa_file'       => isset($data['salinan_coa_file'])       ? $this->storeFile($data['salinan_coa_file'], $folder, $project, 'CPC_Salinan_COA')            : $existing?->salinan_coa_file,
+                'salinan_permit_file'    => isset($data['salinan_permit_file'])    ? $this->storeFile($data['salinan_permit_file'], $folder, $project, 'CPC_Salinan_Permit')      : $existing?->salinan_permit_file,
                 'date_submit_to_kutt'    => $data['date_submit_to_kutt'] ?? $existing?->date_submit_to_kutt,
                 'submitted_by'           => $user->id,
             ]
@@ -493,7 +515,7 @@ class ProjectService
         $existing = $project->cpcReceived;
 
         $filePath = isset($data['cpc_file'])
-            ? $this->storeFile($data['cpc_file'], $folder)
+            ? $this->storeFile($data['cpc_file'], $folder, $project, 'CPC_Sijil_Perakuan')
             : $existing?->cpc_file;
 
         $record = CpcReceived::updateOrCreate(

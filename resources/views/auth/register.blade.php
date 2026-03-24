@@ -27,7 +27,7 @@
 
     {{-- Name --}}
     <div class="form-group">
-      <input type="text"
+      <input type="text" autocomplete="off"
              class="form-control form-control-lg @error('name') is-invalid @enderror"
              name="name"
              value="{{ old('name') }}"
@@ -37,7 +37,7 @@
 
     {{-- Email --}}
     <div class="form-group">
-      <input type="email"
+      <input type="email" autocomplete="off"
              class="form-control form-control-lg @error('email') is-invalid @enderror"
              name="email"
              value="{{ old('email') }}"
@@ -81,7 +81,7 @@
 
     {{-- Staff ID — TM Tech officers only --}}
     <div class="form-group" x-show="isTmTech" x-cloak>
-      <input type="text"
+      <input type="text" autocomplete="off"
              class="form-control form-control-lg @error('id_number') is-invalid @enderror"
              name="id_number"
              value="{{ old('id_number') }}"
@@ -92,7 +92,7 @@
 
     {{-- IC No — external contractors only --}}
     <div class="form-group" x-show="isContractor" x-cloak>
-      <input type="text"
+      <input type="text" autocomplete="off"
              class="form-control form-control-lg @error('id_number') is-invalid @enderror"
              name="id_number"
              value="{{ old('id_number') }}"
@@ -103,7 +103,7 @@
 
     {{-- Password --}}
     <div class="form-group">
-      <input type="password"
+      <input type="password" autocomplete="new-password"
              class="form-control form-control-lg @error('password') is-invalid @enderror"
              name="password"
              placeholder="Password"
@@ -112,7 +112,7 @@
 
     {{-- Confirm password --}}
     <div class="form-group">
-      <input type="password"
+      <input type="password" autocomplete="new-password"
              class="form-control form-control-lg"
              name="password_confirmation"
              placeholder="Confirm password"

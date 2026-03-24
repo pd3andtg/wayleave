@@ -36,15 +36,15 @@
           <div class="row g-3">
             <div class="col-md-4">
               <label class="form-label small">Full Name <span class="text-danger">*</span></label>
-              <input type="text" name="name" class="form-control" value="{{ old('name') }}" required>
+              <input type="text" autocomplete="off" name="name" class="form-control" value="{{ old('name') }}" required>
             </div>
             <div class="col-md-4">
               <label class="form-label small">Email <span class="text-danger">*</span></label>
-              <input type="email" name="email" class="form-control" value="{{ old('email') }}" required>
+              <input type="email" autocomplete="off" name="email" class="form-control" value="{{ old('email') }}" required>
             </div>
             <div class="col-md-4">
               <label class="form-label small">Password <span class="text-danger">*</span></label>
-              <input type="password" name="password" class="form-control" required minlength="8">
+              <input type="password" autocomplete="new-password" name="password" class="form-control" required minlength="8">
             </div>
             <div class="col-md-3">
               <label class="form-label small">Role <span class="text-danger">*</span></label>
@@ -56,11 +56,11 @@
             </div>
             <div class="col-md-3">
               <label class="form-label small">ID Number (Staff ID / IC No)</label>
-              <input type="text" name="id_number" class="form-control" value="{{ old('id_number') }}">
+              <input type="text" autocomplete="off" name="id_number" class="form-control" value="{{ old('id_number') }}">
             </div>
             <div class="col-md-3">
               <label class="form-label small">Contact Number</label>
-              <input type="text" name="contact_number" class="form-control" value="{{ old('contact_number') }}">
+              <input type="text" autocomplete="off" name="contact_number" class="form-control" value="{{ old('contact_number') }}">
             </div>
             <div class="col-md-3" x-show="role === 'officer'" x-cloak>
               <label class="form-label small">Unit</label>
@@ -89,6 +89,16 @@
     </div>
 
     <div class="card">
+      <div class="card-header">
+        <form method="GET" action="{{ route('admin.users.index') }}">
+          <div class="d-flex align-items-center gap-2" style="max-width:420px;">
+            <input type="text" autocomplete="off" name="search" class="form-control form-control-sm" placeholder="Search name or email…" value="{{ $search ?? '' }}">
+            @if($search)
+              <a href="{{ route('admin.users.index') }}" class="btn-action btn-action-sm" style="font-weight:400; text-transform:none; color:#ffffff; white-space:nowrap;">Clear</a>
+            @endif
+          </div>
+        </form>
+      </div>
       <div class="card-body p-0">
         <div class="table-responsive">
           <table class="table table-hover mb-0">
@@ -167,19 +177,19 @@
               <div class="row g-2">
                 <div class="col-md-6">
                   <label class="form-label small">Full Name</label>
-                  <input type="text" name="name" class="form-control form-control-sm" value="{{ $editUser->name }}" required>
+                  <input type="text" autocomplete="off" name="name" class="form-control form-control-sm" value="{{ $editUser->name }}" required>
                 </div>
                 <div class="col-md-6">
                   <label class="form-label small">Email</label>
-                  <input type="email" name="email" class="form-control form-control-sm" value="{{ $editUser->email }}" required>
+                  <input type="email" autocomplete="off" name="email" class="form-control form-control-sm" value="{{ $editUser->email }}" required>
                 </div>
                 <div class="col-md-6">
                   <label class="form-label small">ID Number</label>
-                  <input type="text" name="id_number" class="form-control form-control-sm" value="{{ $editUser->id_number }}">
+                  <input type="text" autocomplete="off" name="id_number" class="form-control form-control-sm" value="{{ $editUser->id_number }}">
                 </div>
                 <div class="col-md-6">
                   <label class="form-label small">Contact Number</label>
-                  <input type="text" name="contact_number" class="form-control form-control-sm" value="{{ $editUser->contact_number }}">
+                  <input type="text" autocomplete="off" name="contact_number" class="form-control form-control-sm" value="{{ $editUser->contact_number }}">
                 </div>
                 @if ($editRole !== 'contractor')
                 <div class="col-md-6">

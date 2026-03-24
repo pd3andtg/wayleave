@@ -26,7 +26,7 @@
 
     {{-- Company name --}}
     <div class="form-group">
-      <input type="text"
+      <input type="text" autocomplete="off"
              class="form-control form-control-lg @error('company_name') is-invalid @enderror"
              name="company_name"
              value="{{ old('company_name') }}"
@@ -36,7 +36,7 @@
 
     {{-- Requester name --}}
     <div class="form-group">
-      <input type="text"
+      <input type="text" autocomplete="off"
              class="form-control form-control-lg @error('requester_name') is-invalid @enderror"
              name="requester_name"
              value="{{ old('requester_name') }}"
@@ -46,7 +46,7 @@
 
     {{-- Requester email --}}
     <div class="form-group">
-      <input type="email"
+      <input type="email" autocomplete="off"
              class="form-control form-control-lg @error('requester_email') is-invalid @enderror"
              name="requester_email"
              value="{{ old('requester_email') }}"

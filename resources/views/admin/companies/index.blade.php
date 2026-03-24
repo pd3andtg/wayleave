@@ -7,7 +7,7 @@
   <div class="col-12">
 
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <h4 class="fw-bold mb-0">Company Registration Requests</h4>
+      <h4 class="fw-bold mb-0">Company Registration and Management</h4>
     </div>
 
     @if (session('success'))
@@ -23,18 +23,28 @@
         <h5 class="fw-semibold mb-0">Register New Company</h5>
       </div>
       <div class="card-body">
-        <form action="{{ route('admin.companies.store') }}" method="POST" class="d-flex gap-2 align-items-end">
+        <form action="{{ route('admin.companies.store') }}" method="POST">
           @csrf
-          <div style="flex:1; max-width:360px;">
+          <div class="mb-3" style="max-width:360px;">
             <label class="form-label small mb-1">Company Name <span class="text-danger">*</span></label>
-            <input type="text" name="name" class="form-control" value="{{ old('name') }}" placeholder="e.g. Syarikat ABC Sdn Bhd" required>
+            <input type="text" autocomplete="off" name="name" class="form-control" value="{{ old('name') }}" placeholder="e.g. ABC Sdn Bhd" required>
           </div>
-          <button type="submit" class="btn-action">Register Company</button>
+          <button type="submit" class="btn-action" style="font-weight:400; text-transform:none; color:#ffffff;">Register Company</button>
         </form>
       </div>
     </div>
 
     <div class="card">
+      <div class="card-header">
+        <form method="GET" action="{{ route('admin.companies.index') }}">
+          <div class="d-flex align-items-center gap-2" style="max-width:400px;">
+            <input type="text" autocomplete="off" name="search" class="form-control form-control-sm" placeholder="Search company name…" value="{{ $search ?? '' }}">
+            @if($search)
+              <a href="{{ route('admin.companies.index') }}" class="btn-action btn-action-sm" style="font-weight:400; text-transform:none; color:#ffffff; white-space:nowrap;">Clear</a>
+            @endif
+          </div>
+        </form>
+      </div>
       <div class="card-body p-0">
         <div class="table-responsive">
           <table class="table table-hover mb-0">
@@ -60,7 +70,7 @@
                           action="{{ route('admin.companies.update', $company) }}" method="POST">
                       @csrf
                       @method('PATCH')
-                      <input type="text" name="name" value="{{ $company->name }}"
+                      <input type="text" autocomplete="off" name="name" value="{{ $company->name }}"
                              class="form-control form-control-sm d-inline"
                              style="width: 14rem; height: 31px; display: inline-block !important;"
                              required>

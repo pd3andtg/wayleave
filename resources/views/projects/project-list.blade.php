@@ -22,7 +22,7 @@
         <form method="GET" action="{{ route('projects.index') }}" id="filter-form">
           <div class="row g-2 mb-4">
             <div class="col">
-              <input type="text"
+              <input type="text" autocomplete="off"
                      name="search"
                      class="form-control"
                      placeholder="Search Ref No or Project Description"
@@ -38,6 +38,7 @@
                 <option value="cancelled"   {{ request('status') === 'cancelled'   ? 'selected' : '' }}>Cancelled</option>
               </select>
             </div>
+            @role('admin')
             <div class="col-auto">
               <select name="nd_state" class="form-control" onchange="document.getElementById('filter-form').submit()"
                       style="height: 52px;">
@@ -47,6 +48,7 @@
                 <option value="ND_KEL" {{ request('nd_state') === 'ND_KEL' ? 'selected' : '' }}>ND KEL</option>
               </select>
             </div>
+            @endrole
           </div>
         </form>
 

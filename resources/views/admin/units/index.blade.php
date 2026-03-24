@@ -34,7 +34,7 @@
           @csrf
           <div class="mb-3">
             <label for="name" class="form-label">Unit Name</label>
-            <input type="text" id="name" name="name" class="form-control @error('name') is-invalid @enderror"
+            <input type="text" autocomplete="off" id="name" name="name" class="form-control @error('name') is-invalid @enderror"
                    value="{{ old('name') }}" placeholder="e.g. ND TRG" required>
           </div>
           <div class="text-center">
@@ -49,8 +49,16 @@
 
     {{-- Existing units list --}}
     <div class="card">
-      <div class="card-header">
+      <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h5 class="fw-semibold mb-0">Existing Units</h5>
+        <form method="GET" action="{{ route('admin.units.index') }}">
+          <div class="d-flex align-items-center gap-2">
+            <input type="text" autocomplete="off" name="search" class="form-control form-control-sm" placeholder="Search unit name…" value="{{ $search ?? '' }}" style="min-width:180px;">
+            @if($search)
+              <a href="{{ route('admin.units.index') }}" class="btn-action btn-action-sm" style="font-weight:400; text-transform:none; color:#ffffff; white-space:nowrap;">Clear</a>
+            @endif
+          </div>
+        </form>
       </div>
       <div class="card-body p-0">
         <table class="table table-hover mb-0">
@@ -71,7 +79,7 @@
                   <span x-show="editing" x-cloak>
                     <form id="unit-edit-{{ $unit->id }}" action="{{ route('admin.units.update', $unit) }}" method="POST">
                       @csrf @method('PATCH')
-                      <input type="text" name="name" value="{{ $unit->name }}" class="form-control form-control-sm d-inline" style="width:12rem;" required>
+                      <input type="text" autocomplete="off" name="name" value="{{ $unit->name }}" class="form-control form-control-sm d-inline" style="width:12rem;" required>
                     </form>
                   </span>
                 </td>

@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ config('app.name') }} - Wayleave &amp; Permit Tracking</title>
+  <title>{{ config('app.name') }}</title>
   <link rel="shortcut icon" href="{{ asset('images/favicon.png') }}" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -188,8 +188,9 @@
           <div class="main-slider pattern-overlay">
             <div class="slider-item">
               <div class="banner-content text-center" style="width: 60%; margin-left: auto; margin-right: auto;">
-                <h2 class="banner-title text-center" style="font-size: 2.5em;">Wayleave &amp; Permit Tracking<br>And Filing System</h2>
-                <p>Streamline your wayleave applications, track permit statuses, and manage all filings in one place.</p>
+                <img src="{{ asset('images/waytracksvg.svg') }}" alt="WayTrack" style="height: 130px; width: auto; display: block; margin: 0 auto 1rem auto;">
+                <h2 class="banner-title text-center" style="font-size: 2.5em; margin-bottom: 0.75rem; color: #1c3260;">Wayleave &amp; Permit<br>Management System</h2>
+                <p style="font-size: 1.2em;">Transparent Tracking, Better Control</p>
                 <div class="btn-wrap">
                   <a href="{{ route('login') }}" class="btn btn-accent btn-accent-arrow" style="font-size: 1.1em; padding: 0.6em 3.5em;">
                     Sign In
@@ -214,7 +215,7 @@
         <div class="col-md-12">
           <div class="copyright">
             <div class="row">
-              <div class="col-md-6">
+              <div class="col-md-12 text-center">
                 <p>&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
               </div>
             </div>

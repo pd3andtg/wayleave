@@ -13,13 +13,17 @@ use Illuminate\Support\Facades\Mail;
 // Approved companies appear in the contractor registration dropdown.
 class AdminCompanyController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $companies = Company::with(['requestedBy', 'approvedBy'])
-            ->latest()
-            ->paginate(20);
+        $search = $request->input('search');
 
-        return view('admin.companies.index', compact('companies'));
+        $companies = Company::with(['requestedBy', 'approvedBy'])
+            ->when($search, fn($q) => $q->where('name', 'ilike', "%{$search}%"))
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('admin.companies.index', compact('companies', 'search'));
     }
 
     // Admin registers a company directly (status = approved immediately, no request needed).

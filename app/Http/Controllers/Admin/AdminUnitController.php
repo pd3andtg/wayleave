@@ -10,11 +10,16 @@ use Illuminate\Http\Request;
 // Stored in the database so admin can add new regions without any code changes.
 class AdminUnitController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $units = Unit::withCount('users')->orderBy('name')->get();
+        $search = $request->input('search');
 
-        return view('admin.units.index', compact('units'));
+        $units = Unit::withCount('users')
+            ->when($search, fn($q) => $q->where('name', 'ilike', "%{$search}%"))
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.units.index', compact('units', 'search'));
     }
 
     public function store(Request $request)

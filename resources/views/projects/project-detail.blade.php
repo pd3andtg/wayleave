@@ -163,19 +163,19 @@
               <div class="row">
                 <div class="col-md-4 mb-3">
                   <label class="form-label text-muted small">KUTT Ref No / PBT Ref No</label>
-                  <input type="text" name="ref_no" class="form-control" value="{{ old('ref_no', $project->ref_no) }}">
+                  <input type="text" autocomplete="off" name="ref_no" class="form-control" value="{{ old('ref_no', $project->ref_no) }}">
                 </div>
                 <div class="col-md-4 mb-3">
                   <label class="form-label text-muted small">LOR No</label>
-                  <input type="text" name="lor_no" class="form-control" value="{{ old('lor_no', $project->lor_no) }}">
+                  <input type="text" autocomplete="off" name="lor_no" class="form-control" value="{{ old('lor_no', $project->lor_no) }}">
                 </div>
                 <div class="col-md-4 mb-3">
                   <label class="form-label text-muted small">Project No</label>
-                  <input type="text" name="project_no" class="form-control" value="{{ old('project_no', $project->project_no) }}">
+                  <input type="text" autocomplete="off" name="project_no" class="form-control" value="{{ old('project_no', $project->project_no) }}">
                 </div>
                 <div class="col-md-4 mb-3">
                   <label class="form-label text-muted small">Project Description <span class="text-danger">*</span></label>
-                  <textarea name="project_desc" class="form-control" rows="1" required>{{ old('project_desc', $project->project_desc) }}</textarea>
+                  <textarea autocomplete="off" name="project_desc" class="form-control" rows="1" required>{{ old('project_desc', $project->project_desc) }}</textarea>
                 </div>
                 <div class="col-md-4 mb-3">
                   <label class="form-label text-muted small">ND State <span class="text-danger">*</span></label>
@@ -227,7 +227,7 @@
                 @endrole
                 <div class="col-md-4 mb-3">
                   <label class="form-label text-muted small">Remarks</label>
-                  <textarea name="remarks" class="form-control" rows="1">{{ old('remarks', $project->remarks) }}</textarea>
+                  <textarea autocomplete="off" name="remarks" class="form-control" rows="1">{{ old('remarks', $project->remarks) }}</textarea>
                 </div>
               </div>
               <div class="d-flex justify-content-end gap-2">
@@ -257,7 +257,7 @@
           @csrf
           <div class="mb-3">
             <label class="form-label">Reason for Cancellation <span class="text-danger">*</span></label>
-            <textarea name="cancellation_reason" class="form-control" rows="3" required minlength="5"
+            <textarea autocomplete="off" name="cancellation_reason" class="form-control" rows="3" required minlength="5"
                       placeholder="State the reason for cancellation"></textarea>
           </div>
           <div class="d-flex justify-content-end gap-2">
@@ -393,7 +393,7 @@ $tlLabels = [
                       <div class="row g-2">
                         <div class="col-md-3">
                           <label class="form-label small">Document Info <span class="text-danger">*</span></label>
-                          <input type="text" name="document_info" class="form-control form-control-sm" value="{{ $item->document_info }}" required>
+                          <input type="text" autocomplete="off" name="document_info" class="form-control form-control-sm" value="{{ $item->document_info }}" required>
                         </div>
                         <div class="col-md-2">
                           <label class="form-label small">Type <span class="text-danger">*</span></label>
@@ -412,7 +412,7 @@ $tlLabels = [
                         </div>
                         <div class="col-md-3">
                           <label class="form-label small">Remarks</label>
-                          <input type="text" name="remarks" class="form-control form-control-sm" value="{{ $item->remarks }}" placeholder="e.g. BOQ/INV No">
+                          <input type="text" autocomplete="off" name="remarks" class="form-control form-control-sm" value="{{ $item->remarks }}" placeholder="e.g. BOQ/INV No">
                         </div>
                         <div class="col-md-4">
                           <label class="form-label small">Replace File (PDF, max 10MB)</label>
@@ -453,7 +453,7 @@ $tlLabels = [
                 <div class="row g-2">
                   <div class="col-md-4">
                     <label class="form-label small">Document Info <span class="text-danger">*</span></label>
-                    <input type="text" name="document_info" class="form-control form-control-sm" required>
+                    <input type="text" autocomplete="off" name="document_info" class="form-control form-control-sm" required>
                   </div>
                   <div class="col-md-4">
                     <label class="form-label small">Type <span class="text-danger">*</span></label>
@@ -472,7 +472,7 @@ $tlLabels = [
                   </div>
                   <div class="col-md-4">
                     <label class="form-label small">Remarks</label>
-                    <input type="text" name="remarks" class="form-control form-control-sm" placeholder="BOQ/Invoice No">
+                    <input type="text" autocomplete="off" name="remarks" class="form-control form-control-sm" placeholder="BOQ/Invoice No">
                   </div>
                   <div class="col-md-4">
                     <label class="form-label small">File (PDF, max 10MB)</label>
@@ -571,7 +571,7 @@ $tlLabels = [
                       <div class="row g-2">
                         <div class="col-md-4">
                           <label class="form-label small">Document Info</label>
-                          <input type="text" name="document_info" class="form-control form-control-sm" value="{{ $item->document_info }}">
+                          <input type="text" autocomplete="off" name="document_info" class="form-control form-control-sm" value="{{ $item->document_info }}">
                         </div>
                         <div class="col-md-2">
                           <label class="form-label small">Type</label>
@@ -590,7 +590,7 @@ $tlLabels = [
                         </div>
                         <div class="col-md-4">
                           <label class="form-label small">EDS No</label>
-                          <input type="text" name="eds_no" class="form-control form-control-sm" value="{{ $item->eds_no }}">
+                          <input type="text" autocomplete="off" name="eds_no" class="form-control form-control-sm" value="{{ $item->eds_no }}">
                         </div>
                         <div class="col-md-4">
                           <label class="form-label small">Payment Status</label>
@@ -605,7 +605,7 @@ $tlLabels = [
                         </div>
                         <div class="col-md-4">
                           <label class="form-label small">Remarks</label>
-                          <input type="text" name="remarks" class="form-control form-control-sm" value="{{ $item->remarks }}">
+                          <input type="text" autocomplete="off" name="remarks" class="form-control form-control-sm" value="{{ $item->remarks }}">
                         </div>
                         <div class="col-12">
                           <label class="form-label small">Replace File (overwrites original)</label>
@@ -626,21 +626,40 @@ $tlLabels = [
                     </form>
                   </td>
                 </tr>
-                {{-- Inline endorse row: file upload only --}}
-                <tr x-show="endorsing" x-cloak>
-                  <td colspan="11" class="py-2 px-3">
+                {{-- Inline endorse row: EDS No, Payment Status, file upload --}}
+                <tr x-show="endorsing" x-cloak style="background:#f8f9fa;">
+                  <td colspan="11" class="py-3 px-3">
                     <form action="{{ route('projects.boq-inv-items.update', [$project, $item]) }}" method="POST" enctype="multipart/form-data">
                       @csrf
-                      <div class="d-flex align-items-center gap-2">
-                        <label class="form-label small fw-semibold mb-0">Upload Endorsed File <span class="text-danger">*</span></label>
-                        <div x-data="{ fn: '' }" class="d-flex align-items-center gap-2">
-                          <label class="btn-action mb-0" style="cursor:pointer; white-space:nowrap;">
-                            Choose File
-                            <input type="file" name="file" class="d-none" accept="application/pdf" required @change="fn = $event.target.files[0]?.name ?? ''">
-                          </label>
-                          <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px; font-weight:normal;"></span>
+                      <div class="row g-2">
+                        <div class="col-md-3">
+                          <label class="form-label small">EDS No</label>
+                          <input type="text" autocomplete="off" name="eds_no" class="form-control form-control-sm" value="{{ $item->eds_no }}" placeholder="EDS No">
                         </div>
-                        <button type="submit" class="btn-action btn-action-green">Endorse</button>
+                        <div class="col-md-3">
+                          <label class="form-label small">Payment Status</label>
+                          <select name="payment_status" class="form-control form-control-sm">
+                            <option value="">— Select —</option>
+                            <option value="pending_endorsement" {{ $item->payment_status === 'pending_endorsement' ? 'selected' : '' }}>Pending Endorsement</option>
+                            <option value="endorsed"            {{ $item->payment_status === 'endorsed'            ? 'selected' : '' }}>Endorsed</option>
+                            <option value="endorsed_and_paid"   {{ $item->payment_status === 'endorsed_and_paid'   ? 'selected' : '' }}>Endorsed and Paid</option>
+                            <option value="waived"              {{ $item->payment_status === 'waived'              ? 'selected' : '' }}>Waived</option>
+                            <option value="cancelled"           {{ $item->payment_status === 'cancelled'           ? 'selected' : '' }}>Cancelled</option>
+                          </select>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label small">Upload Endorsed File</label>
+                          <div x-data="{ fn: '' }" class="d-flex align-items-center gap-2 mt-1">
+                            <label class="btn-action mb-0" style="cursor:pointer; white-space:nowrap;">
+                              Choose File
+                              <input type="file" name="file" class="d-none" accept="application/pdf" @change="fn = $event.target.files[0]?.name ?? ''">
+                            </label>
+                            <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:200px; font-weight:normal;"></span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="d-flex gap-2 mt-3">
+                        <button type="submit" class="btn-action btn-action-green">Save Endorsement</button>
                         <button type="button" class="btn-action" style="background:#6c757d; border-color:#6c757d;"
                                 x-on:click="endorsing = false">Cancel</button>
                       </div>
@@ -749,7 +768,7 @@ $tlLabels = [
                       <option value="{{ $pn }}">{{ $pn }}</option>
                     @endforeach
                   </select>
-                  <input type="text" name="pbt_name_other" class="form-control form-control-sm mt-1"
+                  <input type="text" autocomplete="off" name="pbt_name_other" class="form-control form-control-sm mt-1"
                          placeholder="Specify other PBT name" x-show="showOther" x-cloak>
                 </div>
                 <div class="col-md-3">
@@ -938,7 +957,7 @@ $tlLabels = [
                               </div>
                               <div class="col-md-3">
                                 <label class="form-label small">EDS No</label>
-                                <input type="text" name="fi[eds_no]" class="form-control form-control-sm" value="{{ $paymentFI?->eds_no }}">
+                                <input type="text" autocomplete="off" name="fi[eds_no]" class="form-control form-control-sm" value="{{ $paymentFI?->eds_no }}">
                               </div>
                               <div class="col-md-3">
                                 <label class="form-label small">Method of Payment</label>
@@ -976,7 +995,7 @@ $tlLabels = [
                               </div>
                               <div class="col-md-3">
                                 <label class="form-label small">EDS No</label>
-                                <input type="text" name="deposit[eds_no]" class="form-control form-control-sm" value="{{ $paymentDep?->eds_no }}">
+                                <input type="text" autocomplete="off" name="deposit[eds_no]" class="form-control form-control-sm" value="{{ $paymentDep?->eds_no }}">
                               </div>
                               <div class="col-md-3">
                                 <label class="form-label small">Method of Payment</label>
@@ -1025,7 +1044,7 @@ $tlLabels = [
           $requiredPayments = $project->wayleavePayments->where('status', 'required');
         @endphp
         @if($requiredPayments->isEmpty())
-          <p class="text-muted">No required payments (only rows where status = Required appear here).</p>
+          <p class="text-muted">No required payments.</p>
         @else
           <div class="table-responsive">
             <table class="table table-borderless mb-0">
@@ -1131,28 +1150,40 @@ $tlLabels = [
           </div>
         @endif
         @can('update', $project)
-        <form action="{{ route('projects.permit-submission.store', $project) }}" method="POST" enctype="multipart/form-data" class="mt-3">
-          @csrf
-          <div class="row g-2">
-            <div class="col-md-3">
-              <label class="form-label small">Submit Date <span class="text-danger">*</span></label>
-              <input type="date" name="submit_date" class="form-control form-control-38"
-                     value="{{ $permitSub?->submit_date?->format('Y-m-d') }}" required>
+        <div x-data="{ replacing: {{ $permitSub ? 'false' : 'true' }} }">
+          @if($permitSub)
+            <div x-show="!replacing" class="mt-2">
+              <button type="button" class="btn-action btn-action-sm" x-on:click="replacing = true">Replace</button>
             </div>
-            <div class="col-md-5">
-              <label class="form-label small">Submission File (PDF)</label>
-              <div x-data="{ fn: '' }" class="d-flex align-items-center gap-2">
-                <label class="btn-action mb-0" style="cursor:pointer; white-space:nowrap;">
-                  Choose File
-                  <input type="file" name="submission_file" class="d-none" accept="application/pdf"
-                         {{ $permitSub ? '' : 'required' }} @change="fn = $event.target.files[0]?.name ?? ''">
-                </label>
-                <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px; font-weight:normal;"></span>
+          @endif
+          <form x-show="replacing" x-cloak action="{{ route('projects.permit-submission.store', $project) }}" method="POST" enctype="multipart/form-data" class="mt-3">
+            @csrf
+            <div class="row g-2">
+              <div class="col-md-3">
+                <label class="form-label small">Submit Date <span class="text-danger">*</span></label>
+                <input type="date" name="submit_date" class="form-control form-control-38"
+                       value="{{ $permitSub?->submit_date?->format('Y-m-d') }}" required>
+              </div>
+              <div class="col-md-5">
+                <label class="form-label small">Submission File (PDF)</label>
+                <div x-data="{ fn: '' }" class="d-flex align-items-center gap-2">
+                  <label class="btn-action mb-0" style="cursor:pointer; white-space:nowrap;">
+                    Choose File
+                    <input type="file" name="submission_file" class="d-none" accept="application/pdf"
+                           {{ $permitSub ? '' : 'required' }} @change="fn = $event.target.files[0]?.name ?? ''">
+                  </label>
+                  <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px; font-weight:normal;"></span>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="mt-2 text-center"><button type="submit" class="btn-action">{{ $permitSub ? 'Replace' : 'Save' }}</button></div>
-        </form>
+            <div class="mt-2 d-flex gap-2 @if(!$permitSub) justify-content-center @endif">
+              <button type="submit" class="btn-action">{{ $permitSub ? 'Save' : 'Save' }}</button>
+              @if($permitSub)
+                <button type="button" class="btn-action" style="background:#6c757d; border-color:#6c757d;" x-on:click="replacing = false">Cancel</button>
+              @endif
+            </div>
+          </form>
+        </div>
         @endcan
         <hr class="mt-3 mb-2" style="opacity:1;">
         {{-- Note + example image side by side --}}
@@ -1178,7 +1209,7 @@ $tlLabels = [
                 <div class="modal-dialog modal-lg modal-dialog-centered">
                   <div class="modal-content">
                     <div class="modal-header py-2">
-                      <span class="fw-semibold small">Contoh Dokumen — Section 8</span>
+                      <span class="fw-semibold small">Contoh Permohonan Permit</span>
                       <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body text-center p-2">
@@ -1232,28 +1263,40 @@ $tlLabels = [
           </div>
         @endif
         @can('update', $project)
-        <form action="{{ route('projects.permit-received.store', $project) }}" method="POST" enctype="multipart/form-data" class="mt-3">
-          @csrf
-          <div class="row g-2">
-            <div class="col-md-3">
-              <label class="form-label small">Date Received <span class="text-danger">*</span></label>
-              <input type="date" name="permit_received_date" class="form-control form-control-38"
-                     value="{{ $permitRec?->permit_received_date?->format('Y-m-d') }}" required>
+        <div x-data="{ replacing: {{ $permitRec ? 'false' : 'true' }} }">
+          @if($permitRec)
+            <div x-show="!replacing" class="mt-2">
+              <button type="button" class="btn-action btn-action-sm" x-on:click="replacing = true">Replace</button>
             </div>
-            <div class="col-md-5">
-              <label class="form-label small">Permit File (PDF)</label>
-              <div x-data="{ fn: '' }" class="d-flex align-items-center gap-2">
-                <label class="btn-action mb-0" style="cursor:pointer; white-space:nowrap;">
-                  Choose File
-                  <input type="file" name="permit_file" class="d-none" accept="application/pdf"
-                         {{ $permitRec ? '' : 'required' }} @change="fn = $event.target.files[0]?.name ?? ''">
-                </label>
-                <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px; font-weight:normal;"></span>
+          @endif
+          <form x-show="replacing" x-cloak action="{{ route('projects.permit-received.store', $project) }}" method="POST" enctype="multipart/form-data" class="mt-3">
+            @csrf
+            <div class="row g-2">
+              <div class="col-md-3">
+                <label class="form-label small">Date Received <span class="text-danger">*</span></label>
+                <input type="date" name="permit_received_date" class="form-control form-control-38"
+                       value="{{ $permitRec?->permit_received_date?->format('Y-m-d') }}" required>
+              </div>
+              <div class="col-md-5">
+                <label class="form-label small">Permit File (PDF)</label>
+                <div x-data="{ fn: '' }" class="d-flex align-items-center gap-2">
+                  <label class="btn-action mb-0" style="cursor:pointer; white-space:nowrap;">
+                    Choose File
+                    <input type="file" name="permit_file" class="d-none" accept="application/pdf"
+                           {{ $permitRec ? '' : 'required' }} @change="fn = $event.target.files[0]?.name ?? ''">
+                  </label>
+                  <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px; font-weight:normal;"></span>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="mt-2 text-center"><button type="submit" class="btn-action">{{ $permitRec ? 'Replace' : 'Save' }}</button></div>
-        </form>
+            <div class="mt-2 d-flex gap-2 @if(!$permitRec) justify-content-center @endif">
+              <button type="submit" class="btn-action">Save</button>
+              @if($permitRec)
+                <button type="button" class="btn-action" style="background:#6c757d; border-color:#6c757d;" x-on:click="replacing = false">Cancel</button>
+              @endif
+            </div>
+          </form>
+        </div>
         @endcan
         <hr class="mt-3 mb-2" style="opacity:1;">
         <div class="text-muted small">
@@ -1285,19 +1328,29 @@ $tlLabels = [
           </div>
         @endif
         @can('update', $project)
-        <form action="{{ route('projects.notis-mula.store', $project) }}" method="POST" enctype="multipart/form-data" class="mt-3">
-          @csrf
-          <div x-data="{ fn: '' }" class="d-flex align-items-center gap-2 mb-2">
-            <label class="btn-action mb-0" style="cursor:pointer; white-space:nowrap;">
-              Choose File
-              <input type="file" name="notis_mula_file" class="d-none" accept="application/pdf" required @change="fn = $event.target.files[0]?.name ?? ''">
-            </label>
-            <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:200px; font-weight:normal;"></span>
-          </div>
-          <div class="mt-2 text-center">
-            <button type="submit" class="btn-action">{{ $workNotice?->notis_mula_file ? 'Replace' : 'Save' }}</button>
-          </div>
-        </form>
+        <div x-data="{ replacing: {{ $workNotice?->notis_mula_file ? 'false' : 'true' }} }">
+          @if($workNotice?->notis_mula_file)
+            <div x-show="!replacing" class="mt-2">
+              <button type="button" class="btn-action btn-action-sm" x-on:click="replacing = true">Replace</button>
+            </div>
+          @endif
+          <form x-show="replacing" x-cloak action="{{ route('projects.notis-mula.store', $project) }}" method="POST" enctype="multipart/form-data" class="mt-3">
+            @csrf
+            <div x-data="{ fn: '' }" class="d-flex align-items-center gap-2 mb-2">
+              <label class="btn-action mb-0" style="cursor:pointer; white-space:nowrap;">
+                Choose File
+                <input type="file" name="notis_mula_file" class="d-none" accept="application/pdf" required @change="fn = $event.target.files[0]?.name ?? ''">
+              </label>
+              <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:200px; font-weight:normal;"></span>
+            </div>
+            <div class="mt-2 d-flex gap-2 @if(!$workNotice?->notis_mula_file) justify-content-center @endif">
+              <button type="submit" class="btn-action">Save</button>
+              @if($workNotice?->notis_mula_file)
+                <button type="button" class="btn-action" style="background:#6c757d; border-color:#6c757d;" x-on:click="replacing = false">Cancel</button>
+              @endif
+            </div>
+          </form>
+        </div>
         @endcan
         <hr class="mt-3 mb-2" style="opacity:1;">
         <div class="text-muted small">
@@ -1330,19 +1383,29 @@ $tlLabels = [
           </div>
         @endif
         @can('update', $project)
-        <form action="{{ route('projects.notis-siap.store', $project) }}" method="POST" enctype="multipart/form-data" class="mt-3">
-          @csrf
-          <div x-data="{ fn: '' }" class="d-flex align-items-center gap-2 mb-2">
-            <label class="btn-action mb-0" style="cursor:pointer; white-space:nowrap;">
-              Choose File
-              <input type="file" name="notis_siap_file" class="d-none" accept="application/pdf" required @change="fn = $event.target.files[0]?.name ?? ''">
-            </label>
-            <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:200px; font-weight:normal;"></span>
-          </div>
-          <div class="mt-2 text-center">
-            <button type="submit" class="btn-action">{{ $workNotice?->notis_siap_file ? 'Replace' : 'Save' }}</button>
-          </div>
-        </form>
+        <div x-data="{ replacing: {{ $workNotice?->notis_siap_file ? 'false' : 'true' }} }">
+          @if($workNotice?->notis_siap_file)
+            <div x-show="!replacing" class="mt-2">
+              <button type="button" class="btn-action btn-action-sm" x-on:click="replacing = true">Replace</button>
+            </div>
+          @endif
+          <form x-show="replacing" x-cloak action="{{ route('projects.notis-siap.store', $project) }}" method="POST" enctype="multipart/form-data" class="mt-3">
+            @csrf
+            <div x-data="{ fn: '' }" class="d-flex align-items-center gap-2 mb-2">
+              <label class="btn-action mb-0" style="cursor:pointer; white-space:nowrap;">
+                Choose File
+                <input type="file" name="notis_siap_file" class="d-none" accept="application/pdf" required @change="fn = $event.target.files[0]?.name ?? ''">
+              </label>
+              <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:200px; font-weight:normal;"></span>
+            </div>
+            <div class="mt-2 d-flex gap-2 @if(!$workNotice?->notis_siap_file) justify-content-center @endif">
+              <button type="submit" class="btn-action">Save</button>
+              @if($workNotice?->notis_siap_file)
+                <button type="button" class="btn-action" style="background:#6c757d; border-color:#6c757d;" x-on:click="replacing = false">Cancel</button>
+              @endif
+            </div>
+          </form>
+        </div>
         @endcan
         <hr class="mt-3 mb-2" style="opacity:1;">
         <div class="text-muted small">
@@ -1504,32 +1567,45 @@ $tlLabels = [
           <div class="alert alert-success py-2">Project marked as <strong>Completed</strong>.</div>
         @endif
         @can('update', $project)
-        <form action="{{ route('projects.cpc-received.store', $project) }}" method="POST" enctype="multipart/form-data" class="mt-3">
-          @csrf
-          <div class="row g-2">
-            <div class="col-md-3">
-              <label class="form-label small">CPC Date <span class="text-danger">*</span></label>
-              <input type="date" name="cpc_date" class="form-control form-control-38"
-                     value="{{ $cpcRec?->cpc_date?->format('Y-m-d') }}" required>
+        <div x-data="{ replacing: {{ $cpcRec ? 'false' : 'true' }} }">
+          {{-- Show Replace button only when CPC already exists --}}
+          @if($cpcRec)
+            <div x-show="!replacing" class="mt-2">
+              <button type="button" class="btn-action btn-action-sm" x-on:click="replacing = true">Replace</button>
             </div>
-            <div class="col-md-5">
-              <label class="form-label small">CPC File (PDF)</label>
-              <div x-data="{ fn: '' }" class="d-flex align-items-center gap-2">
-                <label class="btn-action mb-0" style="cursor:pointer; white-space:nowrap;">
-                  Choose File
-                  <input type="file" name="cpc_file" class="d-none" accept="application/pdf"
-                         {{ $cpcRec ? '' : 'required' }} @change="fn = $event.target.files[0]?.name ?? ''">
-                </label>
-                <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px; font-weight:normal;"></span>
+          @endif
+
+          <form x-show="replacing" x-cloak action="{{ route('projects.cpc-received.store', $project) }}" method="POST" enctype="multipart/form-data" class="mt-3">
+            @csrf
+            <div class="row g-2">
+              <div class="col-md-3">
+                <label class="form-label small">CPC Date <span class="text-danger">*</span></label>
+                <input type="date" name="cpc_date" class="form-control form-control-38"
+                       value="{{ $cpcRec?->cpc_date?->format('Y-m-d') }}" required>
+              </div>
+              <div class="col-md-5">
+                <label class="form-label small">CPC File (PDF)</label>
+                <div x-data="{ fn: '' }" class="d-flex align-items-center gap-2">
+                  <label class="btn-action mb-0" style="cursor:pointer; white-space:nowrap;">
+                    Choose File
+                    <input type="file" name="cpc_file" class="d-none" accept="application/pdf"
+                           {{ $cpcRec ? '' : 'required' }} @change="fn = $event.target.files[0]?.name ?? ''">
+                  </label>
+                  <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px; font-weight:normal;"></span>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="mt-2 text-center">
-            <button type="submit" class="btn-action">
-              {{ $cpcRec ? 'Replace' : 'Upload & Mark Completed' }}
-            </button>
-          </div>
-        </form>
+            <div class="mt-2 d-flex gap-2 @if(!$cpcRec) justify-content-center @endif">
+              <button type="submit" class="btn-action">
+                {{ $cpcRec ? 'Save' : 'Upload & Mark Completed' }}
+              </button>
+              @if($cpcRec)
+                <button type="button" class="btn-action" style="background:#6c757d; border-color:#6c757d;"
+                        x-on:click="replacing = false">Cancel</button>
+              @endif
+            </div>
+          </form>
+        </div>
         @endcan
         <hr class="mt-3 mb-2" style="opacity:1;">
         <div class="text-muted small">

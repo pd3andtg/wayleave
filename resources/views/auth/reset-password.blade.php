@@ -20,7 +20,7 @@
     <input type="hidden" name="token" value="{{ $token }}">
 
     <div class="form-group">
-      <input type="email"
+      <input type="email" autocomplete="off"
              class="form-control form-control-lg @error('email') is-invalid @enderror"
              name="email"
              value="{{ old('email') }}"
@@ -29,7 +29,7 @@
     </div>
 
     <div class="form-group">
-      <input type="password"
+      <input type="password" autocomplete="new-password"
              class="form-control form-control-lg @error('password') is-invalid @enderror"
              name="password"
              placeholder="New password (min. 8 characters)"
@@ -37,7 +37,7 @@
     </div>
 
     <div class="form-group">
-      <input type="password"
+      <input type="password" autocomplete="new-password"
              class="form-control form-control-lg"
              name="password_confirmation"
              placeholder="Confirm new password"

@@ -163,6 +163,8 @@ class ProjectController extends Controller
 
         $disk = config('filesystems.default');
 
+        abort_if(!Storage::disk($disk === 's3' ? 's3' : 'local')->exists($path), 404, 'File not found.');
+
         if ($disk === 's3') {
             return redirect(
                 Storage::disk('s3')->temporaryUrl($path, now()->addMinutes(30))

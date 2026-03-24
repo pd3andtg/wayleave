@@ -24,63 +24,159 @@
       </div>
     @endif
 
+    @php
+      $stateOptions = [
+        'TERENGGANU', 'PAHANG', 'KELANTAN', 'SELANGOR', 'JOHOR', 'KEDAH',
+        'MELAKA', 'NEGERI SEMBILAN', 'PERAK', 'PERLIS', 'PULAU PINANG',
+        'SABAH', 'SARAWAK', 'KUALA LUMPUR', 'PUTRAJAYA', 'LABUAN',
+      ];
+    @endphp
+
     {{-- Add new node form --}}
-    <div class="card mb-4">
-      <div class="card-header">
+    <div class="card mb-4" x-data="{ showBulk: false }">
+      <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="fw-semibold mb-0">Add New Node</h5>
+        <button type="button" class="btn-action btn-action-sm" x-on:click="showBulk = !showBulk"
+                x-text="showBulk ? 'Single Add' : '+ Add Multiple Nodes'"></button>
       </div>
       <div class="card-body">
-        <form action="{{ route('admin.nodes.store') }}" method="POST">
-          @csrf
-          <div class="row g-3 mb-3">
-            <div class="col-md-2">
-              <label for="acronym" class="form-label">Acronym <span class="text-danger">*</span></label>
-              <input type="text" id="acronym" name="acronym"
-                     class="form-control @error('acronym') is-invalid @enderror"
-                     value="{{ old('acronym') }}" placeholder="e.g. AJH" required>
-              @error('acronym')
-                <div class="invalid-feedback">{{ $message }}</div>
-              @enderror
+
+        {{-- Single add --}}
+        <div x-show="!showBulk">
+          <form action="{{ route('admin.nodes.store') }}" method="POST">
+            @csrf
+            <div class="row g-3 mb-3">
+              <div class="col-md-2">
+                <label class="form-label">Acronym <span class="text-danger">*</span></label>
+                <input type="text" autocomplete="off" name="acronym"
+                       class="form-control @error('acronym') is-invalid @enderror"
+                       value="{{ old('acronym') }}" placeholder="e.g. AJH" required>
+                @error('acronym') <div class="invalid-feedback">{{ $message }}</div> @enderror
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                <input type="text" autocomplete="off" name="full_name"
+                       class="form-control @error('full_name') is-invalid @enderror"
+                       value="{{ old('full_name') }}" placeholder="e.g. AIR JERNIH" required>
+                @error('full_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+              </div>
+              <div class="col-md-2">
+                <label class="form-label">ND</label>
+                <select name="nd" class="form-control @error('nd') is-invalid @enderror" style="height:calc(1.5em + 0.75rem + 2px);">
+                  <option value="">— Select —</option>
+                  @foreach($ndOptions as $val => $label)
+                    <option value="{{ $val }}" {{ old('nd') === $val ? 'selected' : '' }}>{{ $label }}</option>
+                  @endforeach
+                </select>
+                @error('nd') <div class="invalid-feedback">{{ $message }}</div> @enderror
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">State</label>
+                <select name="state" class="form-control @error('state') is-invalid @enderror" style="height:calc(1.5em + 0.75rem + 2px);">
+                  <option value="">— Select —</option>
+                  @foreach($stateOptions as $s)
+                    <option value="{{ $s }}" {{ old('state') === $s ? 'selected' : '' }}>{{ $s }}</option>
+                  @endforeach
+                </select>
+                @error('state') <div class="invalid-feedback">{{ $message }}</div> @enderror
+              </div>
             </div>
-            <div class="col-md-4">
-              <label for="full_name" class="form-label">Full Name <span class="text-danger">*</span></label>
-              <input type="text" id="full_name" name="full_name"
-                     class="form-control @error('full_name') is-invalid @enderror"
-                     value="{{ old('full_name') }}" placeholder="e.g. AIR JERNIH" required>
-              @error('full_name')
-                <div class="invalid-feedback">{{ $message }}</div>
-              @enderror
+            <div class="text-center">
+              <button type="submit" class="btn-action" style="font-weight:400; text-transform:none; color:#ffffff;">Add Node</button>
             </div>
-            <div class="col-md-2">
-              <label for="nd" class="form-label">AND</label>
-              <input type="text" id="nd" name="nd"
-                     class="form-control @error('nd') is-invalid @enderror"
-                     value="{{ old('nd') }}" placeholder="e.g. TRG">
-              @error('nd')
-                <div class="invalid-feedback">{{ $message }}</div>
-              @enderror
+          </form>
+        </div>
+
+        {{-- Bulk add — ND and State chosen once, applied to all rows --}}
+        <div x-show="showBulk" x-cloak
+             x-data="{
+               nd: '', state: '',
+               rows: [{ acronym: '', full_name: '' }],
+               addRow() { this.rows.push({ acronym: '', full_name: '' }); },
+               removeRow(i) { if (this.rows.length > 1) this.rows.splice(i, 1); }
+             }">
+          <form action="{{ route('admin.nodes.storeBulk') }}" method="POST">
+            @csrf
+            {{-- Shared ND and State --}}
+            <div class="row g-3 mb-3">
+              <div class="col-md-3">
+                <label class="form-label">ND <span class="text-danger">*</span></label>
+                <select name="nd" x-model="nd" class="form-control">
+                  <option value="">— Select —</option>
+                  @foreach($ndOptions as $val => $label)
+                    <option value="{{ $val }}">{{ $label }}</option>
+                  @endforeach
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">State <span class="text-danger">*</span></label>
+                <select name="state" x-model="state" class="form-control">
+                  <option value="">— Select —</option>
+                  @foreach($stateOptions as $s)
+                    <option value="{{ $s }}">{{ $s }}</option>
+                  @endforeach
+                </select>
+              </div>
             </div>
-            <div class="col-md-4">
-              <label for="state" class="form-label">State</label>
-              <input type="text" id="state" name="state"
-                     class="form-control @error('state') is-invalid @enderror"
-                     value="{{ old('state') }}" placeholder="e.g. Terengganu">
-              @error('state')
-                <div class="invalid-feedback">{{ $message }}</div>
-              @enderror
+            {{-- Hidden fields to pass nd/state per row --}}
+            <div class="table-responsive">
+              <table class="table table-bordered table-sm align-middle mb-3">
+                <thead class="table-light">
+                  <tr>
+                    <th style="color:#07326A;">#</th>
+                    <th style="color:#07326A;">Acronym <span class="text-danger">*</span></th>
+                    <th style="color:#07326A;">Full Name <span class="text-danger">*</span></th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template x-for="(row, i) in rows" :key="i">
+                    <tr>
+                      <td x-text="i + 1" class="text-muted" style="width:2.5rem;"></td>
+                      <td style="width:9rem;">
+                        <input type="text" autocomplete="off" :name="`nodes[${i}][acronym]`" x-model="row.acronym"
+                               class="form-control form-control-sm" placeholder="e.g. AJH" required>
+                        {{-- Pass shared nd/state per row as hidden inputs --}}
+                        <input type="hidden" :name="`nodes[${i}][nd]`" :value="nd">
+                        <input type="hidden" :name="`nodes[${i}][state]`" :value="state">
+                      </td>
+                      <td>
+                        <input type="text" autocomplete="off" :name="`nodes[${i}][full_name]`" x-model="row.full_name"
+                               class="form-control form-control-sm" placeholder="e.g. AIR JERNIH" required>
+                      </td>
+                      <td style="width:2.5rem;">
+                        <button type="button" class="btn-action btn-action-red btn-action-sm"
+                                x-on:click="removeRow(i)" x-show="rows.length > 1">&times;</button>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
             </div>
-          </div>
-          <div class="text-center">
-            <button type="submit" class="btn-action">Add Node</button>
-          </div>
-        </form>
+            <div class="d-flex justify-content-between align-items-center">
+              <button type="button" class="btn-action btn-action-sm" x-on:click="addRow()"
+                      style="font-weight:400; text-transform:none; color:#ffffff;">+ Add Row</button>
+              <button type="submit" class="btn-action"
+                      style="font-weight:400; text-transform:none; color:#ffffff;">Save All Nodes</button>
+            </div>
+          </form>
+        </div>
+
       </div>
     </div>
 
     {{-- Existing nodes list --}}
     <div class="card">
-      <div class="card-header">
+      <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h5 class="fw-semibold mb-0">Existing Nodes</h5>
+        <form method="GET" action="{{ route('admin.nodes.index') }}">
+          <div class="d-flex align-items-center gap-2">
+            <input type="text" autocomplete="off" name="search" class="form-control form-control-sm" placeholder="Search acronym, name, ND or state…" value="{{ $search ?? '' }}" style="min-width:220px;">
+            @if($search)
+              <a href="{{ route('admin.nodes.index') }}" class="btn-action btn-action-sm" style="font-weight:400; text-transform:none; color:#ffffff; white-space:nowrap;">Clear</a>
+            @endif
+          </div>
+        </form>
       </div>
       <div class="card-body p-0">
         <table class="table table-hover mb-0">
@@ -103,26 +199,36 @@
                   <span x-show="editing" x-cloak>
                     <form id="node-edit-{{ $node->id }}" action="{{ route('admin.nodes.update', $node) }}" method="POST">
                       @csrf @method('PATCH')
-                      <input type="text" name="acronym" value="{{ $node->acronym }}" class="form-control form-control-sm d-inline" style="width:5rem;" required>
+                      <input type="text" autocomplete="off" name="acronym" value="{{ $node->acronym }}" class="form-control form-control-sm d-inline" style="width:5rem;" required>
                     </form>
                   </span>
                 </td>
                 <td>
                   <span x-show="!editing">{{ $node->full_name }}</span>
                   <span x-show="editing" x-cloak>
-                    <input type="text" name="full_name" form="node-edit-{{ $node->id }}" value="{{ $node->full_name }}" class="form-control form-control-sm d-inline" style="width:12rem;" required>
+                    <input type="text" autocomplete="off" name="full_name" form="node-edit-{{ $node->id }}" value="{{ $node->full_name }}" class="form-control form-control-sm d-inline" style="width:12rem;" required>
                   </span>
                 </td>
                 <td>
                   <span x-show="!editing">{{ $node->nd ?? '—' }}</span>
                   <span x-show="editing" x-cloak>
-                    <input type="text" name="nd" form="node-edit-{{ $node->id }}" value="{{ $node->nd }}" class="form-control form-control-sm d-inline" style="width:7rem;" placeholder="ND_TRG">
+                    <select name="nd" form="node-edit-{{ $node->id }}" class="form-control form-control-sm d-inline" style="width:9rem;">
+                      <option value="">— None —</option>
+                      @foreach($ndOptions as $val => $label)
+                        <option value="{{ $val }}" {{ $node->nd === $val ? 'selected' : '' }}>{{ $label }}</option>
+                      @endforeach
+                    </select>
                   </span>
                 </td>
                 <td>
                   <span x-show="!editing">{{ $node->state ?? '—' }}</span>
                   <span x-show="editing" x-cloak>
-                    <input type="text" name="state" form="node-edit-{{ $node->id }}" value="{{ $node->state }}" class="form-control form-control-sm d-inline" style="width:10rem;" placeholder="Terengganu">
+                    <select name="state" form="node-edit-{{ $node->id }}" class="form-control form-control-sm d-inline" style="width:11rem;">
+                      <option value="">— None —</option>
+                      @foreach($stateOptions as $s)
+                        <option value="{{ $s }}" {{ $node->state === $s ? 'selected' : '' }}>{{ $s }}</option>
+                      @endforeach
+                    </select>
                   </span>
                 </td>
                 <td>

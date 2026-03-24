@@ -23,7 +23,7 @@
     @csrf
 
     <div class="form-group">
-      <input type="email"
+      <input type="email" autocomplete="off"
              class="form-control form-control-lg @error('email') is-invalid @enderror"
              name="email"
              value="{{ old('email') }}"

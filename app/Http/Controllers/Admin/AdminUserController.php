@@ -13,13 +13,23 @@ use Illuminate\Support\Facades\Hash;
 // Contractor roles cannot be changed — only officers can be promoted/demoted.
 class AdminUserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with(['roles', 'company', 'unit'])
-            ->latest()
-            ->paginate(20);
+        $search = $request->input('search');
 
-        return view('admin.users.index', compact('users'));
+        $users = User::with(['roles', 'company', 'unit'])
+            ->when($search, fn($q) => $q
+                ->where('name', 'ilike', "%{$search}%")
+                ->orWhere('email', 'ilike', "%{$search}%")
+            )
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
+
+        $companies = Company::where('status', 'approved')->orderBy('name')->get();
+        $units     = Unit::orderBy('name')->get();
+
+        return view('admin.users.index', compact('users', 'search', 'companies', 'units'));
     }
 
     public function store(Request $request)

@@ -144,6 +144,7 @@ Route::middleware('auth')->group(function () {
         // Node management — add/edit/delete TM nodes (Admin manages via UI)
         Route::get('/nodes',                            [AdminNodeController::class, 'index'])->name('nodes.index');
         Route::post('/nodes',                           [AdminNodeController::class, 'store'])->name('nodes.store');
+        Route::post('/nodes/bulk',                      [AdminNodeController::class, 'storeBulk'])->name('nodes.storeBulk');
         Route::patch('/nodes/{node}',                   [AdminNodeController::class, 'update'])->name('nodes.update');
         Route::delete('/nodes/{node}',                  [AdminNodeController::class, 'destroy'])->name('nodes.destroy');
     });
