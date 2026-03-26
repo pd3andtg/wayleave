@@ -57,11 +57,25 @@
           <div class="alert alert-success py-2">{{ session('success') }}</div>
         @endif
 
+        {{-- Results count + Show All --}}
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="text-muted small">
+            @if ($projects->total() > 0)
+              Showing {{ $projects->firstItem() }} to {{ $projects->lastItem() }} of {{ $projects->total() }} results
+            @else
+              No projects found.
+            @endif
+          </div>
+          @if (request()->hasAny(['search', 'status', 'nd_state']))
+            <a href="{{ route('projects.index') }}" class="text-muted small">Show All</a>
+          @endif
+        </div>
+
         {{-- Table --}}
         <div class="table-responsive">
           <table class="table table-hover" style="font-size: 0.875rem; table-layout: fixed; width: 100%;">
             <colgroup>
-              <col style="width: 110px;">  {{-- Ref No --}}
+              <col style="width: 170px;">  {{-- Ref No --}}
               <col style="width: 200px;">  {{-- Description --}}
               @role('admin|officer')
               <col style="width: 130px;">  {{-- Company --}}

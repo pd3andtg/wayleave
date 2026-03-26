@@ -26,7 +26,7 @@ class ProjectController extends Controller
 
         $projects = $this->projectService->getProjectList(
             auth()->user(),
-            $request->only('search', 'status', 'nd_state')
+            $request->only('search', 'status', 'nd_state', 'per_page')
         );
 
         // Compute timeline progress count and next step label for each project on this page.
