@@ -15,7 +15,8 @@ class StoreNotisSiapRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'notis_siap_file' => ['required', 'file', 'mimes:pdf', 'max:10240'],
+            'notis_siap_file'   => ['required', 'file', 'mimes:pdf', 'max:10240'],
+            'tarikh_siap_kerja' => ['required', 'date'],
         ];
     }
 }

@@ -239,6 +239,43 @@ class ProjectService
         ];
     }
 
+    // Returns the earliest relevant date for each timeline section.
+    // Used to display when work on each section first began, so viewers can
+    // gauge how long each stage of the project actually took.
+    // Returns null for sections with no data yet (displayed as blank in the view).
+    public function getTimelineDates(Project $project): array
+    {
+        $boqItems      = $project->boqInvItems;
+        $wayleavePhbts = $project->wayleavePhbts;
+        $payments      = $project->wayleavePayments;
+
+        // Section 3: earliest updated_at where a payment_status was first set.
+        $sec3Date = $boqItems->whereNotNull('payment_status')->sortBy('updated_at')->first()?->updated_at;
+
+        // Section 5: earliest updated_at where endorsed_by was set on a PBT row.
+        $sec5Date = $wayleavePhbts->whereNotNull('endorsed_by')->sortBy('updated_at')->first()?->updated_at;
+
+        // Section 7: earliest received_posted_date among required rows.
+        $sec7Date = $payments->where('status', 'required')->whereNotNull('received_posted_date')
+            ->sortBy('received_posted_date')->first()?->received_posted_date;
+
+        return [
+            1  => $project->created_at,
+            2  => $boqItems->sortBy('created_at')->first()?->created_at,
+            3  => $sec3Date,
+            4  => $wayleavePhbts->sortBy('created_at')->first()?->created_at,
+            5  => $sec5Date,
+            6  => $payments->sortBy('created_at')->first()?->created_at,
+            7  => $sec7Date,
+            8  => $project->permitSubmission?->created_at,
+            9  => $project->permitReceived?->created_at,
+            10 => $project->workNotice?->tarikh_mula_kerja,
+            11 => $project->workNotice?->tarikh_siap_kerja,
+            12 => $project->cpcApplication?->created_at,
+            13 => $project->cpcReceived?->created_at,
+        ];
+    }
+
     // ── Section 2 & 3: BOQ/INV Items ──────────────────────────────────────────
 
     // Contractor adds a new BOQ/INV row (visible in both Section 2 and Section 3).
@@ -462,9 +499,11 @@ class ProjectService
         return WorkNotice::updateOrCreate(
             ['project_id' => $project->id],
             [
-                'notis_mula_file' => $filePath,
-                'notis_siap_file' => $existing?->notis_siap_file,  // Preserve existing notis siap
-                'uploaded_by'     => $user->id,
+                'notis_mula_file'   => $filePath,
+                'tarikh_mula_kerja' => $data['tarikh_mula_kerja'],
+                'notis_siap_file'   => $existing?->notis_siap_file,  // Preserve existing notis siap
+                'tarikh_siap_kerja' => $existing?->tarikh_siap_kerja, // Preserve existing tarikh siap
+                'uploaded_by'       => $user->id,
             ]
         );
     }
@@ -481,9 +520,11 @@ class ProjectService
         return WorkNotice::updateOrCreate(
             ['project_id' => $project->id],
             [
-                'notis_mula_file' => $existing?->notis_mula_file,  // Preserve existing notis mula
-                'notis_siap_file' => $filePath,
-                'uploaded_by'     => $user->id,
+                'notis_mula_file'   => $existing?->notis_mula_file,  // Preserve existing notis mula
+                'tarikh_mula_kerja' => $existing?->tarikh_mula_kerja, // Preserve existing tarikh mula
+                'notis_siap_file'   => $filePath,
+                'tarikh_siap_kerja' => $data['tarikh_siap_kerja'],
+                'uploaded_by'       => $user->id,
             ]
         );
     }

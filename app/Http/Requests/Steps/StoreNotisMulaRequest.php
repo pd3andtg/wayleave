@@ -15,7 +15,8 @@ class StoreNotisMulaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'notis_mula_file' => ['required', 'file', 'mimes:pdf', 'max:10240'],
+            'notis_mula_file'   => ['required', 'file', 'mimes:pdf', 'max:10240'],
+            'tarikh_mula_kerja' => ['required', 'date'],
         ];
     }
 }

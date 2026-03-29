@@ -15,7 +15,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('project_id')->constrained('projects')->cascadeOnDelete();
             $table->string('notis_mula_file')->nullable();
+            $table->date('tarikh_mula_kerja')->nullable();
             $table->string('notis_siap_file')->nullable();
+            $table->date('tarikh_siap_kerja')->nullable();
             $table->foreignId('uploaded_by')->constrained('users')->cascadeOnDelete();
             $table->timestamps();
         });

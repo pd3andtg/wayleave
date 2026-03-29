@@ -12,8 +12,15 @@ class WorkNotice extends Model
     protected $fillable = [
         'project_id',
         'notis_mula_file',
+        'tarikh_mula_kerja',
         'notis_siap_file',
+        'tarikh_siap_kerja',
         'uploaded_by',
+    ];
+
+    protected $casts = [
+        'tarikh_mula_kerja' => 'date',
+        'tarikh_siap_kerja' => 'date',
     ];
 
     public function project()

@@ -89,8 +89,9 @@ class ProjectController extends Controller
             'cpcReceived.uploadedBy',
         ]);
 
-        // Pass timeline completion status to the view.
+        // Pass timeline completion status and section dates to the view.
         $timelineStatus = $this->projectService->getTimelineStatus($project);
+        $timelineDates  = $this->projectService->getTimelineDates($project);
 
         // Officers/admins need company list for the Section 1 edit form.
         $companies = auth()->user()->hasRole('contractor')
@@ -102,10 +103,14 @@ class ProjectController extends Controller
         // Global example/reference images — same across all projects.
         // Resolved here so Blade templates contain no storage logic.
         $exampleImages = [
-            'section8' => ExampleImageController::exists('section8'),
+            'section8'  => ExampleImageController::exists('section8'),
+            'section9'  => ExampleImageController::exists('section9'),
+            'section10' => ExampleImageController::exists('section10'),
+            'section11' => ExampleImageController::exists('section11'),
+            'section12' => ExampleImageController::exists('section12'),
         ];
 
-        return view('projects.project-detail', compact('project', 'timelineStatus', 'companies', 'nodes', 'exampleImages'));
+        return view('projects.project-detail', compact('project', 'timelineStatus', 'timelineDates', 'companies', 'nodes', 'exampleImages'));
     }
 
     // Section 1: update project information (editable by anyone with access).

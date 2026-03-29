@@ -71,7 +71,7 @@
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title"><span class="me-3">1</span> Project Information</h3>
+        <h3 class="card-title"><span class="me-3">1</span> NF: Project Information</h3>
 
         @if ($cancelled)
           <div class="alert alert-danger mb-3">
@@ -279,10 +279,10 @@
 @php
 $tl = $timelineStatus;
 $tlLabels = [
-    1 => 'Project Info', 2 => 'BOQ/INV Filed', 3 => 'BOQ/INV Endorsed',
-    4 => 'Wayleave', 5 => 'Wayleave Endorsed', 6 => 'WL Payment',
-    7 => 'BG/BD Received', 8 => 'Permit Submitted', 9 => 'Permit Received',
-    10 => 'Notis Mula', 11 => 'Notis Siap', 12 => 'CPC Application', 13 => 'CPC Received',
+    1 => 'NF: Project Info', 2 => 'NF: Upload BOQ/Invoice', 3 => 'TM: BOQ/INV Endorsement and Payment',
+    4 => 'NF: Upload Wayleave', 5 => 'TM: Wayleave Endorsement and Payment', 6 => 'TM: Update Deposit & FI Payment Application Date',
+    7 => 'TM: Upload BG/BD from FINSSO', 8 => 'NF: Document Permit Submission to PBT', 9 => 'NF: Upload Permit Received from PBT',
+    10 => 'NF: Notis Mula Kerja', 11 => 'NF: Notis Siap Kerja', 12 => 'NF: Upload Document CPC Submission to PBT', 13 => 'NF: Upload CPC',
 ];
 @endphp
 <div class="row">
@@ -293,6 +293,10 @@ $tlLabels = [
         <div class="d-flex align-items-start" style="overflow-x:auto; padding-bottom:0.5rem;">
           @foreach (range(1, 13) as $i)
             <div class="d-flex flex-column align-items-center" style="min-width:64px; flex:1;">
+              {{-- Date above the node --}}
+              <div class="text-center mb-1" style="font-size:0.55rem; color:#6c757d; line-height:1.2; min-height:2.4em; font-weight:600;">
+                {{ $timelineDates[$i] ? \Carbon\Carbon::parse($timelineDates[$i])->format('d M Y') : '' }}
+              </div>
               <div class="d-flex align-items-center w-100">
                 @if ($i > 1)
                   <div style="flex:1; height:2px; background:{{ $tl[$i-1] ? '#28a745' : '#dee2e6' }};"></div>
@@ -334,7 +338,7 @@ $tlLabels = [
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title"><span class="me-3">2</span> BOQ/Invoice Files</h3>
+        <h3 class="card-title"><span class="me-3">2</span> NF: Upload BOQ/Invoice Files</h3>
         @if($boqHidden)
           <p class="text-muted mb-0"><em>Payment to KUTT is {{ ucfirst(str_replace('_', ' ', $project->payment_to_kutt)) }} — BOQ/INV section not applicable.</em></p>
         @else
@@ -505,7 +509,7 @@ $tlLabels = [
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title"><span class="me-3">3</span> TM: BOQ/Invoice Endorsement</h3>
+        <h3 class="card-title"><span class="me-3">3</span> TM: BOQ/Invoice Endorsement and Payment</h3>
         @if($boqHidden)
           <p class="text-muted mb-0"><em>Payment to KUTT is {{ ucfirst(str_replace('_', ' ', $project->payment_to_kutt)) }} — BOQ/INV section not applicable.</em></p>
         @else
@@ -688,7 +692,7 @@ $tlLabels = [
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title"><span class="me-3">4</span> Wayleave Received</h3>
+        <h3 class="card-title"><span class="me-3">4</span> NF: Wayleave Received</h3>
 
         @forelse ($project->wayleavePhbts as $pbt)
         <div class="border rounded p-2 mb-2" x-data="{ open: false }">
@@ -806,7 +810,7 @@ $tlLabels = [
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title"><span class="me-3">5</span> TM: Wayleave Endorsement</h3>
+        <h3 class="card-title"><span class="me-3">5</span> TM: Wayleave Endorsement and Payment</h3>
         @if($project->wayleavePhbts->isEmpty())
           <p class="text-muted">No wayleave PBT records yet (Section 4 must be filled first).</p>
         @else
@@ -871,7 +875,7 @@ $tlLabels = [
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title"><span class="me-3">6</span> TM: Wayleave Payment Details (FI &amp; Deposit)</h3>
+        <h3 class="card-title"><span class="me-3">6</span> TM: Update Deposit & FI Payment Application Date</h3>
         @if($project->wayleavePhbts->isEmpty())
           <p class="text-muted">No PBT records yet.</p>
         @else
@@ -1039,7 +1043,7 @@ $tlLabels = [
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title"><span class="me-3">7</span> TM: BG &amp; BD Received from FINSSO</h3>
+        <h3 class="card-title"><span class="me-3">7</span> TM: UPLOAD BG & BD RECEIVED FROM FINSSO</h3>
         @php
           $requiredPayments = $project->wayleavePayments->where('status', 'required');
         @endphp
@@ -1134,7 +1138,7 @@ $tlLabels = [
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title"><span class="me-3">8</span> Doc Permit Application Submission to KUTT</h3>
+        <h3 class="card-title"><span class="me-3">8</span> NF: UPLOAD PERMIT DOCUMENT SUBMISSION TO PBT</h3>
         @php $permitSub = $project->permitSubmission; @endphp
         @if($permitSub)
           <div class="row mb-3">
@@ -1247,7 +1251,7 @@ $tlLabels = [
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title"><span class="me-3">9</span> Permit Received</h3>
+        <h3 class="card-title"><span class="me-3">9</span> NF: Upload Permit Received from PBT</h3>
         @php $permitRec = $project->permitReceived; @endphp
         @if($permitRec)
           <div class="row mb-3">
@@ -1299,12 +1303,47 @@ $tlLabels = [
         </div>
         @endcan
         <hr class="mt-3 mb-2" style="opacity:1;">
-        <div class="text-muted small">
-          <strong>NOTA:</strong>
-          <ol class="mb-0 ps-3 mt-1">
-            <li>HARDCOPY PERMIT PERLU DIAMBIL DARIPADA PIHAK PBT/KUTT.</li>
-            <li>SILA SCAN DAN MUAT NAIK KELULUSAN PERMIT.</li>
-          </ol>
+        <div class="d-flex align-items-start gap-4">
+          <div class="text-muted small flex-grow-1">
+            <strong>NOTA:</strong>
+            <ol class="mb-0 ps-3 mt-1">
+              <li>HARDCOPY PERMIT PERLU DIAMBIL DARIPADA PIHAK PBT/KUTT.</li>
+              <li>SILA SCAN DAN MUAT NAIK KELULUSAN PERMIT.</li>
+            </ol>
+          </div>
+          <div class="text-center" style="min-width:130px;">
+            @if($exampleImages['section9'])
+              <img src="{{ route('example-images.show', 'section9') }}"
+                   alt="Contoh dokumen" class="img-thumbnail" style="max-width:120px; cursor:pointer;"
+                   data-bs-toggle="modal" data-bs-target="#exampleImageModal9">
+              <div class="text-muted" style="font-size:0.7rem; margin-top:3px;">Contoh Dokumen</div>
+              <div class="modal fade" id="exampleImageModal9" tabindex="-1">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                  <div class="modal-content">
+                    <div class="modal-header py-2">
+                      <span class="fw-semibold small">Contoh Permit Received</span>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center p-2">
+                      <img src="{{ route('example-images.show', 'section9') }}" alt="Contoh dokumen" class="img-fluid">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            @else
+              <div class="text-muted" style="font-size:0.7rem;">Tiada contoh</div>
+            @endif
+            @role('admin|officer')
+            <form action="{{ route('example-images.upload', 'section9') }}" method="POST"
+                  enctype="multipart/form-data" class="mt-1">
+              @csrf
+              <label class="btn-action btn-action-sm mb-0" style="cursor:pointer; font-size:0.75rem;">
+                {{ $exampleImages['section9'] ? 'Replace' : 'Upload' }}
+                <input type="file" name="image" class="d-none" accept="image/*" onchange="this.form.submit()">
+              </label>
+            </form>
+            @endrole
+          </div>
         </div>
       </div>
     </div>
@@ -1318,13 +1357,19 @@ $tlLabels = [
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title"><span class="me-3">10</span> Notis Mula Kerja</h3>
+        <h3 class="card-title"><span class="me-3">10</span> NF: Upload Notis Mula Kerja</h3>
         @php $workNotice = $project->workNotice; @endphp
         @if($workNotice?->notis_mula_file)
-          <div class="mb-3">
-            <div class="text-muted small fw-normal mb-1">Notis Mula Kerja</div>
-            <a href="{{ route('projects.download', ['project' => $project, 'path' => $workNotice->notis_mula_file]) }}"
-               class="btn-action btn-action-sm"><i class="ti-download me-1"></i>Download</a>
+          <div class="row mb-3">
+            <div class="col-md-3">
+              <div class="text-muted small">Tarikh Mula Kerja</div>
+              <div>{{ $workNotice->tarikh_mula_kerja?->format('d/m/Y') ?? '—' }}</div>
+            </div>
+            <div class="col-md-3">
+              <div class="text-muted small">File</div>
+              <a href="{{ route('projects.download', ['project' => $project, 'path' => $workNotice->notis_mula_file]) }}"
+                 class="btn-action btn-action-sm"><i class="ti-download me-1"></i>Download</a>
+            </div>
           </div>
         @endif
         @can('update', $project)
@@ -1336,12 +1381,23 @@ $tlLabels = [
           @endif
           <form x-show="replacing" x-cloak action="{{ route('projects.notis-mula.store', $project) }}" method="POST" enctype="multipart/form-data" class="mt-3">
             @csrf
-            <div x-data="{ fn: '' }" class="d-flex align-items-center gap-2 mb-2">
-              <label class="btn-action mb-0" style="cursor:pointer; white-space:nowrap;">
-                Choose File
-                <input type="file" name="notis_mula_file" class="d-none" accept="application/pdf" required @change="fn = $event.target.files[0]?.name ?? ''">
-              </label>
-              <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:200px; font-weight:normal;"></span>
+            <div class="row g-2">
+              <div class="col-md-3">
+                <label class="form-label small">Tarikh Mula Kerja <span class="text-danger">*</span></label>
+                <input type="date" name="tarikh_mula_kerja" class="form-control form-control-38"
+                       value="{{ old('tarikh_mula_kerja', $workNotice?->tarikh_mula_kerja?->format('Y-m-d')) }}" required>
+              </div>
+              <div class="col-md-5">
+                <label class="form-label small">Notis Mula Kerja (PDF)</label>
+                <div x-data="{ fn: '' }" class="d-flex align-items-center gap-2">
+                  <label class="btn-action mb-0" style="cursor:pointer; white-space:nowrap;">
+                    Choose File
+                    <input type="file" name="notis_mula_file" class="d-none" accept="application/pdf"
+                           {{ $workNotice?->notis_mula_file ? '' : 'required' }} @change="fn = $event.target.files[0]?.name ?? ''">
+                  </label>
+                  <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px; font-weight:normal;"></span>
+                </div>
+              </div>
             </div>
             <div class="mt-2 d-flex gap-2 @if(!$workNotice?->notis_mula_file) justify-content-center @endif">
               <button type="submit" class="btn-action">Save</button>
@@ -1353,14 +1409,49 @@ $tlLabels = [
         </div>
         @endcan
         <hr class="mt-3 mb-2" style="opacity:1;">
-        <div class="text-muted small">
-          <strong>NOTA:</strong>
-          <ol class="mb-0 ps-3 mt-1">
-            <li>SILA HANTAR NOTIS MULA KERJA KEPADA PIHAK KUTT/PBT.</li>
-            <li>PASTIKAN ADA COP TERIMA &amp; TARIKH TERIMA OLEH KUTT/PBT.</li>
-            <li>SEKIRANYA TERDAPAT PERUBAHAN ATAU HALANGAN DI TAPAK, SILA MAKLUM KEPADA PBT/KUTT SEBELUM KERJA-KERJA DIBUAT.</li>
-            <li>SILA AMBIL GAMBAR SEBELUM, SEMASA DAN SELEPAS.</li>
-          </ol>
+        <div class="d-flex align-items-start gap-4">
+          <div class="text-muted small flex-grow-1">
+            <strong>NOTA:</strong>
+            <ol class="mb-0 ps-3 mt-1">
+              <li>SILA HANTAR NOTIS MULA KERJA KEPADA PIHAK KUTT/PBT.</li>
+              <li>PASTIKAN ADA COP TERIMA &amp; TARIKH TERIMA OLEH KUTT/PBT.</li>
+              <li>SEKIRANYA TERDAPAT PERUBAHAN ATAU HALANGAN DI TAPAK, SILA MAKLUM KEPADA PBT/KUTT SEBELUM KERJA-KERJA DIBUAT.</li>
+              <li>SILA AMBIL GAMBAR SEBELUM, SEMASA DAN SELEPAS.</li>
+            </ol>
+          </div>
+          <div class="text-center" style="min-width:130px;">
+            @if($exampleImages['section10'])
+              <img src="{{ route('example-images.show', 'section10') }}"
+                   alt="Contoh dokumen" class="img-thumbnail" style="max-width:120px; cursor:pointer;"
+                   data-bs-toggle="modal" data-bs-target="#exampleImageModal10">
+              <div class="text-muted" style="font-size:0.7rem; margin-top:3px;">Contoh Dokumen</div>
+              <div class="modal fade" id="exampleImageModal10" tabindex="-1">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                  <div class="modal-content">
+                    <div class="modal-header py-2">
+                      <span class="fw-semibold small">Contoh Notis Mula Kerja</span>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center p-2">
+                      <img src="{{ route('example-images.show', 'section10') }}" alt="Contoh dokumen" class="img-fluid">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            @else
+              <div class="text-muted" style="font-size:0.7rem;">Tiada contoh</div>
+            @endif
+            @role('admin|officer')
+            <form action="{{ route('example-images.upload', 'section10') }}" method="POST"
+                  enctype="multipart/form-data" class="mt-1">
+              @csrf
+              <label class="btn-action btn-action-sm mb-0" style="cursor:pointer; font-size:0.75rem;">
+                {{ $exampleImages['section10'] ? 'Replace' : 'Upload' }}
+                <input type="file" name="image" class="d-none" accept="image/*" onchange="this.form.submit()">
+              </label>
+            </form>
+            @endrole
+          </div>
         </div>
       </div>
     </div>
@@ -1374,12 +1465,18 @@ $tlLabels = [
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title"><span class="me-3">11</span> Notis Siap Kerja</h3>
+        <h3 class="card-title"><span class="me-3">11</span> NF: Upload Notis Siap Kerja</h3>
         @if($workNotice?->notis_siap_file)
-          <div class="mb-3">
-            <div class="text-muted small fw-normal mb-1">Notis Siap Kerja</div>
-            <a href="{{ route('projects.download', ['project' => $project, 'path' => $workNotice->notis_siap_file]) }}"
-               class="btn-action btn-action-sm"><i class="ti-download me-1"></i>Download</a>
+          <div class="row mb-3">
+            <div class="col-md-3">
+              <div class="text-muted small">Tarikh Siap Kerja</div>
+              <div>{{ $workNotice->tarikh_siap_kerja?->format('d/m/Y') ?? '—' }}</div>
+            </div>
+            <div class="col-md-3">
+              <div class="text-muted small">File</div>
+              <a href="{{ route('projects.download', ['project' => $project, 'path' => $workNotice->notis_siap_file]) }}"
+                 class="btn-action btn-action-sm"><i class="ti-download me-1"></i>Download</a>
+            </div>
           </div>
         @endif
         @can('update', $project)
@@ -1391,12 +1488,23 @@ $tlLabels = [
           @endif
           <form x-show="replacing" x-cloak action="{{ route('projects.notis-siap.store', $project) }}" method="POST" enctype="multipart/form-data" class="mt-3">
             @csrf
-            <div x-data="{ fn: '' }" class="d-flex align-items-center gap-2 mb-2">
-              <label class="btn-action mb-0" style="cursor:pointer; white-space:nowrap;">
-                Choose File
-                <input type="file" name="notis_siap_file" class="d-none" accept="application/pdf" required @change="fn = $event.target.files[0]?.name ?? ''">
-              </label>
-              <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:200px; font-weight:normal;"></span>
+            <div class="row g-2">
+              <div class="col-md-3">
+                <label class="form-label small">Tarikh Siap Kerja <span class="text-danger">*</span></label>
+                <input type="date" name="tarikh_siap_kerja" class="form-control form-control-38"
+                       value="{{ old('tarikh_siap_kerja', $workNotice?->tarikh_siap_kerja?->format('Y-m-d')) }}" required>
+              </div>
+              <div class="col-md-5">
+                <label class="form-label small">Notis Siap Kerja (PDF)</label>
+                <div x-data="{ fn: '' }" class="d-flex align-items-center gap-2">
+                  <label class="btn-action mb-0" style="cursor:pointer; white-space:nowrap;">
+                    Choose File
+                    <input type="file" name="notis_siap_file" class="d-none" accept="application/pdf"
+                           {{ $workNotice?->notis_siap_file ? '' : 'required' }} @change="fn = $event.target.files[0]?.name ?? ''">
+                  </label>
+                  <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px; font-weight:normal;"></span>
+                </div>
+              </div>
             </div>
             <div class="mt-2 d-flex gap-2 @if(!$workNotice?->notis_siap_file) justify-content-center @endif">
               <button type="submit" class="btn-action">Save</button>
@@ -1408,13 +1516,48 @@ $tlLabels = [
         </div>
         @endcan
         <hr class="mt-3 mb-2" style="opacity:1;">
-        <div class="text-muted small">
-          <strong>NOTA:</strong>
-          <ol class="mb-0 ps-3 mt-1">
-            <li>SILA HANTAR NOTIS SIAP KERJA KEPADA PIHAK KUTT/PBT.</li>
-            <li>PASTIKAN ADA COP TERIMA &amp; TARIKH TERIMA OLEH KUTT/PBT.</li>
-            <li>SILA SCAN &amp; MUAT-NAIK SALINAN NOTIS SIAP KERJA.</li>
-          </ol>
+        <div class="d-flex align-items-start gap-4">
+          <div class="text-muted small flex-grow-1">
+            <strong>NOTA:</strong>
+            <ol class="mb-0 ps-3 mt-1">
+              <li>SILA HANTAR NOTIS SIAP KERJA KEPADA PIHAK KUTT/PBT.</li>
+              <li>PASTIKAN ADA COP TERIMA &amp; TARIKH TERIMA OLEH KUTT/PBT.</li>
+              <li>SILA SCAN &amp; MUAT-NAIK SALINAN NOTIS SIAP KERJA.</li>
+            </ol>
+          </div>
+          <div class="text-center" style="min-width:130px;">
+            @if($exampleImages['section11'])
+              <img src="{{ route('example-images.show', 'section11') }}"
+                   alt="Contoh dokumen" class="img-thumbnail" style="max-width:120px; cursor:pointer;"
+                   data-bs-toggle="modal" data-bs-target="#exampleImageModal11">
+              <div class="text-muted" style="font-size:0.7rem; margin-top:3px;">Contoh Dokumen</div>
+              <div class="modal fade" id="exampleImageModal11" tabindex="-1">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                  <div class="modal-content">
+                    <div class="modal-header py-2">
+                      <span class="fw-semibold small">Contoh Notis Siap Kerja</span>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center p-2">
+                      <img src="{{ route('example-images.show', 'section11') }}" alt="Contoh dokumen" class="img-fluid">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            @else
+              <div class="text-muted" style="font-size:0.7rem;">Tiada contoh</div>
+            @endif
+            @role('admin|officer')
+            <form action="{{ route('example-images.upload', 'section11') }}" method="POST"
+                  enctype="multipart/form-data" class="mt-1">
+              @csrf
+              <label class="btn-action btn-action-sm mb-0" style="cursor:pointer; font-size:0.75rem;">
+                {{ $exampleImages['section11'] ? 'Replace' : 'Upload' }}
+                <input type="file" name="image" class="d-none" accept="image/*" onchange="this.form.submit()">
+              </label>
+            </form>
+            @endrole
+          </div>
         </div>
       </div>
     </div>
@@ -1428,7 +1571,7 @@ $tlLabels = [
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title"><span class="me-3">12</span> Permohonan Sijil Perakuan Siap Kerja (CPC)</h3>
+        <h3 class="card-title"><span class="me-3">12</span> NF: Upload Permohonan Sijil Perakuan Siap Kerja (CPC)</h3>
         @php
           $cpcApp = $project->cpcApplication;
           $allUploaded = $cpcApp
@@ -1530,12 +1673,47 @@ $tlLabels = [
         </form>
         @endcan
         <hr class="mt-3 mb-2" style="opacity:1;">
-        <div class="text-muted small">
-          <strong>NOTA:</strong>
-          <ol class="mb-0 ps-3 mt-1">
-            <li>SILA MUAT-NAIK SALINAN Surat Serahan Dokumen Lengkap CPC.</li>
-            <li>PASTIKAN ADA COP TERIMA &amp; TARIKH TERIMA OLEH PBT/KUTT.</li>
-          </ol>
+        <div class="d-flex align-items-start gap-4">
+          <div class="text-muted small flex-grow-1">
+            <strong>NOTA:</strong>
+            <ol class="mb-0 ps-3 mt-1">
+              <li>SILA MUAT-NAIK SALINAN Surat Serahan Dokumen Lengkap CPC.</li>
+              <li>PASTIKAN ADA COP TERIMA &amp; TARIKH TERIMA OLEH PBT/KUTT.</li>
+            </ol>
+          </div>
+          <div class="text-center" style="min-width:130px;">
+            @if($exampleImages['section12'])
+              <img src="{{ route('example-images.show', 'section12') }}"
+                   alt="Contoh dokumen" class="img-thumbnail" style="max-width:120px; cursor:pointer;"
+                   data-bs-toggle="modal" data-bs-target="#exampleImageModal12">
+              <div class="text-muted" style="font-size:0.7rem; margin-top:3px;">Contoh Surat Serahan</div>
+              <div class="modal fade" id="exampleImageModal12" tabindex="-1">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                  <div class="modal-content">
+                    <div class="modal-header py-2">
+                      <span class="fw-semibold small">Contoh Surat Serahan</span>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center p-2">
+                      <img src="{{ route('example-images.show', 'section12') }}" alt="Contoh dokumen" class="img-fluid">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            @else
+              <div class="text-muted" style="font-size:0.7rem;">Tiada contoh</div>
+            @endif
+            @role('admin|officer')
+            <form action="{{ route('example-images.upload', 'section12') }}" method="POST"
+                  enctype="multipart/form-data" class="mt-1">
+              @csrf
+              <label class="btn-action btn-action-sm mb-0" style="cursor:pointer; font-size:0.75rem;">
+                {{ $exampleImages['section12'] ? 'Replace' : 'Upload' }}
+                <input type="file" name="image" class="d-none" accept="image/*" onchange="this.form.submit()">
+              </label>
+            </form>
+            @endrole
+          </div>
         </div>
       </div>
     </div>
@@ -1550,7 +1728,7 @@ $tlLabels = [
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title"><span class="me-3">13</span> Sijil Perakuan Siap Kerja</h3>
+        <h3 class="card-title"><span class="me-3">13</span> NF: Upload Sijil Perakuan Siap Kerja</h3>
         @php $cpcRec = $project->cpcReceived; @endphp
         @if($cpcRec)
           <div class="row mb-3">
