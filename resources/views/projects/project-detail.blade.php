@@ -309,7 +309,21 @@ $tlLabels = [
               </div>
               <div class="d-flex align-items-center w-100">
                 @if ($i > 1)
-                  <div style="flex:1; height:2px; background:{{ $tl[$i-1] ? '#28a745' : '#dee2e6' }};"></div>
+                  @php
+                    $prevDate = $timelineDates[$i - 1] ?? null;
+                    $currDate = $timelineDates[$i] ?? null;
+                    $daysDiff = ($prevDate && $currDate)
+                        ? (int) \Carbon\Carbon::parse($prevDate)->diffInDays(\Carbon\Carbon::parse($currDate), false)
+                        : null;
+                  @endphp
+                  <div style="flex:1; position:relative; height:2px; background:{{ $tl[$i-1] ? '#28a745' : '#dee2e6' }};">
+                    @if ($daysDiff !== null)
+                      <span style="position:absolute; top:-13px; left:0; transform:translateX(-50%);
+                                   font-size:0.5rem; color:#6c757d; white-space:nowrap; font-weight:700;">
+                        {{ $daysDiff }} day{{ $daysDiff === 1 ? '' : 's' }}
+                      </span>
+                    @endif
+                  </div>
                 @else
                   <div style="flex:1;"></div>
                 @endif

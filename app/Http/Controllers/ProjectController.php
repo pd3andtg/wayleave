@@ -167,11 +167,11 @@ class ProjectController extends Controller
             $handle = fopen('php://output', 'w');
 
             // Header row
-            $columns = ['No.', 'Ref No', 'LOR No', 'Project No', 'Project Description', 'ND State', 'PIC Name'];
+            $columns = ['No.', 'Ref No', 'LOR No', 'Project No', 'Project Description', 'ND State', 'TM Node', 'PIC Name'];
             if ($isOfficerOrAdmin) {
                 $columns[] = 'Company';
             }
-            $columns = array_merge($columns, ['Application Date', 'Status', 'Progress (Sections Completed)', 'Payment to PBT', 'Remarks']);
+            $columns = array_merge($columns, ['Application Date', 'Status', 'Progress (Sections Completed)', 'Next Step', 'Payment to PBT', 'Remarks']);
             fputcsv($handle, $columns);
 
             foreach ($projects as $i => $project) {
@@ -187,6 +187,15 @@ class ProjectController extends Controller
                 $tlStatus  = $this->projectService->getTimelineStatus($project);
                 $completed = count(array_filter($tlStatus));
 
+                // Next step — same logic as the dashboard list
+                if ($displayStatus === 'Cancelled') {
+                    $nextStep = '— Project Cancelled —';
+                } elseif ($displayStatus === 'Completed') {
+                    $nextStep = '— All Steps Completed —';
+                } else {
+                    $nextStep = $this->projectService->getNextStepLabel($tlStatus);
+                }
+
                 $row = [
                     $i + 1,
                     $project->ref_no ?? '',
@@ -194,6 +203,7 @@ class ProjectController extends Controller
                     $project->project_no ?? '',
                     $project->project_desc,
                     str_replace('_', ' ', $project->nd_state),
+                    $project->node ? $project->node->acronym . ' - ' . $project->node->full_name : '',
                     $project->pic_name,
                 ];
 
@@ -204,6 +214,7 @@ class ProjectController extends Controller
                 $row[] = $project->application_date?->format('d/m/Y') ?? '';
                 $row[] = $displayStatus;
                 $row[] = $completed . '/13';
+                $row[] = $nextStep;
                 $row[] = $project->payment_to_pbt ? ucfirst(str_replace('_', ' ', $project->payment_to_pbt)) : '';
                 $row[] = $project->remarks ?? '';
 

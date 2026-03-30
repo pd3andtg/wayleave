@@ -98,6 +98,7 @@ class ProjectService
     {
         $query = Project::with([
             'company',
+            'node',
             'boqInvItems',
             'wayleavePhbts',
             'wayleavePayments',
