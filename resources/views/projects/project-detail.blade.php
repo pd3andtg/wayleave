@@ -290,9 +290,9 @@
 $tl = $timelineStatus;
 $tlLabels = [
     1 => 'NF: Project Info', 2 => 'NF: Upload BOQ/Invoice', 3 => 'TM: BOQ/INV Endorsement and Payment',
-    4 => 'NF: Upload Wayleave', 5 => 'TM: Wayleave Endorsement', 6 => 'TM: Update Deposit & FI Payment Application Date',
-    7 => 'TM: Upload BG/BD from FINSSO', 8 => 'NF: Document Permit Submission to PBT', 9 => 'NF: Upload Permit Received from PBT',
-    10 => 'NF: Notis Mula Kerja', 11 => 'NF: Notis Siap Kerja', 12 => 'NF: Upload Document CPC Submission to PBT', 13 => 'NF: Upload CPC',
+    4 => 'NF: Upload Wayleave', 5 => 'TM: Wayleave Endorsement', 6 => 'TM: Update Deposit & FI  Payment (BG/BD) Application Date',
+    7 => 'TM: Upload BG/BD Received Date from FINSSO', 8 => 'NF: Document Permit Submission to PBT', 9 => 'NF: Upload Permit Received from PBT',
+    10 => 'NF: Notis Mula Kerja', 11 => 'NF: Notis Siap Kerja', 12 => 'NF: Upload Document CPC Submission to PBT', 13 => 'NF: Upload Approved CPC',
 ];
 @endphp
 <div class="row">
@@ -1360,6 +1360,10 @@ $tlLabels = [
               <div>{{ $rec->permit_received_date?->format('d/m/Y') ?? '—' }}</div>
             </div>
             <div>
+              <div class="text-muted small">PBT Name</div>
+              <div>{{ $rec->remarks ?? '—' }}</div>
+            </div>
+            <div>
               <div class="text-muted small">Permit File</div>
               <a href="{{ route('projects.download', ['project' => $project, 'path' => $rec->permit_file]) }}"
                  class="btn-action btn-action-sm"><i class="ti-download me-1"></i>Download</a>
@@ -1386,6 +1390,11 @@ $tlLabels = [
                   <label class="form-label small">Date Received <span class="text-danger">*</span></label>
                   <input type="date" name="permit_received_date" class="form-control form-control-sm"
                          value="{{ $rec->permit_received_date?->format('Y-m-d') }}" required>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label small">PBT Name</label>
+                  <input type="text" autocomplete="off" name="remarks" class="form-control form-control-sm"
+                         value="{{ $rec->remarks }}">
                 </div>
                 <div class="col-md-5">
                   <label class="form-label small">Replace File <span class="text-muted">(leave blank to keep current)</span></label>
@@ -1424,6 +1433,10 @@ $tlLabels = [
                 <div class="col-md-3">
                   <label class="form-label small">Date Received <span class="text-danger">*</span></label>
                   <input type="date" name="permit_received_date" class="form-control form-control-38" required>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label small">PBT Name</label>
+                  <input type="text" autocomplete="off" name="remarks" class="form-control form-control-38">
                 </div>
                 <div class="col-md-5">
                   <label class="form-label small">Permit File (PDF) <span class="text-danger">*</span></label>
@@ -1897,7 +1910,7 @@ $tlLabels = [
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title"><span class="me-3">13</span> NF: Upload Sijil Perakuan Siap Kerja</h3>
+        <h3 class="card-title"><span class="me-3">13</span> NF: Upload Approved CPC</h3>
         @php $cpcRec = $project->cpcReceived; @endphp
         @if($cpcRec)
           <div class="row mb-3">

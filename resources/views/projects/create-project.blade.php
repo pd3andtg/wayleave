@@ -55,9 +55,29 @@
                         const found = this.allNodes.find(n => String(n.id) === String(this.nodeId));
                         if (found) this.nodeSearch = found.acronym + ' \u2014 ' + found.full_name;
                     }
+                },
+                allCompanies: {{ Js::from($companies->map(fn($c) => ['id' => $c->id, 'name' => $c->name])) }},
+                companyId: '{{ old('company_id', '') }}',
+                companySearch: '',
+                showCompanyDropdown: false,
+                get filteredCompanies() {
+                    if (!this.companySearch.trim()) return this.allCompanies;
+                    const q = this.companySearch.toLowerCase();
+                    return this.allCompanies.filter(c => c.name.toLowerCase().includes(q));
+                },
+                selectCompany(company) {
+                    this.companyId = company.id;
+                    this.companySearch = company.name;
+                    this.showCompanyDropdown = false;
+                },
+                initCompanySearch() {
+                    if (this.companyId) {
+                        const found = this.allCompanies.find(c => String(c.id) === String(this.companyId));
+                        if (found) this.companySearch = found.name;
+                    }
                 }
               }"
-              x-init="initNodeSearch()">
+              x-init="initNodeSearch(); initCompanySearch()">
           @csrf
 
           {{-- Self Applied by TM (officer/admin only) --}}
@@ -73,22 +93,39 @@
             </div>
           </div>
 
-          {{-- Company dropdown (only if NOT self-applied) --}}
+          {{-- Company searchable typeahead (only if NOT self-applied) --}}
           <div class="form-group row" x-show="!selfApplied" x-cloak>
             <label class="col-sm-3 col-form-label text-sm-end">Company <span class="text-danger">*</span></label>
             <div class="col-sm-9">
-              <select class="form-control @error('company_id') is-invalid @enderror"
-                      name="company_id"
-                      :required="!selfApplied">
-                <option value="">-- Select Company --</option>
-                @foreach($companies as $company)
-                  <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>
-                    {{ $company->name }}
-                  </option>
-                @endforeach
-              </select>
+              <input type="hidden" name="company_id" :value="companyId" :required="!selfApplied">
+              <div style="position:relative;">
+                <input type="text"
+                       class="form-control @error('company_id') is-invalid @enderror"
+                       x-model="companySearch"
+                       @focus="showCompanyDropdown = true"
+                       @input="showCompanyDropdown = true; companyId = ''"
+                       @click.outside="showCompanyDropdown = false"
+                       placeholder="Search company name..."
+                       autocomplete="off">
+                <div x-show="showCompanyDropdown && filteredCompanies.length > 0"
+                     style="position:absolute; z-index:1000; width:100%; max-height:220px; overflow-y:auto;
+                            background:#fff; border:1px solid #ced4da; border-radius:4px; margin-top:2px;">
+                  <template x-for="company in filteredCompanies" :key="company.id">
+                    <div @click="selectCompany(company)"
+                         style="padding:6px 12px; cursor:pointer; font-size:0.875rem;"
+                         @mouseover="$el.style.background='#f0f4ff'"
+                         @mouseout="$el.style.background='#fff'"
+                         x-text="company.name">
+                    </div>
+                  </template>
+                </div>
+                <div x-show="showCompanyDropdown && companySearch.trim() && filteredCompanies.length === 0"
+                     class="form-text text-muted" style="font-size:0.8rem; margin-top:4px;">
+                  No companies found matching your search.
+                </div>
+              </div>
               @error('company_id')
-                <div class="invalid-feedback">{{ $message }}</div>
+                <div class="invalid-feedback d-block">{{ $message }}</div>
               @enderror
             </div>
           </div>
@@ -98,7 +135,7 @@
             <label class="col-sm-3 col-form-label text-sm-end">PBT Reference No <span class="text-danger">*</span></label>
             <div class="col-sm-9">
               <input type="text" autocomplete="off" class="form-control @error('ref_no') is-invalid @enderror"
-                     name="ref_no" value="{{ old('ref_no') }}" placeholder="e.g. KUTT/2024/001" required>
+                     name="ref_no" value="{{ old('ref_no') }}" placeholder="KUTT/KUP/BKI/PBT REF NO" required>
             </div>
           </div>
 

@@ -136,6 +136,86 @@ class ProjectController extends Controller
         return back()->with('success', 'Project cancelled.');
     }
 
+    // Export the filtered project list as a CSV file.
+    // Applies the same scoping and filters as the index page (no pagination).
+    public function export(Request $request)
+    {
+        $this->authorize('viewAny', Project::class);
+
+        $projects = $this->projectService->getProjectListForExport(
+            auth()->user(),
+            $request->only('search', 'status', 'nd_state')
+        );
+
+        $isOfficerOrAdmin = auth()->user()->hasRole('officer') || auth()->user()->hasRole('admin');
+
+        $statusLabel = match($request->input('status')) {
+            'in_progress' => 'In_Progress',
+            'completed'   => 'Completed',
+            'cancelled'   => 'Cancelled',
+            default       => 'All',
+        };
+
+        $filename = 'Projects_' . $statusLabel . '_' . now()->format('Ymd_His') . '.csv';
+
+        $headers = [
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function () use ($projects, $isOfficerOrAdmin) {
+            $handle = fopen('php://output', 'w');
+
+            // Header row
+            $columns = ['No.', 'Ref No', 'LOR No', 'Project No', 'Project Description', 'ND State', 'PIC Name'];
+            if ($isOfficerOrAdmin) {
+                $columns[] = 'Company';
+            }
+            $columns = array_merge($columns, ['Application Date', 'Status', 'Progress (Sections Completed)', 'Payment to PBT', 'Remarks']);
+            fputcsv($handle, $columns);
+
+            foreach ($projects as $i => $project) {
+                // Derive display status
+                if ($project->application_status === 'cancelled') {
+                    $displayStatus = 'Cancelled';
+                } elseif ($project->status === 'completed') {
+                    $displayStatus = 'Completed';
+                } else {
+                    $displayStatus = 'In Progress';
+                }
+
+                $tlStatus  = $this->projectService->getTimelineStatus($project);
+                $completed = count(array_filter($tlStatus));
+
+                $row = [
+                    $i + 1,
+                    $project->ref_no ?? '',
+                    $project->lor_no ?? '',
+                    $project->project_no ?? '',
+                    $project->project_desc,
+                    str_replace('_', ' ', $project->nd_state),
+                    $project->pic_name,
+                ];
+
+                if ($isOfficerOrAdmin) {
+                    $row[] = $project->company->name ?? '';
+                }
+
+                $row[] = $project->application_date?->format('d/m/Y') ?? '';
+                $row[] = $displayStatus;
+                $row[] = $completed . '/13';
+                $row[] = $project->payment_to_pbt ? ucfirst(str_replace('_', ' ', $project->payment_to_pbt)) : '';
+                $row[] = $project->remarks ?? '';
+
+                fputcsv($handle, $row);
+            }
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
     // Permanently delete a project — admin only.
     public function destroy(Project $project)
     {

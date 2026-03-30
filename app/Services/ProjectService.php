@@ -92,6 +92,56 @@ class ProjectService
         return $query->paginate(15)->withQueryString();
     }
 
+    // Same as getProjectList but returns all matching records without pagination.
+    // Used by the CSV export — no per_page limit applied.
+    public function getProjectListForExport(User $user, array $filters): \Illuminate\Database\Eloquent\Collection
+    {
+        $query = Project::with([
+            'company',
+            'boqInvItems',
+            'wayleavePhbts',
+            'wayleavePayments',
+            'permitSubmissions',
+            'permitReceiveds',
+            'workNotice',
+            'cpcApplication',
+            'cpcReceived',
+        ])->latest();
+
+        if ($user->hasRole('contractor')) {
+            $query->where('company_id', $user->company_id);
+        } elseif ($user->hasRole('officer') && $user->unit) {
+            $ndState = strtoupper(str_replace(' ', '_', $user->unit->name));
+            $query->where('nd_state', $ndState);
+        }
+
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $operator = config('database.default') === 'pgsql' ? 'ilike' : 'like';
+                $q->where('ref_no', $operator, "%{$search}%")
+                  ->orWhere('project_desc', $operator, "%{$search}%");
+            });
+        }
+
+        if (!empty($filters['nd_state'])) {
+            $query->where('nd_state', $filters['nd_state']);
+        }
+
+        if (!empty($filters['status'])) {
+            if ($filters['status'] === 'completed') {
+                $query->where('status', 'completed');
+            } elseif ($filters['status'] === 'cancelled') {
+                $query->where('application_status', 'cancelled');
+            } elseif ($filters['status'] === 'in_progress') {
+                $query->where('application_status', 'in_progress')
+                      ->where('status', '!=', 'completed');
+            }
+        }
+
+        return $query->get();
+    }
+
     // Returns in_progress, completed, and cancelled counts for the user's visible scope.
     // Uses the same company/unit scoping as getProjectList but ignores search/status filters
     // so the counts always reflect the full picture, not just the current filtered view.
@@ -528,6 +578,7 @@ class ProjectService
             'project_id'           => $project->id,
             'permit_received_date' => $data['permit_received_date'],
             'permit_file'          => $filePath,
+            'remarks'              => $data['remarks'] ?? null,
             'uploaded_by'          => $user->id,
         ]);
     }
@@ -542,6 +593,7 @@ class ProjectService
         $permitReceived->update([
             'permit_received_date' => $data['permit_received_date'],
             'permit_file'          => $filePath,
+            'remarks'              => $data['remarks'] ?? null,
             'uploaded_by'          => $user->id,
         ]);
 

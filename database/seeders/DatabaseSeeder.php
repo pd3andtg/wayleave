@@ -123,7 +123,66 @@ class DatabaseSeeder extends Seeder
             ['status' => 'approved']
         );
 
-        // ── Companies (approved, for contractor test accounts) ─────────────────
+        // ── Companies (approved contractors) ──────────────────────────────────
+        $contractorCompanies = [
+            'RITES SDN BHD',
+            'RIDZQIN INDUSTRIES SDN BHD',
+            'GCC LINKS (M) SDN BHD',
+            'DAGANG JATI SDN BHD',
+            'PAKARCOM SDN BHD',
+            'MK NETWORKS GROUP SDN BHD',
+            'DIESOLEX PETROLEUM SDN BHD',
+            'MEGA CONVERGENCE SDN BHD',
+            'PEMBINAAN MOHAMED NAZIR MERASLAM SDN BHD',
+            'WAYCOM SDN BHD',
+            'INTELLIGENT CONNECTION SDN BHD',
+            'RR MJKH GROUP SDN BHD',
+            'TMM ENGINEERING SERVICES SDN BHD',
+            'AZIMAT TELCO SDN BHD',
+            'ANJANG JAYA SDN BHD',
+            'ETD MAKMUR (M) SDN BHD',
+            'WUHAN FIBERHOME INT. (M)',
+            'GETRA SDN. BERHAD',
+            'KONSORTIUM KONTRAKTOR RR KP SDN BHD',
+            'KONSORTIUM KOVENREA SDN BHD',
+            'ABINA GLOBAL SDN BHD',
+            'HARTA UNITY SDN BHD',
+            'SYARIKAT OSMANIA LOGISTIC SDN BHD',
+            'SPS CORPORATION SDN BHD',
+            'PROSERIN TECHNOLOGY SDN BHD',
+            'SINOR TECHNOLOGY SDN BHD',
+            'PCOM TECHNOLOGIES SDN BHD',
+            'NEXUSCORPGROUP SDN BHD',
+            'EXACT ENGINEERING SDN BHD',
+            'KONSORTIUM MYRCOM SDN BHD',
+            'SERI PANCAR SDN BHD',
+            'TETAP YAKIN SDN BHD',
+            'LIKMANINA SDN BHD',
+            'FALTECH ENGINEERING SDN BHD',
+            'EMAX SYNERGY SDN BHD',
+            'TELCO DATA  SDN BHD',
+            'CELLCO TRINITY SDN BHD',
+            'NUGEN COMMUNICATION SDN BHD',
+            'TRINTEL (M) SDN BHD',
+            'AMDC RESOURCES SDN BHD',
+            'KN BERSATU SDN BHD',
+            'NEPOLINK SDN BHD',
+            'MOTOBINA SDN BHD',
+            'SUTERA UTAMA SDN BHD',
+            'ANEKA BENA MN SDN BHD',
+            'OCK SETIA ENGINEERING SDN BHD',
+            'KAZAKON SDN BHD',
+            'RUL SYNERGY SDN BHD',
+        ];
+
+        foreach ($contractorCompanies as $companyName) {
+            Company::firstOrCreate(
+                ['name' => $companyName],
+                ['status' => 'approved']
+            );
+        }
+
+        // ── Test companies (for seeded contractor accounts) ────────────────────
         $companyA = Company::firstOrCreate(
             ['name' => 'Company A'],
             ['status' => 'approved']

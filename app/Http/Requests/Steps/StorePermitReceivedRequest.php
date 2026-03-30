@@ -17,6 +17,7 @@ class StorePermitReceivedRequest extends FormRequest
         return [
             'permit_received_date' => ['required', 'date'],
             'permit_file'          => ['required', 'file', 'mimes:pdf', 'max:10240'],
+            'remarks'              => ['nullable', 'string'],
         ];
     }
 }

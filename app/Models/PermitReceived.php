@@ -15,6 +15,7 @@ class PermitReceived extends Model
         'project_id',
         'permit_received_date',
         'permit_file',
+        'remarks',
         'uploaded_by',
     ];
 

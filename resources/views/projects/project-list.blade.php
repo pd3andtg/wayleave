@@ -88,7 +88,7 @@
           <div class="alert alert-success py-2">{{ session('success') }}</div>
         @endif
 
-        {{-- Results count + Show All --}}
+        {{-- Results count + Export + Show All --}}
         <div class="d-flex align-items-center justify-content-between mb-2">
           <div class="text-muted small">
             @if ($projects->total() > 0)
@@ -97,9 +97,17 @@
               No projects found.
             @endif
           </div>
-          @if (request()->hasAny(['search', 'status', 'nd_state']))
-            <a href="{{ route('projects.index') }}" class="text-muted small">Show All</a>
-          @endif
+          <div class="d-flex align-items-center gap-3">
+            @if ($projects->total() > 0)
+              <a href="{{ route('projects.export', request()->only('search', 'status', 'nd_state')) }}"
+                 class="btn-action btn-action-sm" style="white-space:nowrap;">
+                Export CSV
+              </a>
+            @endif
+            @if (request()->hasAny(['search', 'status', 'nd_state']))
+              <a href="{{ route('projects.index') }}" class="text-muted small">Show All</a>
+            @endif
+          </div>
         </div>
 
         {{-- Table --}}
@@ -154,7 +162,7 @@
                 @endphp
                 <tr style="cursor: pointer;" onclick="window.location='{{ route('projects.show', $project) }}'">
                   {{-- Ref No --}}
-                  <td style="white-space: nowrap;">{{ $project->ref_no ?? '—' }}</td>
+                  <td style="white-space: normal; word-break: break-word;">{{ $project->ref_no ?? '—' }}</td>
 
                   {{-- Description — wraps up to 3 lines within fixed column width --}}
                   <td style="white-space: normal; word-break: break-word;">
