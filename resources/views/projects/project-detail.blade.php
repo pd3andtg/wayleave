@@ -207,7 +207,7 @@
                          value="{{ old('application_date', $project->application_date?->format('Y-m-d')) }}">
                 </div>
                 <div class="col-md-4 mb-3">
-                  <label class="form-label text-muted small">Payment to PBT</label>
+                  <label class="form-label text-muted small">Payment to KUTT/</label>
                   <select name="payment_to_pbt" class="form-control">
                     <option value="">-- Select --</option>
                     <option value="charged"      {{ old('payment_to_pbt', $project->payment_to_pbt) === 'charged'      ? 'selected' : '' }}>Charged</option>
@@ -294,13 +294,48 @@ $tlLabels = [
     7 => 'TM: Upload BG/BD Received Date from FINSSO', 8 => 'NF: Document Permit Submission to PBT', 9 => 'NF: Upload Permit Received from PBT',
     10 => 'NF: Notis Mula Kerja', 11 => 'NF: Notis Siap Kerja', 12 => 'NF: Upload Document CPC Submission to PBT', 13 => 'NF: Upload Approved CPC',
 ];
+
+// Total days: Section 1 date to the last completed section that has a date.
+$tlTotalDays = null;
+$tlStartDate = $timelineDates[1] ?? null;
+if ($tlStartDate) {
+    $lastCompletedDate = null;
+    foreach (range(13, 1) as $s) {
+        if ($tl[$s] && !empty($timelineDates[$s])) {
+            $lastCompletedDate = $timelineDates[$s];
+            break;
+        }
+    }
+    if ($lastCompletedDate && $lastCompletedDate != $tlStartDate) {
+        $tlTotalDays = (int) \Carbon\Carbon::parse($tlStartDate)->diffInDays(\Carbon\Carbon::parse($lastCompletedDate), false);
+    }
+}
 @endphp
 <div class="row">
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title">Project Timeline</h3>
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <h3 class="card-title mb-0">Project Timeline</h3>
+          @if ($tlTotalDays !== null)
+            <span style="font-size:0.78rem; font-weight:700; color:#144e90;">
+              Total: {{ $tlTotalDays }} day{{ $tlTotalDays === 1 ? '' : 's' }}
+            </span>
+          @endif
+        </div>
         <div class="d-flex align-items-start" style="overflow-x:auto; padding-bottom:0.5rem;">
+          @php
+            // Build a look-back date map: for each node, find the nearest previous date.
+            // Used so lines between waived sections (no date) still show a meaningful diff.
+            $tlEffectiveDates = [];
+            $lastKnownDate = null;
+            for ($s = 1; $s <= 13; $s++) {
+                if (!empty($timelineDates[$s])) {
+                    $lastKnownDate = $timelineDates[$s];
+                }
+                $tlEffectiveDates[$s] = $lastKnownDate;
+            }
+          @endphp
           @foreach (range(1, 13) as $i)
             <div class="d-flex flex-column align-items-center" style="min-width:64px; flex:1;">
               {{-- Date above the node --}}
@@ -310,10 +345,12 @@ $tlLabels = [
               <div class="d-flex align-items-center w-100">
                 @if ($i > 1)
                   @php
-                    $prevDate = $timelineDates[$i - 1] ?? null;
-                    $currDate = $timelineDates[$i] ?? null;
-                    $daysDiff = ($prevDate && $currDate)
-                        ? (int) \Carbon\Carbon::parse($prevDate)->diffInDays(\Carbon\Carbon::parse($currDate), false)
+                    // Use effective (look-back) dates so waived gaps still show a count
+                    // when the next real date is available.
+                    $prevEffective = $tlEffectiveDates[$i - 1] ?? null;
+                    $currDate      = $timelineDates[$i] ?? null;
+                    $daysDiff = ($prevEffective && $currDate)
+                        ? (int) \Carbon\Carbon::parse($prevEffective)->diffInDays(\Carbon\Carbon::parse($currDate), false)
                         : null;
                   @endphp
                   <div style="flex:1; position:relative; height:2px; background:{{ $tl[$i-1] ? '#28a745' : '#dee2e6' }};">
@@ -346,6 +383,43 @@ $tlLabels = [
             </div>
           @endforeach
         </div>
+
+        {{-- Stage brackets — proportional to node count each stage spans --}}
+        {{-- Each unit = 1 node width (64px min). Stages share the same scroll container. --}}
+        @php
+        $stageColor = '#144e90';
+        $dropHeight = '20px';
+        $barHeight  = '2px';
+        $stages = [
+            ['units' => 1, 'label' => 'Stage 1: Registration of Wayleave & Permit Application.'],
+            ['units' => 2, 'label' => 'Stage 2: Payment to Koridor Utiliti - KUTT/KUP/BKI.'],
+            ['units' => 5, 'label' => 'Stage 3: Wayleave Acquisition, Document Preparation, Preparation of Deposit & FI, and Submission of Documents to PBT.'],
+            ['units' => 2, 'label' => 'Stage 4: Project Implementation Upon Permit Approval.'],
+            ['units' => 3, 'label' => 'Stage 5: Preparation of Documents for CPC Application.'],
+        ];
+        @endphp
+        <div class="d-flex" style="overflow-x:visible; margin-top:4px; gap:6px;">
+          @foreach ($stages as $stage)
+            <div style="flex:{{ $stage['units'] }}; min-width:{{ $stage['units'] * 64 }}px; display:flex; flex-direction:column; align-items:stretch; padding:0 8px;">
+              {{-- U-bracket: two vertical drops + horizontal bar at bottom --}}
+              <div style="display:flex; align-items:flex-end; height:{{ $dropHeight }};">
+                {{-- Left vertical drop --}}
+                <div style="width:{{ $barHeight }}; height:100%; background:{{ $stageColor }}; flex-shrink:0;"></div>
+                {{-- Spacer --}}
+                <div style="flex:1;"></div>
+                {{-- Right vertical drop --}}
+                <div style="width:{{ $barHeight }}; height:100%; background:{{ $stageColor }}; flex-shrink:0;"></div>
+              </div>
+              {{-- Horizontal bar --}}
+              <div style="height:{{ $barHeight }}; background:{{ $stageColor }};"></div>
+              {{-- Stage label --}}
+              <div class="text-center mt-1" style="font-size:0.65rem; color:#212529 !important; font-weight:400 !important; line-height:1.3; padding:0 12px;">
+                {{ $stage['label'] }}
+              </div>
+            </div>
+          @endforeach
+        </div>
+
       </div>
     </div>
   </div>
@@ -364,7 +438,7 @@ $tlLabels = [
       <div class="card-body">
         <h3 class="card-title"><span class="me-3">2</span> NF: Upload BOQ/Invoice Files</h3>
         @if($boqHidden)
-          <p class="text-muted mb-0"><em>Payment to PBT is {{ ucfirst(str_replace('_', ' ', $project->payment_to_pbt)) }} — BOQ/INV section not applicable.</em></p>
+          <p class="text-muted mb-0"><em>Payment to KUTT/ is {{ ucfirst(str_replace('_', ' ', $project->payment_to_pbt)) }} — BOQ/INV section not applicable.</em></p>
         @else
           <div class="table-responsive">
             <table class="table table-borderless mb-0">
@@ -739,51 +813,100 @@ $tlLabels = [
         <h3 class="card-title"><span class="me-3">4</span> NF: Wayleave Received</h3>
 
         @forelse ($project->wayleavePhbts as $pbt)
-        <div class="border rounded p-2 mb-2" x-data="{ open: false }">
+        <div class="border rounded p-2 mb-2" x-data="{ editing: false, showOther: {{ $pbt->pbt_name === 'Others' ? 'true' : 'false' }} }">
           <div>
-            <strong class="small">{{ $pbt->pbt_number }} — {{ str_replace('_', ' ', $pbt->pbt_name === 'Others' ? $pbt->pbt_name_other : $pbt->pbt_name) }}</strong>
+            <strong class="small">{{ $pbt->pbt_number }} — {{ $pbt->pbt_name === 'Others' ? $pbt->pbt_name_other : str_replace('_', ' ', $pbt->pbt_name) }}</strong>
             @if($pbt->endorsed_by)
               <span class="badge bg-success ms-2">Endorsed by {{ $pbt->endorsedBy?->name }}</span>
             @endif
           </div>
-          <div class="d-flex align-items-start justify-content-between mt-2">
-            <div class="d-flex align-items-start gap-4">
-              <div>
-                <div class="small fw-normal text-muted">Date Received</div>
-                <div class="small">{{ $pbt->wayleave_received_date?->format('d/m/Y') ?? '—' }}</div>
+
+          {{-- Read view --}}
+          <div x-show="!editing">
+            <div class="d-flex align-items-start justify-content-between mt-2">
+              <div class="d-flex align-items-start gap-4">
+                <div>
+                  <div class="small fw-normal text-muted">Date Received</div>
+                  <div class="small">{{ $pbt->wayleave_received_date?->format('d/m/Y') ?? '—' }}</div>
+                </div>
+                <div>
+                  <div class="small fw-normal text-muted">Wayleave File</div>
+                  @if($pbt->wayleave_file)
+                    <a href="{{ route('projects.download', ['project' => $project, 'path' => $pbt->wayleave_file]) }}"
+                       class="btn-action btn-action-sm"><i class="ti-download me-1"></i>Download</a>
+                  @else
+                    <span class="small text-muted">—</span>
+                  @endif
+                </div>
               </div>
-              <div>
-                <div class="small fw-normal text-muted">Wayleave File</div>
-                @if($pbt->wayleave_file)
-                  <a href="{{ route('projects.download', ['project' => $project, 'path' => $pbt->wayleave_file]) }}"
-                     class="btn-action btn-action-sm"><i class="ti-download me-1"></i>Download</a>
-                @else
-                  <span class="small text-muted">—</span>
-                @endif
-              </div>
+              @can('update', $project)
+              <button type="button" class="btn-action btn-action-sm" x-on:click="editing = true">Edit</button>
+              @endcan
             </div>
-            {{-- Contractor: replace file toggle --}}
-            @role('contractor')
-            <button type="button" class="btn-action btn-action-sm" x-on:click="open = !open">Replace File</button>
-            @endrole
           </div>
-          {{-- Replace file form --}}
-          @role('contractor')
-          <div x-show="open" x-cloak class="mt-2">
-            <form action="{{ route('projects.wayleave-pbts.replace', [$project, $pbt]) }}" method="POST" enctype="multipart/form-data">
+
+          {{-- Edit form --}}
+          @can('update', $project)
+          <div x-show="editing" x-cloak class="mt-2">
+            <form action="{{ route('projects.wayleave-pbts.update', [$project, $pbt]) }}" method="POST" enctype="multipart/form-data">
               @csrf
-              <div x-data="{ fn: '' }" class="d-flex align-items-center gap-2">
-                <label class="btn-action mb-0" style="cursor:pointer; white-space:nowrap;">
-                  Choose File
-                  <input type="file" name="wayleave_file" class="d-none" accept="application/pdf" required @change="fn = $event.target.files[0]?.name ?? ''">
-                </label>
-                <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:160px; font-weight:normal;"></span>
-                <button type="submit" class="btn-action btn-action-sm ms-1">Upload</button>
+              @method('PUT')
+              <div class="row g-2">
+                @if(!$pbt->endorsed_by)
+                {{-- Not yet endorsed: all fields editable --}}
+                <div class="col-md-3">
+                  <label class="form-label small">PBT Name <span class="text-danger">*</span></label>
+                  <select name="pbt_name" class="form-control form-control-sm" required
+                          @change="showOther = $event.target.value === 'Others'">
+                    @foreach(['MBKT','MPK','MDS','MDB','MPD','JKR HT','JKR KN','JKR DN','JKR KT','JKR KM','JKR ST','Others'] as $pn)
+                      <option value="{{ $pn }}" {{ $pbt->pbt_name === $pn ? 'selected' : '' }}>{{ $pn }}</option>
+                    @endforeach
+                  </select>
+                  <input type="text" autocomplete="off" name="pbt_name_other" class="form-control form-control-sm mt-1"
+                         placeholder="Specify other PBT name"
+                         value="{{ $pbt->pbt_name_other }}"
+                         x-show="showOther" x-cloak>
+                </div>
+                @else
+                {{-- Already endorsed: PBT name is locked, pass hidden values through --}}
+                <input type="hidden" name="pbt_name" value="{{ $pbt->pbt_name }}">
+                @if($pbt->pbt_name === 'Others')
+                  <input type="hidden" name="pbt_name_other" value="{{ $pbt->pbt_name_other }}">
+                @endif
+                @endif
+
+                <div class="col-md-3">
+                  <label class="form-label small">Date Received</label>
+                  <input type="date" name="wayleave_received_date" class="form-control form-control-sm"
+                         value="{{ $pbt->wayleave_received_date?->format('Y-m-d') }}">
+                </div>
+
+                @if(!$pbt->endorsed_by)
+                {{-- Not yet endorsed: file upload allowed --}}
+                <div class="col-md-4">
+                  <label class="form-label small">Wayleave File (PDF) — leave blank to keep existing</label>
+                  <div x-data="{ fn: '' }" class="d-flex align-items-center gap-2">
+                    <label class="btn-action mb-0" style="cursor:pointer; white-space:nowrap;">
+                      Choose File
+                      <input type="file" name="wayleave_file" class="d-none" accept="application/pdf"
+                             @change="fn = $event.target.files[0]?.name ?? ''">
+                    </label>
+                    <span class="text-muted small" x-text="fn || 'No file chosen'"
+                          style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:140px; font-weight:normal;"></span>
+                  </div>
+                  <div class="text-muted" style="font-size:0.7rem; margin-top:2px;">PDF only — max 10MB</div>
+                </div>
+                @endif
+
+                <div class="col-md-2 d-flex align-items-end gap-2">
+                  <button type="submit" class="btn-action btn-action-sm">Save</button>
+                  <button type="button" class="btn-action btn-action-sm" style="background:#6c757d;"
+                          x-on:click="editing = false">Cancel</button>
+                </div>
               </div>
-              <div class="text-muted" style="font-size:0.7rem; margin-top:2px;">PDF only — max 10MB</div>
             </form>
           </div>
-          @endrole
+          @endcan
         </div>
         @empty
           <p class="text-muted">No wayleave PBT records yet.</p>

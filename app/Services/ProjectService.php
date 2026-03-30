@@ -436,6 +436,26 @@ class ProjectService
         return $pbt;
     }
 
+    // Section 4 (All users): update PBT name, date, and optionally replace file.
+    // Does not touch endorsed_by — endorsement is managed separately in Section 5.
+    public function updateWayleavePhbt(array $data, Project $project, WayleavePhbt $pbt): WayleavePhbt
+    {
+        $payload = [
+            'pbt_name'               => $data['pbt_name'],
+            'pbt_name_other'         => $data['pbt_name'] === 'Others' ? ($data['pbt_name_other'] ?? null) : null,
+            'wayleave_received_date' => $data['wayleave_received_date'] ?? null,
+        ];
+
+        if (isset($data['wayleave_file'])) {
+            $folder            = 'projects/' . $project->id . '/wayleave-pbts';
+            $payload['wayleave_file'] = $this->storeFile($data['wayleave_file'], $folder, $project, 'Wayleave_' . $pbt->pbt_number);
+        }
+
+        $pbt->update($payload);
+
+        return $pbt;
+    }
+
     // ── Section 5: Officer Endorses Wayleave File ─────────────────────────────
 
     // Officer uploads the endorsed version, overwriting the contractor's file.

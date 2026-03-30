@@ -74,6 +74,7 @@ Route::middleware('auth')->group(function () {
 
     // ── Section 4: Wayleave PBT Upload (Contractor) ───────────────────────────
     Route::post('/projects/{project}/wayleave-pbts',                              [WayleavePhbtController::class, 'store'])->name('projects.wayleave-pbts.store');
+    Route::put('/projects/{project}/wayleave-pbts/{wayleavePhbt}',                [WayleavePhbtController::class, 'update'])->name('projects.wayleave-pbts.update');
     Route::post('/projects/{project}/wayleave-pbts/{wayleavePhbt}/replace',       [WayleavePhbtController::class, 'replace'])->name('projects.wayleave-pbts.replace');
 
     // ── Section 5: Officer Endorses Wayleave File ─────────────────────────────

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Steps\EndorseWayleavePhbtRequest;
 use App\Http\Requests\Steps\ReplaceWayleavePhbtRequest;
 use App\Http\Requests\Steps\StoreWayleavePhbtRequest;
+use App\Http\Requests\Steps\UpdateWayleavePhbtRequest;
 use App\Models\Project;
 use App\Models\WayleavePhbt;
 use App\Services\ProjectService;
@@ -25,6 +26,16 @@ class WayleavePhbtController extends Controller
         $this->projectService->storeWayleavePhbt($request->validated(), $project, auth()->user());
 
         return redirect(route('projects.show', $project) . '#section-4')->with('success', 'Wayleave PBT added successfully.');
+    }
+
+    // Section 4 (All users): update PBT name, date, and optionally the file.
+    public function update(UpdateWayleavePhbtRequest $request, Project $project, WayleavePhbt $wayleavePhbt)
+    {
+        $this->authorize('update', $project);
+
+        $this->projectService->updateWayleavePhbt($request->validated(), $project, $wayleavePhbt);
+
+        return redirect(route('projects.show', $project) . '#section-4')->with('success', 'Wayleave PBT updated successfully.');
     }
 
     // Section 4 (Contractor): replace their own wayleave file before officer endorsement.
