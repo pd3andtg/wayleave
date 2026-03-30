@@ -19,7 +19,7 @@ class DocumentReferenceService
 
         if (!empty($filters['search'])) {
             $search   = $filters['search'];
-            $operator = config('database.default') === 'pgsql' ? 'ilike' : 'like';
+            $operator = config('database.default') === 'pgsql' ? 'like' : 'like';
             $query->where(function ($q) use ($search, $operator) {
                 $q->where('title', $operator, "%{$search}%")
                   ->orWhere('description', $operator, "%{$search}%");

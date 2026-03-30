@@ -19,8 +19,8 @@ class AdminUserController extends Controller
 
         $users = User::with(['roles', 'company', 'unit'])
             ->when($search, fn($q) => $q
-                ->where('name', 'ilike', "%{$search}%")
-                ->orWhere('email', 'ilike', "%{$search}%")
+                ->where('name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")
             )
             ->latest()
             ->paginate(20)

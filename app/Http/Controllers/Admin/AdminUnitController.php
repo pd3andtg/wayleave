@@ -15,7 +15,7 @@ class AdminUnitController extends Controller
         $search = $request->input('search');
 
         $units = Unit::withCount('users')
-            ->when($search, fn($q) => $q->where('name', 'ilike', "%{$search}%"))
+            ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%"))
             ->orderBy('name')
             ->get();
 

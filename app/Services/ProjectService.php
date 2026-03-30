@@ -66,7 +66,7 @@ class ProjectService
         if (!empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
-                $operator = config('database.default') === 'pgsql' ? 'ilike' : 'like';
+                $operator = config('database.default') === 'pgsql' ? 'like' : 'like';
                 $q->where('ref_no', $operator, "%{$search}%")
                   ->orWhere('project_desc', $operator, "%{$search}%");
             });

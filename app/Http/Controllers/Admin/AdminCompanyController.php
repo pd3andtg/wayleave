@@ -18,7 +18,7 @@ class AdminCompanyController extends Controller
         $search = $request->input('search');
 
         $companies = Company::with(['requestedBy', 'approvedBy'])
-            ->when($search, fn($q) => $q->where('name', 'ilike', "%{$search}%"))
+            ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%"))
             ->latest()
             ->paginate(20)
             ->withQueryString();

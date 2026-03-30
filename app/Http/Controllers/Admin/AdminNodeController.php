@@ -17,10 +17,10 @@ class AdminNodeController extends Controller
         $search = $request->input('search');
 
         $nodes = Node::when($search, fn($q) => $q
-                ->where('acronym',   'ilike', "%{$search}%")
-                ->orWhere('full_name', 'ilike', "%{$search}%")
-                ->orWhere('nd',        'ilike', "%{$search}%")
-                ->orWhere('state',     'ilike', "%{$search}%")
+                ->where('acronym',   'like', "%{$search}%")
+                ->orWhere('full_name', 'like', "%{$search}%")
+                ->orWhere('nd',        'like', "%{$search}%")
+                ->orWhere('state',     'like', "%{$search}%")
             )
             ->orderBy('acronym')
             ->get();
