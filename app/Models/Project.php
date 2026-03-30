@@ -21,6 +21,7 @@ class Project extends Model
         'pic_name',
         'nd_state',
         'node_id',
+        'application_date',
         'self_applied_by_tm',
         'payment_to_pbt',
         'application_status',
@@ -33,6 +34,7 @@ class Project extends Model
 
     protected $casts = [
         'self_applied_by_tm' => 'boolean',
+        'application_date'   => 'date',
     ];
 
     public function company()

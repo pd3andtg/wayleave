@@ -23,6 +23,7 @@ class StoreProjectRequest extends FormRequest
             'project_desc'       => ['required', 'string'],
             'nd_state'           => ['required', 'in:ND_TRG,ND_PHG,ND_KEL'],
             'node_id'            => ['required', 'exists:nodes,id'],
+            'application_date'   => ['nullable', 'date'],
             'self_applied_by_tm' => ['nullable', 'boolean'],
             'payment_to_pbt'     => ['nullable', 'in:charged,waived,not_required'],
             'company_id'         => ['nullable', 'exists:companies,id'],

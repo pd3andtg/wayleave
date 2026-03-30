@@ -104,6 +104,7 @@ Route::middleware('auth')->group(function () {
     // ── Section 12: CPC Application (Contractor) ──────────────────────────────
     Route::post('/projects/{project}/cpc-application',                                        [CpcApplicationController::class, 'store'])->name('projects.cpc-application.store');
     Route::delete('/projects/{project}/cpc-application/{cpcApplication}/file/{field}',       [CpcApplicationController::class, 'destroyFile'])->name('projects.cpc-application.destroy-file');
+    Route::delete('/projects/{project}/cpc-application/{cpcApplication}/files',              [CpcApplicationController::class, 'destroyAllFiles'])->name('projects.cpc-application.destroy-all-files');
 
     // ── Section 13: CPC Received → Project Completed (Contractor) ────────────
     Route::post('/projects/{project}/cpc-received',      [CpcReceivedController::class, 'store'])->name('projects.cpc-received.store');

@@ -167,6 +167,7 @@ class ProjectService
             'pic_name'           => $user->name,         // Auto-filled; stored as text to persist if user deleted
             'nd_state'           => $data['nd_state'],
             'node_id'            => $data['node_id'] ?? null,
+            'application_date'   => $data['application_date'] ?? null,
             'self_applied_by_tm' => $isSelfApplied,
             'payment_to_pbt'     => $data['payment_to_pbt'] ?? null,
             'remarks'            => $data['remarks'] ?? null,
@@ -232,10 +233,17 @@ class ProjectService
         // Sections 2 & 3: if payment_to_pbt = waived/not_required, auto-complete (waived).
         $boqWaived = in_array($project->payment_to_pbt, ['waived', 'not_required']);
 
-        // Section 3 complete only when ALL rows are endorsed_and_paid OR waived.
+        // Section 3 complete when ALL rows are settled:
+        // BQ rows need status = endorsed OR waived (no "endorsed_and_paid" for BQ).
+        // INV rows need status = endorsed_and_paid OR waived.
         $sec3Complete = $boqWaived || (
             $boqItems->count() > 0 &&
-            $boqItems->every(fn($item) => in_array($item->payment_status, ['endorsed_and_paid', 'waived']))
+            $boqItems->every(function ($item) {
+                if ($item->type === 'BQ') {
+                    return in_array($item->payment_status, ['endorsed', 'waived']);
+                }
+                return in_array($item->payment_status, ['endorsed_and_paid', 'waived']);
+            })
         );
 
         // Section 7: all required payment rows must have received_posted_date set.
@@ -261,9 +269,8 @@ class ProjectService
         ];
     }
 
-    // Returns the earliest relevant date for each timeline section.
-    // Used to display when work on each section first began, so viewers can
-    // gauge how long each stage of the project actually took.
+    // Returns the most relevant date for each timeline section.
+    // Each section uses the actual business date entered by the user, not system timestamps.
     // Returns null for sections with no data yet (displayed as blank in the view).
     public function getTimelineDates(Project $project): array
     {
@@ -271,30 +278,32 @@ class ProjectService
         $wayleavePhbts = $project->wayleavePhbts;
         $payments      = $project->wayleavePayments;
 
-        // Section 3: earliest updated_at where a payment_status was first set.
-        $sec3Date = $boqItems->whereNotNull('payment_status')->sortBy('updated_at')->first()?->updated_at;
+        // Section 3: latest eds_application_date recorded by officer across all BOQ/INV rows.
+        $sec3Date = $boqItems->whereNotNull('eds_application_date')
+            ->sortByDesc('eds_application_date')->first()?->eds_application_date;
 
-        // Section 5: earliest updated_at where endorsed_by was set on a PBT row.
-        $sec5Date = $wayleavePhbts->whereNotNull('endorsed_by')->sortBy('updated_at')->first()?->updated_at;
+        // Section 5: latest endorsed_date recorded by officer across all PBT rows.
+        $sec5Date = $wayleavePhbts->whereNotNull('endorsed_date')
+            ->sortByDesc('endorsed_date')->first()?->endorsed_date;
 
-        // Section 7: earliest received_posted_date among required rows.
+        // Section 7: latest received_posted_date among required payment rows.
         $sec7Date = $payments->where('status', 'required')->whereNotNull('received_posted_date')
-            ->sortBy('received_posted_date')->first()?->received_posted_date;
+            ->sortByDesc('received_posted_date')->first()?->received_posted_date;
 
         return [
-            1  => $project->created_at,
-            2  => $boqItems->sortBy('created_at')->first()?->created_at,
-            3  => $sec3Date,
-            4  => $wayleavePhbts->sortBy('created_at')->first()?->created_at,
-            5  => $sec5Date,
-            6  => $payments->sortBy('created_at')->first()?->created_at,
-            7  => $sec7Date,
-            8  => $project->permitSubmissions->sortBy('created_at')->first()?->created_at,
-            9  => $project->permitReceiveds->sortBy('created_at')->first()?->created_at,
-            10 => $project->workNotice?->tarikh_mula_kerja,
-            11 => $project->workNotice?->tarikh_siap_kerja,
-            12 => $project->cpcApplication?->created_at,
-            13 => $project->cpcReceived?->created_at,
+            1  => $project->application_date,                                                                              // Registration date at KUTT/BKI/KUP/PBT
+            2  => $boqItems->whereNotNull('date_received')->sortByDesc('date_received')->first()?->date_received,          // Latest date_received in BOQ/INV items
+            3  => $sec3Date,                                                                                               // Latest EDS application date
+            4  => $wayleavePhbts->whereNotNull('wayleave_received_date')->sortByDesc('wayleave_received_date')->first()?->wayleave_received_date, // Latest wayleave received date
+            5  => $sec5Date,                                                                                               // Latest endorsed date
+            6  => $payments->whereNotNull('application_date')->sortByDesc('application_date')->first()?->application_date, // Latest FI/Deposit application date
+            7  => $sec7Date,                                                                                               // Latest BG/BD received/posted date
+            8  => $project->permitSubmissions->whereNotNull('submit_date')->sortByDesc('submit_date')->first()?->submit_date,         // Latest permit submission date
+            9  => $project->permitReceiveds->whereNotNull('permit_received_date')->sortByDesc('permit_received_date')->first()?->permit_received_date, // Latest permit received date
+            10 => $project->workNotice?->tarikh_mula_kerja,                                                               // Notis Mula date
+            11 => $project->workNotice?->tarikh_siap_kerja,                                                               // Notis Siap date
+            12 => $project->cpcApplication?->date_submit_to_pbt,                                                          // CPC application submission date
+            13 => $project->cpcReceived?->cpc_date,                                                                       // CPC received date
         ];
     }
 
@@ -326,14 +335,15 @@ class ProjectService
         $folder = 'projects/' . $project->id . '/boq-inv';
 
         $payload = [
-            'document_info'  => $data['document_info'] ?? $item->document_info,
-            'type'           => $data['type'] ?? $item->type,
-            'date_received'  => $data['date_received'] ?? $item->date_received,
-            'amount'         => $data['amount'] ?? $item->amount,
-            'eds_no'         => $data['eds_no'] ?? $item->eds_no,
-            'payment_status' => $data['payment_status'] ?? $item->payment_status,
-            'remarks'        => $data['remarks'] ?? $item->remarks,
-            'updated_by'     => $user->id,
+            'document_info'       => $data['document_info'] ?? $item->document_info,
+            'type'                => $data['type'] ?? $item->type,
+            'date_received'       => $data['date_received'] ?? $item->date_received,
+            'amount'              => $data['amount'] ?? $item->amount,
+            'eds_no'              => $data['eds_no'] ?? $item->eds_no,
+            'eds_application_date'=> $data['eds_application_date'] ?? $item->eds_application_date,
+            'payment_status'      => $data['payment_status'] ?? $item->payment_status,
+            'remarks'             => $data['remarks'] ?? $item->remarks,
+            'updated_by'          => $user->id,
         ];
 
         // Officer/admin overwrites file if a new one is uploaded.
@@ -388,6 +398,7 @@ class ProjectService
         $pbt->update([
             'wayleave_file' => $wayleaveFile,
             'endorsed_by'   => $user->id,
+            'endorsed_date' => $data['endorsed_date'] ?? null,
         ]);
 
         return $pbt;
@@ -613,6 +624,23 @@ class ProjectService
             Storage::disk(config('filesystems.default'))->delete($cpcApp->$field);
         }
         $cpcApp->update([$field => null]);
+    }
+
+    // Delete all four uploaded files from a CPC application and null all file columns.
+    public function deleteAllCpcFiles(CpcApplication $cpcApp): void
+    {
+        $disk = Storage::disk(config('filesystems.default'));
+        foreach (['surat_serahan_file', 'laporan_bergambar_file', 'salinan_coa_file', 'salinan_permit_file'] as $field) {
+            if ($cpcApp->$field) {
+                $disk->delete($cpcApp->$field);
+            }
+        }
+        $cpcApp->update([
+            'surat_serahan_file'     => null,
+            'laporan_bergambar_file' => null,
+            'salinan_coa_file'       => null,
+            'salinan_permit_file'    => null,
+        ]);
     }
 
     // ── Section 13: CPC Received → Project Completed (Contractor) ─────────────

@@ -20,8 +20,9 @@ class UpdateBoqInvItemRequest extends FormRequest
             'type'           => ['nullable', 'in:BQ,INV'],
             'date_received'  => ['nullable', 'date'],
             'amount'         => ['nullable', 'numeric', 'min:0'],
-            'eds_no'         => ['nullable', 'string', 'max:255'],
-            'payment_status' => ['nullable', 'in:endorsed,endorsed_and_paid,pending_endorsement,waived,cancelled'],
+            'eds_no'              => ['nullable', 'string', 'max:255'],
+            'eds_application_date'=> ['nullable', 'date'],
+            'payment_status'      => ['nullable', 'in:endorsed,endorsed_and_paid,pending_endorsement,waived,cancelled'],
             'file'           => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
             'remarks'        => ['nullable', 'string', 'max:255'],
         ];

@@ -213,6 +213,21 @@
             </div>
           </div>
 
+          {{-- Application Date — Registration Date at KUTT/BKI/KUP/PBT --}}
+          <div class="form-group row">
+            <label class="col-sm-3 col-form-label text-sm-end">
+              Application Date
+              <div class="text-muted" style="font-size:0.7rem; font-weight:normal;">(Registration Date at KUTT/BKI/KUP/PBT)</div>
+            </label>
+            <div class="col-sm-9">
+              <input type="date" name="application_date" class="form-control @error('application_date') is-invalid @enderror"
+                     value="{{ old('application_date') }}">
+              @error('application_date')
+                <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
+            </div>
+          </div>
+
           {{-- Payment to PBT --}}
           <div class="form-group row">
             <label class="col-sm-3 col-form-label text-sm-end">Payment to KUTT/PBI/KUP</label>

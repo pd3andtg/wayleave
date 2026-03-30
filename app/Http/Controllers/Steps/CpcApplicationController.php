@@ -42,4 +42,14 @@ class CpcApplicationController extends Controller
 
         return redirect(route('projects.show', $project) . '#section-12')->with('success', 'File deleted.');
     }
+
+    // Delete all four uploaded files from the CPC application record.
+    public function destroyAllFiles(Project $project, CpcApplication $cpcApplication)
+    {
+        $this->authorize('update', $project);
+
+        $this->projectService->deleteAllCpcFiles($cpcApplication);
+
+        return redirect(route('projects.show', $project) . '#section-12')->with('success', 'All CPC files deleted.');
+    }
 }

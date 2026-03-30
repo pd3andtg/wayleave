@@ -16,7 +16,8 @@ class EndorseWayleavePhbtRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'wayleave_file' => ['required', 'file', 'mimes:pdf', 'max:10240'],
+            'wayleave_file'  => ['required', 'file', 'mimes:pdf', 'max:10240'],
+            'endorsed_date'  => ['nullable', 'date'],
         ];
     }
 }

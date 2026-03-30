@@ -109,6 +109,11 @@
                 <div>{{ $project->node ? $project->node->acronym . ' — ' . $project->node->full_name : '—' }}</div>
               </div>
               <div class="col-md-4 mb-3">
+                <div class="text-muted small fw-bold">Application Date</div>
+                <div class="text-muted" style="font-size:0.7rem;">(Registration Date at KUTT/BKI/KUP/PBT)</div>
+                <div>{{ $project->application_date?->format('d/m/Y') ?? '—' }}</div>
+              </div>
+              <div class="col-md-4 mb-3">
                 <div class="text-muted small fw-bold">PIC Name</div>
                 <div>{{ $project->pic_name }}</div>
               </div>
@@ -197,6 +202,11 @@
                   </select>
                 </div>
                 <div class="col-md-4 mb-3">
+                  <label class="form-label text-muted small">Application Date <span class="text-muted" style="font-size:0.7rem;">(Registration Date at KUTT/BKI/KUP/PBT)</span></label>
+                  <input type="date" name="application_date" class="form-control"
+                         value="{{ old('application_date', $project->application_date?->format('Y-m-d')) }}">
+                </div>
+                <div class="col-md-4 mb-3">
                   <label class="form-label text-muted small">Payment to PBT</label>
                   <select name="payment_to_pbt" class="form-control">
                     <option value="">-- Select --</option>
@@ -280,7 +290,7 @@
 $tl = $timelineStatus;
 $tlLabels = [
     1 => 'NF: Project Info', 2 => 'NF: Upload BOQ/Invoice', 3 => 'TM: BOQ/INV Endorsement and Payment',
-    4 => 'NF: Upload Wayleave', 5 => 'TM: Wayleave Endorsement and Payment', 6 => 'TM: Update Deposit & FI Payment Application Date',
+    4 => 'NF: Upload Wayleave', 5 => 'TM: Wayleave Endorsement', 6 => 'TM: Update Deposit & FI Payment Application Date',
     7 => 'TM: Upload BG/BD from FINSSO', 8 => 'NF: Document Permit Submission to PBT', 9 => 'NF: Upload Permit Received from PBT',
     10 => 'NF: Notis Mula Kerja', 11 => 'NF: Notis Siap Kerja', 12 => 'NF: Upload Document CPC Submission to PBT', 13 => 'NF: Upload CPC',
 ];
@@ -523,6 +533,7 @@ $tlLabels = [
                   <th style="font-weight:600; color:#07326A;">Date Received</th>
                   <th style="font-weight:600; color:#07326A;">Amount (RM)</th>
                   <th style="font-weight:600; color:#07326A;">EDS No</th>
+                  <th style="font-weight:600; color:#07326A;">EDS Application Date</th>
                   <th style="font-weight:600; color:#07326A;">Payment Status</th>
                   <th style="font-weight:600; color:#07326A;">Endorsed By</th>
                   <th style="font-weight:600; color:#07326A;">Remarks</th>
@@ -538,7 +549,8 @@ $tlLabels = [
                   <td>{{ $item->type }}</td>
                   <td>{{ $item->date_received?->format('d/m/Y') }}</td>
                   <td>{{ $item->amount ? number_format($item->amount, 2) : '—' }}</td>
-                  <td>{{ $item->eds_no ?? '—' }}</td>
+                  <td>{{ $item->type === 'INV' ? ($item->eds_no ?? '—') : '—' }}</td>
+                  <td>{{ $item->type === 'INV' ? ($item->eds_application_date?->format('d/m/Y') ?? '—') : '—' }}</td>
                   <td>
                     {{ $item->payment_status ? ucfirst(str_replace('_', ' ', $item->payment_status)) : '—' }}
                   </td>
@@ -592,17 +604,25 @@ $tlLabels = [
                           <label class="form-label small">Amount (RM)</label>
                           <input type="number" name="amount" step="0.01" class="form-control form-control-sm" value="{{ $item->amount }}">
                         </div>
+                        @if($item->type === 'INV')
                         <div class="col-md-4">
                           <label class="form-label small">EDS No</label>
                           <input type="text" autocomplete="off" name="eds_no" class="form-control form-control-sm" value="{{ $item->eds_no }}">
                         </div>
+                        <div class="col-md-4">
+                          <label class="form-label small">EDS Application Date</label>
+                          <input type="date" name="eds_application_date" class="form-control form-control-sm" value="{{ $item->eds_application_date?->format('Y-m-d') }}">
+                        </div>
+                        @endif
                         <div class="col-md-4">
                           <label class="form-label small">Payment Status</label>
                           <select name="payment_status" class="form-control form-control-sm">
                             <option value="">— Select —</option>
                             <option value="pending_endorsement" {{ $item->payment_status === 'pending_endorsement' ? 'selected' : '' }}>Pending Endorsement</option>
                             <option value="endorsed"            {{ $item->payment_status === 'endorsed'            ? 'selected' : '' }}>Endorsed</option>
+                            @if($item->type === 'INV')
                             <option value="endorsed_and_paid"   {{ $item->payment_status === 'endorsed_and_paid'   ? 'selected' : '' }}>Endorsed and Paid</option>
+                            @endif
                             <option value="waived"              {{ $item->payment_status === 'waived'              ? 'selected' : '' }}>Waived</option>
                             <option value="cancelled"           {{ $item->payment_status === 'cancelled'           ? 'selected' : '' }}>Cancelled</option>
                           </select>
@@ -637,17 +657,25 @@ $tlLabels = [
                     <form action="{{ route('projects.boq-inv-items.update', [$project, $item]) }}" method="POST" enctype="multipart/form-data">
                       @csrf
                       <div class="row g-2">
+                        @if($item->type === 'INV')
                         <div class="col-md-3">
                           <label class="form-label small">EDS No</label>
                           <input type="text" autocomplete="off" name="eds_no" class="form-control form-control-sm" value="{{ $item->eds_no }}" placeholder="EDS No">
                         </div>
+                        <div class="col-md-3">
+                          <label class="form-label small">EDS Application Date</label>
+                          <input type="date" name="eds_application_date" class="form-control form-control-sm" value="{{ $item->eds_application_date?->format('Y-m-d') }}">
+                        </div>
+                        @endif
                         <div class="col-md-3">
                           <label class="form-label small">Payment Status</label>
                           <select name="payment_status" class="form-control form-control-sm">
                             <option value="">— Select —</option>
                             <option value="pending_endorsement" {{ $item->payment_status === 'pending_endorsement' ? 'selected' : '' }}>Pending Endorsement</option>
                             <option value="endorsed"            {{ $item->payment_status === 'endorsed'            ? 'selected' : '' }}>Endorsed</option>
+                            @if($item->type === 'INV')
                             <option value="endorsed_and_paid"   {{ $item->payment_status === 'endorsed_and_paid'   ? 'selected' : '' }}>Endorsed and Paid</option>
+                            @endif
                             <option value="waived"              {{ $item->payment_status === 'waived'              ? 'selected' : '' }}>Waived</option>
                             <option value="cancelled"           {{ $item->payment_status === 'cancelled'           ? 'selected' : '' }}>Cancelled</option>
                           </select>
@@ -836,6 +864,9 @@ $tlLabels = [
               <div class="d-flex flex-column align-items-end gap-1">
                 @if($pbt->endorsed_by)
                   <span class="text-muted small fw-normal">Endorsed by {{ $pbt->endorsedBy?->name }}</span>
+                  @if($pbt->endorsed_date)
+                    <span class="text-muted small fw-normal">Endorsed Date: {{ $pbt->endorsed_date->format('d/m/Y') }}</span>
+                  @endif
                 @else
                   <span class="text-muted small fw-normal">Pending Endorsement</span>
                 @endif
@@ -851,17 +882,29 @@ $tlLabels = [
             <div x-show="open" x-cloak class="mt-2">
               <form action="{{ route('projects.wayleave-pbts.endorse', [$project, $pbt]) }}" method="POST" enctype="multipart/form-data">
                 @csrf
-                <div x-data="{ fn: '' }" class="d-flex align-items-center gap-2">
-                  <label class="btn-action mb-0" style="cursor:pointer; white-space:nowrap;">
-                    Choose File
-                    <input type="file" name="wayleave_file" class="d-none" accept="application/pdf" required @change="fn = $event.target.files[0]?.name ?? ''">
-                  </label>
-                  <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:160px; font-weight:normal;"></span>
+                <div class="row g-2 mb-2">
+                  <div class="col-md-3">
+                    <label class="form-label small">Endorsed Date</label>
+                    <input type="date" name="endorsed_date" class="form-control form-control-sm"
+                           value="{{ $pbt->endorsed_date?->format('Y-m-d') }}">
+                  </div>
+                  <div class="col-md-9">
+                    <label class="form-label small">Endorsed File (PDF) <span class="text-danger">*</span></label>
+                    <div x-data="{ fn: '' }" class="d-flex align-items-center gap-2">
+                      <label class="btn-action mb-0" style="cursor:pointer; white-space:nowrap;">
+                        Choose File
+                        <input type="file" name="wayleave_file" class="d-none" accept="application/pdf" required @change="fn = $event.target.files[0]?.name ?? ''">
+                      </label>
+                      <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:160px; font-weight:normal;"></span>
+                    </div>
+                    <div class="text-muted" style="font-size:0.7rem; margin-top:2px;">PDF only — max 10MB</div>
+                  </div>
+                </div>
+                <div class="d-flex gap-2">
                   <button type="submit" class="btn-action btn-action-sm">Endorse</button>
                   <button type="button" class="btn-action btn-action-sm" style="background:#6c757d; border-color:#6c757d;"
                           x-on:click="open = false">Cancel</button>
                 </div>
-                <div class="text-muted" style="font-size:0.7rem; margin-top:2px;">PDF only — max 10MB</div>
               </form>
             </div>
             @endrole
@@ -894,7 +937,7 @@ $tlLabels = [
                   <th style="font-weight:600; color:#07326A;">Amount (RM)</th>
                   <th style="font-weight:600; color:#07326A;">EDS No</th>
                   <th style="font-weight:600; color:#07326A;">Method of Payment</th>
-                  <th style="font-weight:600; color:#07326A;">Application Date</th>
+                  <th style="font-weight:600; color:#07326A;">EDS Application Date</th>
                   @role('officer|admin') <th style="font-weight:600; color:#07326A;">Action</th> @endrole
                 </tr>
               </thead>
@@ -1165,7 +1208,7 @@ $tlLabels = [
               <button type="button" class="btn-action btn-action-sm" x-on:click="editing = true">Edit</button>
               <form action="{{ route('projects.permit-submission.destroy', [$project, $sub]) }}" method="POST"
                     onsubmit="return confirm('Delete this submission? This cannot be undone.')"
-                    style="margin:0; display:flex; align-items:center;">
+                    style="display:contents;">
                 @csrf @method('DELETE')
                 <button type="submit" class="btn-action btn-action-red btn-action-sm">Delete</button>
               </form>
@@ -1326,7 +1369,7 @@ $tlLabels = [
               <button type="button" class="btn-action btn-action-sm" x-on:click="editing = true">Edit</button>
               <form action="{{ route('projects.permit-received.destroy', [$project, $rec]) }}" method="POST"
                     onsubmit="return confirm('Delete this permit record? This cannot be undone.')"
-                    style="margin:0; display:flex; align-items:center;">
+                    style="display:contents;">
                 @csrf @method('DELETE')
                 <button type="submit" class="btn-action btn-action-red btn-action-sm">Delete</button>
               </form>
@@ -1702,18 +1745,8 @@ $tlLabels = [
               @if($cpcApp->$col)
                 <div class="col-md-2">
                   <div class="text-muted small fw-normal">{{ $label }}</div>
-                  <div class="d-flex gap-1 align-items-center flex-wrap mt-1">
-                    <a href="{{ route('projects.download', ['project' => $project, 'path' => $cpcApp->$col]) }}"
-                       class="btn-action btn-action-sm"><i class="ti-download me-1"></i>Download</a>
-                    @can('update', $project)
-                    <form action="{{ route('projects.cpc-application.destroy-file', [$project, $cpcApp, $col]) }}"
-                          method="POST" onsubmit="return confirm('Delete this file? This cannot be undone.')"
-                          style="margin:0; display:flex; align-items:center;">
-                      @csrf @method('DELETE')
-                      <button type="submit" class="btn-action btn-action-red btn-action-sm">Delete</button>
-                    </form>
-                    @endcan
-                  </div>
+                  <a href="{{ route('projects.download', ['project' => $project, 'path' => $cpcApp->$col]) }}"
+                     class="btn-action btn-action-sm mt-1"><i class="ti-download me-1"></i>Download</a>
                 </div>
               @endif
             @endforeach
@@ -1721,8 +1754,9 @@ $tlLabels = [
         @endif
 
         @can('update', $project)
-        <form action="{{ route('projects.cpc-application.store', $project) }}" method="POST" enctype="multipart/form-data" class="mt-3"
-              x-data="{ replacing: {{ $allUploaded ? 'false' : 'true' }} }">
+        {{-- Wrapper div holds x-data so the Delete All form can be a sibling (nested forms are invalid HTML) --}}
+        <div x-data="{ replacing: {{ $allUploaded ? 'false' : 'true' }} }" class="mt-3">
+        <form action="{{ route('projects.cpc-application.store', $project) }}" method="POST" enctype="multipart/form-data">
           @csrf
           <div class="row g-3" x-show="replacing">
             <div class="col-md-4">
@@ -1778,9 +1812,6 @@ $tlLabels = [
             </div>
           </div>
           <div class="mt-3 text-center">
-            <template x-if="!replacing">
-              <button type="button" class="btn-action" @click="replacing = true">Replace Files</button>
-            </template>
             <template x-if="replacing">
               <span class="d-inline-flex gap-2">
                 <button type="submit" class="btn-action">{{ $allUploaded ? 'Replace' : 'Save' }}</button>
@@ -1791,6 +1822,23 @@ $tlLabels = [
             </template>
           </div>
         </form>
+
+        {{-- Delete All Files — sibling form outside the upload form (nested forms invalid in HTML) --}}
+        @if($cpcApp)
+        <div class="mt-2 text-center" x-show="!replacing">
+          <form action="{{ route('projects.cpc-application.destroy-all-files', [$project, $cpcApp]) }}" method="POST"
+                onsubmit="return confirm('Delete all uploaded CPC files? This cannot be undone.')"
+                style="display:inline;">
+            @csrf @method('DELETE')
+            <span class="d-inline-flex gap-2">
+              <button type="button" class="btn-action" @click="replacing = true">Replace Files</button>
+              <button type="submit" class="btn-action btn-action-red">Delete All Files</button>
+            </span>
+          </form>
+        </div>
+        @endif
+
+        </div>{{-- end x-data wrapper --}}
         @endcan
         <hr class="mt-3 mb-2" style="opacity:1;">
         <div class="d-flex align-items-start gap-4">

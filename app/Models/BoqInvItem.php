@@ -18,6 +18,7 @@ class BoqInvItem extends Model
         'amount',
         'file_path',
         'eds_no',
+        'eds_application_date',
         'payment_status',
         'endorsed_by',
         'remarks',
@@ -25,8 +26,9 @@ class BoqInvItem extends Model
     ];
 
     protected $casts = [
-        'date_received' => 'date',
-        'amount'        => 'decimal:2',
+        'date_received'       => 'date',
+        'amount'              => 'decimal:2',
+        'eds_application_date'=> 'date',
     ];
 
     public function project()

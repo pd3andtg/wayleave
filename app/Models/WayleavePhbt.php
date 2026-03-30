@@ -24,10 +24,12 @@ class WayleavePhbt extends Model
         'wayleave_file',
         'wayleave_received_date',
         'endorsed_by',
+        'endorsed_date',
     ];
 
     protected $casts = [
         'wayleave_received_date' => 'date',
+        'endorsed_date'          => 'date',
     ];
 
     public function project()
