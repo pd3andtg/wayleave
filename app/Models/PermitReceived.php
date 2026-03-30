@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-// Step 7: contractor records the permit received date and uploads the permit file.
-// One record per project.
+// Section 9: contractor/officer records permit received date and uploads the permit file.
+// Up to 3 records per project.
 class PermitReceived extends Model
 {
     // Table name is 'permits_received', not the default 'permit_receiveds'.

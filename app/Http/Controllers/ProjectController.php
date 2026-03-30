@@ -40,7 +40,9 @@ class ProjectController extends Controller
             ];
         }
 
-        return view('projects.project-list', compact('projects', 'timelineData'));
+        $statusCounts = $this->projectService->getStatusCounts(auth()->user());
+
+        return view('projects.project-list', compact('projects', 'timelineData', 'statusCounts'));
     }
 
     public function create()
@@ -82,8 +84,8 @@ class ProjectController extends Controller
             'wayleavePhbts.endorsedBy',
             'wayleavePhbts.payments',
             'wayleavePayments.wayleavePhbt',
-            'permitSubmission.submittedBy',
-            'permitReceived.uploadedBy',
+            'permitSubmissions.submittedBy',
+            'permitReceiveds.uploadedBy',
             'workNotice.uploadedBy',
             'cpcApplication.submittedBy',
             'cpcReceived.uploadedBy',

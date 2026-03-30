@@ -13,6 +13,7 @@ use App\Models\WayleavePayment;
 use App\Models\WayleavePhbt;
 use App\Models\WorkNotice;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Storage;
 
 // Handles all project business logic across all 13 workflow sections.
 // File storage uses the configured default disk (local or S3) — controlled by .env only.
@@ -45,8 +46,8 @@ class ProjectService
             'boqInvItems',
             'wayleavePhbts',
             'wayleavePayments',
-            'permitSubmission',
-            'permitReceived',
+            'permitSubmissions',
+            'permitReceiveds',
             'workNotice',
             'cpcApplication',
             'cpcReceived',
@@ -91,6 +92,27 @@ class ProjectService
         return $query->paginate(15)->withQueryString();
     }
 
+    // Returns in_progress, completed, and cancelled counts for the user's visible scope.
+    // Uses the same company/unit scoping as getProjectList but ignores search/status filters
+    // so the counts always reflect the full picture, not just the current filtered view.
+    public function getStatusCounts(User $user): array
+    {
+        $base = Project::query();
+
+        if ($user->hasRole('contractor')) {
+            $base->where('company_id', $user->company_id);
+        } elseif ($user->hasRole('officer') && $user->unit) {
+            $ndState = strtoupper(str_replace(' ', '_', $user->unit->name));
+            $base->where('nd_state', $ndState);
+        }
+
+        return [
+            'in_progress' => (clone $base)->where('application_status', 'in_progress')->where('status', '!=', 'completed')->count(),
+            'completed'   => (clone $base)->where('status', 'completed')->count(),
+            'cancelled'   => (clone $base)->where('application_status', 'cancelled')->count(),
+        ];
+    }
+
     // Returns the label for the first incomplete timeline stage.
     // Used on the project list page to show the next action required.
     public function getNextStepLabel(array $timelineStatus): string
@@ -103,8 +125,8 @@ class ProjectService
             5  => '05 | TM | UPLOAD ENDORSED WAYLEAVE',
             6  => '06 | TM | UPDATE BG APPLICATION DATE (DEPOSIT) & FI PAYMENT STATUS',
             7  => '07 | TM | UPLOAD BG & BD RECEIVED FROM FINSSO',
-            8  => '08 | NF | UPLOAD PERMIT DOCUMENT SUBMISSION TO PBT/KUTT',
-            9  => '09 | TM | UPLOAD PERMIT RECEIVED FROM KUTT/PBT',
+            8  => '08 | NF | UPLOAD PERMIT DOCUMENT SUBMISSION TO PBT',
+            9  => '09 | TM | UPLOAD PERMIT RECEIVED FROM PBT',
             10 => '10 | NF | UPLOAD "NOTIS MULA KERJA"',
             11 => '11 | NF | UPLOAD "NOTIS SIAP KERJA"',
             12 => '12 | NF | UPLOAD PERMOHONAN SIJIL PERAKUAN SIAP KERJA (CPC)',
@@ -146,7 +168,7 @@ class ProjectService
             'nd_state'           => $data['nd_state'],
             'node_id'            => $data['node_id'] ?? null,
             'self_applied_by_tm' => $isSelfApplied,
-            'payment_to_kutt'    => $data['payment_to_kutt'] ?? null,
+            'payment_to_pbt'     => $data['payment_to_pbt'] ?? null,
             'remarks'            => $data['remarks'] ?? null,
             'company_id'         => $companyId,
             'created_by'         => $user->id,
@@ -207,8 +229,8 @@ class ProjectService
         $wayleavePhbts = $project->wayleavePhbts;
         $payments     = $project->wayleavePayments;
 
-        // Sections 2 & 3: if payment_to_kutt = waived/not_required, auto-complete (waived).
-        $boqWaived = in_array($project->payment_to_kutt, ['waived', 'not_required']);
+        // Sections 2 & 3: if payment_to_pbt = waived/not_required, auto-complete (waived).
+        $boqWaived = in_array($project->payment_to_pbt, ['waived', 'not_required']);
 
         // Section 3 complete only when ALL rows are endorsed_and_paid OR waived.
         $sec3Complete = $boqWaived || (
@@ -230,8 +252,8 @@ class ProjectService
             5  => $wayleavePhbts->whereNotNull('endorsed_by')->count() > 0, // Section 5: any PBT endorsed
             6  => $payments->count() > 0,                                   // Section 6: any payment record
             7  => $sec7Complete,                                             // Section 7: all required rows posted
-            8  => !is_null($project->permitSubmission),                     // Section 8
-            9  => !is_null($project->permitReceived),                       // Section 9
+            8  => $project->permitSubmissions->count() > 0,                  // Section 8
+            9  => $project->permitReceiveds->count() > 0,                   // Section 9
             10 => !is_null($project->workNotice?->notis_mula_file),         // Section 10
             11 => !is_null($project->workNotice?->notis_siap_file),         // Section 11
             12 => !is_null($project->cpcApplication),                       // Section 12
@@ -267,8 +289,8 @@ class ProjectService
             5  => $sec5Date,
             6  => $payments->sortBy('created_at')->first()?->created_at,
             7  => $sec7Date,
-            8  => $project->permitSubmission?->created_at,
-            9  => $project->permitReceived?->created_at,
+            8  => $project->permitSubmissions->sortBy('created_at')->first()?->created_at,
+            9  => $project->permitReceiveds->sortBy('created_at')->first()?->created_at,
             10 => $project->workNotice?->tarikh_mula_kerja,
             11 => $project->workNotice?->tarikh_siap_kerja,
             12 => $project->cpcApplication?->created_at,
@@ -445,46 +467,80 @@ class ProjectService
         return $payment;
     }
 
-    // ── Section 8: Permit Submission to KUTT (Contractor) ─────────────────────
+    // ── Section 8: Permit Submission to PBT (Contractor) ──────────────────────
 
+    // Always creates a new record — up to 3 per project (enforced in the controller).
     public function storePermitSubmission(array $data, Project $project, User $user): PermitSubmission
     {
         $folder   = 'projects/' . $project->id . '/permit-submission';
-        $existing = $project->permitSubmission;
+        $filePath = $this->storeFile($data['submission_file'], $folder, $project, 'Permit_Submission');
 
+        return PermitSubmission::create([
+            'project_id'      => $project->id,
+            'submit_date'     => $data['submit_date'],
+            'submission_file' => $filePath,
+            'submitted_by'    => $user->id,
+        ]);
+    }
+
+    public function updatePermitSubmission(array $data, PermitSubmission $submission, Project $project, User $user): PermitSubmission
+    {
+        $folder   = 'projects/' . $project->id . '/permit-submission';
         $filePath = isset($data['submission_file'])
             ? $this->storeFile($data['submission_file'], $folder, $project, 'Permit_Submission')
-            : $existing?->submission_file;
+            : $submission->submission_file;
 
-        return PermitSubmission::updateOrCreate(
-            ['project_id' => $project->id],
-            [
-                'submit_date'     => $data['submit_date'] ?? $existing?->submit_date,
-                'submission_file' => $filePath,
-                'submitted_by'    => $user->id,
-            ]
-        );
+        $submission->update([
+            'submit_date'     => $data['submit_date'],
+            'submission_file' => $filePath,
+            'submitted_by'    => $user->id,
+        ]);
+
+        return $submission;
+    }
+
+    public function deletePermitSubmission(PermitSubmission $submission): void
+    {
+        Storage::disk(config('filesystems.default'))->delete($submission->submission_file);
+        $submission->delete();
     }
 
     // ── Section 9: Permit Received (Contractor/Officer) ───────────────────────
 
+    // Always creates a new record — up to 3 per project (enforced in the controller).
     public function storePermitReceived(array $data, Project $project, User $user): PermitReceived
     {
         $folder   = 'projects/' . $project->id . '/permit-received';
-        $existing = $project->permitReceived;
+        $filePath = $this->storeFile($data['permit_file'], $folder, $project, 'Permit_Received');
 
+        return PermitReceived::create([
+            'project_id'           => $project->id,
+            'permit_received_date' => $data['permit_received_date'],
+            'permit_file'          => $filePath,
+            'uploaded_by'          => $user->id,
+        ]);
+    }
+
+    public function updatePermitReceived(array $data, PermitReceived $permitReceived, Project $project, User $user): PermitReceived
+    {
+        $folder   = 'projects/' . $project->id . '/permit-received';
         $filePath = isset($data['permit_file'])
             ? $this->storeFile($data['permit_file'], $folder, $project, 'Permit_Received')
-            : $existing?->permit_file;
+            : $permitReceived->permit_file;
 
-        return PermitReceived::updateOrCreate(
-            ['project_id' => $project->id],
-            [
-                'permit_received_date' => $data['permit_received_date'] ?? $existing?->permit_received_date,
-                'permit_file'          => $filePath,
-                'uploaded_by'          => $user->id,
-            ]
-        );
+        $permitReceived->update([
+            'permit_received_date' => $data['permit_received_date'],
+            'permit_file'          => $filePath,
+            'uploaded_by'          => $user->id,
+        ]);
+
+        return $permitReceived;
+    }
+
+    public function deletePermitReceived(PermitReceived $permitReceived): void
+    {
+        Storage::disk(config('filesystems.default'))->delete($permitReceived->permit_file);
+        $permitReceived->delete();
     }
 
     // ── Section 10: Notis Mula Kerja (Contractor) ─────────────────────────────
@@ -543,10 +599,20 @@ class ProjectService
                 'laporan_bergambar_file' => isset($data['laporan_bergambar_file']) ? $this->storeFile($data['laporan_bergambar_file'], $folder, $project, 'CPC_Laporan_Bergambar')  : $existing?->laporan_bergambar_file,
                 'salinan_coa_file'       => isset($data['salinan_coa_file'])       ? $this->storeFile($data['salinan_coa_file'], $folder, $project, 'CPC_Salinan_COA')            : $existing?->salinan_coa_file,
                 'salinan_permit_file'    => isset($data['salinan_permit_file'])    ? $this->storeFile($data['salinan_permit_file'], $folder, $project, 'CPC_Salinan_Permit')      : $existing?->salinan_permit_file,
-                'date_submit_to_kutt'    => $data['date_submit_to_kutt'] ?? $existing?->date_submit_to_kutt,
+                'date_submit_to_pbt'     => $data['date_submit_to_pbt'] ?? $existing?->date_submit_to_pbt,
                 'submitted_by'           => $user->id,
             ]
         );
+    }
+
+    // Delete one specific file from a CPC application and null its column.
+    // $field must be one of the four valid file columns (validated in controller).
+    public function deleteCpcFile(CpcApplication $cpcApp, string $field): void
+    {
+        if ($cpcApp->$field) {
+            Storage::disk(config('filesystems.default'))->delete($cpcApp->$field);
+        }
+        $cpcApp->update([$field => null]);
     }
 
     // ── Section 13: CPC Received → Project Completed (Contractor) ─────────────

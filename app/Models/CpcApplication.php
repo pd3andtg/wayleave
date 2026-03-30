@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-// Step 9: contractor uploads all CPC application documents and submits to KUTT.
+// Step 9: contractor uploads all CPC application documents and submits to PBT.
 // One record per project.
 class CpcApplication extends Model
 {
@@ -14,12 +14,12 @@ class CpcApplication extends Model
         'laporan_bergambar_file',
         'salinan_coa_file',
         'salinan_permit_file',
-        'date_submit_to_kutt',
+        'date_submit_to_pbt',
         'submitted_by',
     ];
 
     protected $casts = [
-        'date_submit_to_kutt' => 'date',
+        'date_submit_to_pbt' => 'date',
     ];
 
     public function project()

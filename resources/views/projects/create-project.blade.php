@@ -95,7 +95,7 @@
           @endunless
 
           <div class="form-group row">
-            <label class="col-sm-3 col-form-label text-sm-end">KUTT/ PBT Reference No <span class="text-danger">*</span></label>
+            <label class="col-sm-3 col-form-label text-sm-end">PBT Reference No <span class="text-danger">*</span></label>
             <div class="col-sm-9">
               <input type="text" autocomplete="off" class="form-control @error('ref_no') is-invalid @enderror"
                      name="ref_no" value="{{ old('ref_no') }}" placeholder="e.g. KUTT/2024/001" required>
@@ -182,15 +182,15 @@
             </div>
           </div>
 
-          {{-- Payment to KUTT --}}
+          {{-- Payment to PBT --}}
           <div class="form-group row">
-            <label class="col-sm-3 col-form-label text-sm-end">Payment to KUTT</label>
+            <label class="col-sm-3 col-form-label text-sm-end">Payment to PBT</label>
             <div class="col-sm-9">
-              <select class="form-control @error('payment_to_kutt') is-invalid @enderror" name="payment_to_kutt">
+              <select class="form-control @error('payment_to_pbt') is-invalid @enderror" name="payment_to_pbt">
                 <option value="">-- Select --</option>
-                <option value="charged"      {{ old('payment_to_kutt') === 'charged'      ? 'selected' : '' }}>Charged</option>
-                <option value="waived"       {{ old('payment_to_kutt') === 'waived'       ? 'selected' : '' }}>Waived</option>
-                <option value="not_required" {{ old('payment_to_kutt') === 'not_required' ? 'selected' : '' }}>Not Required</option>
+                <option value="charged"      {{ old('payment_to_pbt') === 'charged'      ? 'selected' : '' }}>Charged</option>
+                <option value="waived"       {{ old('payment_to_pbt') === 'waived'       ? 'selected' : '' }}>Waived</option>
+                <option value="not_required" {{ old('payment_to_pbt') === 'not_required' ? 'selected' : '' }}>Not Required</option>
               </select>
             </div>
           </div>

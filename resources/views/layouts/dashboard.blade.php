@@ -151,6 +151,13 @@
             </a>
           </li>
 
+          <li class="nav-item {{ request()->routeIs('document-references.*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('document-references.index') }}">
+              <i class="ti-folder menu-icon"></i>
+              <span class="menu-title">Document References</span>
+            </a>
+          </li>
+
           @hasanyrole('admin|officer')
           <li class="nav-item {{ request()->routeIs('approvals.*') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('approvals.index') }}">

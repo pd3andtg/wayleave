@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AdminUnitController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\DocumentReferenceController;
 use App\Http\Controllers\ExampleImageController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\ProjectController;
@@ -84,11 +85,15 @@ Route::middleware('auth')->group(function () {
     // ── Section 7: BG & BD Received from FINSSO (Officer) ─────────────────────
     Route::post('/projects/{project}/wayleave-payments/{wayleavePayment}/received', [WayleavePaymentController::class, 'updateReceived'])->name('projects.wayleave-payments.received');
 
-    // ── Section 8: Permit Submission to KUTT (Contractor) ─────────────────────
-    Route::post('/projects/{project}/permit-submission', [PermitSubmissionController::class, 'store'])->name('projects.permit-submission.store');
+    // ── Section 8: Permit Submission to PBT (Contractor) ──────────────────────
+    Route::post('/projects/{project}/permit-submission',                          [PermitSubmissionController::class, 'store'])->name('projects.permit-submission.store');
+    Route::put('/projects/{project}/permit-submission/{permitSubmission}',        [PermitSubmissionController::class, 'update'])->name('projects.permit-submission.update');
+    Route::delete('/projects/{project}/permit-submission/{permitSubmission}',     [PermitSubmissionController::class, 'destroy'])->name('projects.permit-submission.destroy');
 
     // ── Section 9: Permit Received (Contractor/Officer) ───────────────────────
-    Route::post('/projects/{project}/permit-received',   [PermitReceivedController::class, 'store'])->name('projects.permit-received.store');
+    Route::post('/projects/{project}/permit-received',                            [PermitReceivedController::class, 'store'])->name('projects.permit-received.store');
+    Route::put('/projects/{project}/permit-received/{permitReceived}',            [PermitReceivedController::class, 'update'])->name('projects.permit-received.update');
+    Route::delete('/projects/{project}/permit-received/{permitReceived}',         [PermitReceivedController::class, 'destroy'])->name('projects.permit-received.destroy');
 
     // ── Section 10: Notis Mula Kerja (Contractor) ─────────────────────────────
     Route::post('/projects/{project}/notis-mula',        [WorkNoticeController::class, 'storeNotisMula'])->name('projects.notis-mula.store');
@@ -97,10 +102,20 @@ Route::middleware('auth')->group(function () {
     Route::post('/projects/{project}/notis-siap',        [WorkNoticeController::class, 'storeNotisSiap'])->name('projects.notis-siap.store');
 
     // ── Section 12: CPC Application (Contractor) ──────────────────────────────
-    Route::post('/projects/{project}/cpc-application',   [CpcApplicationController::class, 'store'])->name('projects.cpc-application.store');
+    Route::post('/projects/{project}/cpc-application',                                        [CpcApplicationController::class, 'store'])->name('projects.cpc-application.store');
+    Route::delete('/projects/{project}/cpc-application/{cpcApplication}/file/{field}',       [CpcApplicationController::class, 'destroyFile'])->name('projects.cpc-application.destroy-file');
 
     // ── Section 13: CPC Received → Project Completed (Contractor) ────────────
     Route::post('/projects/{project}/cpc-received',      [CpcReceivedController::class, 'store'])->name('projects.cpc-received.store');
+
+    // ── Document References (reference library for contractors/officers) ────────
+    Route::get('/document-references',                          [DocumentReferenceController::class, 'index'])->name('document-references.index');
+    Route::get('/document-references/{documentReference}/download', [DocumentReferenceController::class, 'download'])->name('document-references.download');
+    Route::middleware('role:admin')->group(function () {
+        Route::post('/document-references',                     [DocumentReferenceController::class, 'store'])->name('document-references.store');
+        Route::put('/document-references/{documentReference}',  [DocumentReferenceController::class, 'update'])->name('document-references.update');
+        Route::delete('/document-references/{documentReference}', [DocumentReferenceController::class, 'destroy'])->name('document-references.destroy');
+    });
 
     // ── Example/reference images (shown as visual guides on project detail) ───
     // View: all authenticated users. Upload/replace: admin + officer only.

@@ -17,7 +17,7 @@ class StoreCpcApplicationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'date_submit_to_kutt'    => ['nullable', 'date'],
+            'date_submit_to_pbt'     => ['nullable', 'date'],
             'surat_serahan_file'     => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
             'laporan_bergambar_file' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
             'salinan_coa_file'       => ['nullable', 'file', 'mimes:pdf', 'max:10240'],

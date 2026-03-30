@@ -18,6 +18,37 @@
           @endrole
         </div>
 
+        {{-- Status count cards --}}
+        <div class="d-flex gap-3 mb-4">
+          <a href="{{ route('projects.index', ['status' => 'in_progress']) }}"
+             class="text-decoration-none flex-fill">
+            <div class="card mb-0" style="border-left: 4px solid #f0ad4e;">
+              <div class="card-body py-3">
+                <div class="text-muted small">In Progress</div>
+                <div style="font-size:1.6rem; font-weight:700; color:#f0ad4e; line-height:1.2;">{{ $statusCounts['in_progress'] }}</div>
+              </div>
+            </div>
+          </a>
+          <a href="{{ route('projects.index', ['status' => 'completed']) }}"
+             class="text-decoration-none flex-fill">
+            <div class="card mb-0" style="border-left: 4px solid #28a745;">
+              <div class="card-body py-3">
+                <div class="text-muted small">Completed</div>
+                <div style="font-size:1.6rem; font-weight:700; color:#28a745; line-height:1.2;">{{ $statusCounts['completed'] }}</div>
+              </div>
+            </div>
+          </a>
+          <a href="{{ route('projects.index', ['status' => 'cancelled']) }}"
+             class="text-decoration-none flex-fill">
+            <div class="card mb-0" style="border-left: 4px solid #dc3545;">
+              <div class="card-body py-3">
+                <div class="text-muted small">Cancelled</div>
+                <div style="font-size:1.6rem; font-weight:700; color:#dc3545; line-height:1.2;">{{ $statusCounts['cancelled'] }}</div>
+              </div>
+            </div>
+          </a>
+        </div>
+
         {{-- Search & Filter — dropdowns auto-submit on change; search submits on Enter --}}
         <form method="GET" action="{{ route('projects.index') }}" id="filter-form">
           <div class="row g-2 mb-4">

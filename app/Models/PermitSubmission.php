@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-// Step 6: contractor submits the permit document to KUTT/PBT.
-// One record per project.
+// Section 8: contractor submits permit documents to PBT.
+// Up to 3 records per project.
 class PermitSubmission extends Model
 {
     protected $fillable = [

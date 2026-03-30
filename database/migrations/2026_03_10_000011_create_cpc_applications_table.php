@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 // Creates the cpc_applications table (Step 9 of the project flow).
 // Contractor uploads the four documents required to apply for CPC
-// and records the date submitted to KUTT.
+// and records the date submitted to PBT.
 return new class extends Migration
 {
     public function up(): void
@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('laporan_bergambar_file')->nullable();
             $table->string('salinan_coa_file')->nullable();
             $table->string('salinan_permit_file')->nullable();
-            $table->date('date_submit_to_kutt')->nullable();
+            $table->date('date_submit_to_pbt')->nullable();
             $table->foreignId('submitted_by')->constrained('users')->cascadeOnDelete();
             $table->timestamps();
         });

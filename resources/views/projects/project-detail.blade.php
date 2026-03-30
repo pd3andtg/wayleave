@@ -85,7 +85,7 @@
           <div x-show="!editing">
             <div class="row">
               <div class="col-md-4 mb-3">
-                <div class="text-muted small fw-bold">KUTT Ref No / PBT Ref No</div>
+                <div class="text-muted small fw-bold">PBT Ref No</div>
                 <div>{{ $project->ref_no ?? '—' }}</div>
               </div>
               <div class="col-md-4 mb-3">
@@ -113,8 +113,8 @@
                 <div>{{ $project->pic_name }}</div>
               </div>
               <div class="col-md-4 mb-3">
-                <div class="text-muted small fw-bold">Payment to KUTT</div>
-                <div>{{ $project->payment_to_kutt ? ucfirst(str_replace('_', ' ', $project->payment_to_kutt)) : '—' }}</div>
+                <div class="text-muted small fw-bold">Payment to PBT</div>
+                <div>{{ $project->payment_to_pbt ? ucfirst(str_replace('_', ' ', $project->payment_to_pbt)) : '—' }}</div>
               </div>
               @role('officer|admin')
               <div class="col-md-4 mb-3">
@@ -162,7 +162,7 @@
               @csrf @method('PUT')
               <div class="row">
                 <div class="col-md-4 mb-3">
-                  <label class="form-label text-muted small">KUTT Ref No / PBT Ref No</label>
+                  <label class="form-label text-muted small">PBT Ref No</label>
                   <input type="text" autocomplete="off" name="ref_no" class="form-control" value="{{ old('ref_no', $project->ref_no) }}">
                 </div>
                 <div class="col-md-4 mb-3">
@@ -197,12 +197,12 @@
                   </select>
                 </div>
                 <div class="col-md-4 mb-3">
-                  <label class="form-label text-muted small">Payment to KUTT</label>
-                  <select name="payment_to_kutt" class="form-control">
+                  <label class="form-label text-muted small">Payment to PBT</label>
+                  <select name="payment_to_pbt" class="form-control">
                     <option value="">-- Select --</option>
-                    <option value="charged"      {{ old('payment_to_kutt', $project->payment_to_kutt) === 'charged'      ? 'selected' : '' }}>Charged</option>
-                    <option value="waived"       {{ old('payment_to_kutt', $project->payment_to_kutt) === 'waived'       ? 'selected' : '' }}>Waived</option>
-                    <option value="not_required" {{ old('payment_to_kutt', $project->payment_to_kutt) === 'not_required' ? 'selected' : '' }}>Not Required</option>
+                    <option value="charged"      {{ old('payment_to_pbt', $project->payment_to_pbt) === 'charged'      ? 'selected' : '' }}>Charged</option>
+                    <option value="waived"       {{ old('payment_to_pbt', $project->payment_to_pbt) === 'waived'       ? 'selected' : '' }}>Waived</option>
+                    <option value="not_required" {{ old('payment_to_pbt', $project->payment_to_pbt) === 'not_required' ? 'selected' : '' }}>Not Required</option>
                   </select>
                 </div>
                 @role('officer|admin')
@@ -340,7 +340,7 @@ $tlLabels = [
       <div class="card-body">
         <h3 class="card-title"><span class="me-3">2</span> NF: Upload BOQ/Invoice Files</h3>
         @if($boqHidden)
-          <p class="text-muted mb-0"><em>Payment to KUTT is {{ ucfirst(str_replace('_', ' ', $project->payment_to_kutt)) }} — BOQ/INV section not applicable.</em></p>
+          <p class="text-muted mb-0"><em>Payment to PBT is {{ ucfirst(str_replace('_', ' ', $project->payment_to_pbt)) }} — BOQ/INV section not applicable.</em></p>
         @else
           <div class="table-responsive">
             <table class="table table-borderless mb-0">
@@ -511,7 +511,7 @@ $tlLabels = [
       <div class="card-body">
         <h3 class="card-title"><span class="me-3">3</span> TM: BOQ/Invoice Endorsement and Payment</h3>
         @if($boqHidden)
-          <p class="text-muted mb-0"><em>Payment to KUTT is {{ ucfirst(str_replace('_', ' ', $project->payment_to_kutt)) }} — BOQ/INV section not applicable.</em></p>
+          <p class="text-muted mb-0"><em>Payment to PBT is {{ ucfirst(str_replace('_', ' ', $project->payment_to_pbt)) }} — BOQ/INV section not applicable.</em></p>
         @else
           <div class="table-responsive">
             <table class="table table-borderless mb-0">
@@ -620,6 +620,7 @@ $tlLabels = [
                             </label>
                             <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px; font-weight:normal;"></span>
                           </div>
+                          <div class="text-muted" style="font-size:0.7rem; margin-top:2px;">PDF only — max 10MB</div>
                         </div>
                       </div>
                       <div class="d-flex gap-2 mt-3">
@@ -660,6 +661,7 @@ $tlLabels = [
                             </label>
                             <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:200px; font-weight:normal;"></span>
                           </div>
+                          <div class="text-muted" style="font-size:0.7rem; margin-top:2px;">PDF only — max 10MB</div>
                         </div>
                       </div>
                       <div class="d-flex gap-2 mt-3">
@@ -736,6 +738,7 @@ $tlLabels = [
                 <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:160px; font-weight:normal;"></span>
                 <button type="submit" class="btn-action btn-action-sm ms-1">Upload</button>
               </div>
+              <div class="text-muted" style="font-size:0.7rem; margin-top:2px;">PDF only — max 10MB</div>
             </form>
           </div>
           @endrole
@@ -788,6 +791,7 @@ $tlLabels = [
                     </label>
                     <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:80px; font-weight:normal;"></span>
                   </div>
+                  <div class="text-muted" style="font-size:0.7rem; margin-top:2px;">PDF only — max 10MB</div>
                 </div>
               </div>
               <div class="mt-2 text-center">
@@ -857,6 +861,7 @@ $tlLabels = [
                   <button type="button" class="btn-action btn-action-sm" style="background:#6c757d; border-color:#6c757d;"
                           x-on:click="open = false">Cancel</button>
                 </div>
+                <div class="text-muted" style="font-size:0.7rem; margin-top:2px;">PDF only — max 10MB</div>
               </form>
             </div>
             @endrole
@@ -1110,6 +1115,7 @@ $tlLabels = [
                             </label>
                             <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px; font-weight:normal;"></span>
                           </div>
+                          <div class="text-muted" style="font-size:0.7rem; margin-top:2px;">PDF only — max 10MB</div>
                         </div>
                       </div>
                       <div class="d-flex gap-2 mt-3">
@@ -1132,62 +1138,109 @@ $tlLabels = [
 </div>
 
 {{-- ================================================================ --}}
-{{-- SECTION 8: DOC PERMIT APPLICATION SUBMISSION TO KUTT             --}}
+{{-- SECTION 8: DOC PERMIT APPLICATION SUBMISSION TO PBT             --}}
 {{-- ================================================================ --}}
 <div class="row" id="section-8">
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
         <h3 class="card-title"><span class="me-3">8</span> NF: UPLOAD PERMIT DOCUMENT SUBMISSION TO PBT</h3>
-        @php $permitSub = $project->permitSubmission; @endphp
-        @if($permitSub)
-          <div class="row mb-3">
-            <div class="col-md-3">
+
+        {{-- List of existing submissions --}}
+        @forelse($project->permitSubmissions as $sub)
+        <div x-data="{ editing: false }">
+          {{-- Read row --}}
+          <div class="d-flex align-items-center gap-4 mb-2" x-show="!editing">
+            <div>
               <div class="text-muted small">Submit Date</div>
-              <div>{{ $permitSub->submit_date?->format('d/m/Y') ?? '—' }}</div>
+              <div>{{ $sub->submit_date?->format('d/m/Y') ?? '—' }}</div>
             </div>
-            <div class="col-md-3">
+            <div>
               <div class="text-muted small">File</div>
-              <a href="{{ route('projects.download', ['project' => $project, 'path' => $permitSub->submission_file]) }}"
+              <a href="{{ route('projects.download', ['project' => $project, 'path' => $sub->submission_file]) }}"
                  class="btn-action btn-action-sm"><i class="ti-download me-1"></i>Download</a>
             </div>
-          </div>
-        @endif
-        @can('update', $project)
-        <div x-data="{ replacing: {{ $permitSub ? 'false' : 'true' }} }">
-          @if($permitSub)
-            <div x-show="!replacing" class="mt-2">
-              <button type="button" class="btn-action btn-action-sm" x-on:click="replacing = true">Replace</button>
+            @can('update', $project)
+            <div class="ms-auto d-flex gap-2 align-items-center">
+              <button type="button" class="btn-action btn-action-sm" x-on:click="editing = true">Edit</button>
+              <form action="{{ route('projects.permit-submission.destroy', [$project, $sub]) }}" method="POST"
+                    onsubmit="return confirm('Delete this submission? This cannot be undone.')"
+                    style="margin:0; display:flex; align-items:center;">
+                @csrf @method('DELETE')
+                <button type="submit" class="btn-action btn-action-red btn-action-sm">Delete</button>
+              </form>
             </div>
-          @endif
-          <form x-show="replacing" x-cloak action="{{ route('projects.permit-submission.store', $project) }}" method="POST" enctype="multipart/form-data" class="mt-3">
-            @csrf
-            <div class="row g-2">
-              <div class="col-md-3">
-                <label class="form-label small">Submit Date <span class="text-danger">*</span></label>
-                <input type="date" name="submit_date" class="form-control form-control-38"
-                       value="{{ $permitSub?->submit_date?->format('Y-m-d') }}" required>
-              </div>
-              <div class="col-md-5">
-                <label class="form-label small">Submission File (PDF)</label>
-                <div x-data="{ fn: '' }" class="d-flex align-items-center gap-2">
-                  <label class="btn-action mb-0" style="cursor:pointer; white-space:nowrap;">
-                    Choose File
-                    <input type="file" name="submission_file" class="d-none" accept="application/pdf"
-                           {{ $permitSub ? '' : 'required' }} @change="fn = $event.target.files[0]?.name ?? ''">
-                  </label>
-                  <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px; font-weight:normal;"></span>
+            @endcan
+          </div>
+          {{-- Inline edit form --}}
+          @can('update', $project)
+          <div x-show="editing" x-cloak class="mb-3 p-3" style="background:#f8f9fa; border-radius:4px;">
+            <form action="{{ route('projects.permit-submission.update', [$project, $sub]) }}" method="POST" enctype="multipart/form-data">
+              @csrf @method('PUT')
+              <div class="row g-2">
+                <div class="col-md-3">
+                  <label class="form-label small">Submit Date <span class="text-danger">*</span></label>
+                  <input type="date" name="submit_date" class="form-control form-control-sm"
+                         value="{{ $sub->submit_date?->format('Y-m-d') }}" required>
+                </div>
+                <div class="col-md-5">
+                  <label class="form-label small">Replace File <span class="text-muted">(leave blank to keep current)</span></label>
+                  <div x-data="{ fn: '' }" class="d-flex align-items-center gap-2">
+                    <label class="btn-action mb-0" style="cursor:pointer; white-space:nowrap;">
+                      Choose File
+                      <input type="file" name="submission_file" class="d-none" accept="application/pdf"
+                             @change="fn = $event.target.files[0]?.name ?? ''">
+                    </label>
+                    <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px; font-weight:normal;"></span>
+                  </div>
+                  <div class="text-muted" style="font-size:0.7rem; margin-top:2px;">PDF only — max 10MB</div>
                 </div>
               </div>
-            </div>
-            <div class="mt-2 d-flex gap-2 @if(!$permitSub) justify-content-center @endif">
-              <button type="submit" class="btn-action">{{ $permitSub ? 'Save' : 'Save' }}</button>
-              @if($permitSub)
-                <button type="button" class="btn-action" style="background:#6c757d; border-color:#6c757d;" x-on:click="replacing = false">Cancel</button>
-              @endif
-            </div>
-          </form>
+              <div class="d-flex gap-2 mt-2">
+                <button type="submit" class="btn-action btn-action-sm">Save</button>
+                <button type="button" class="btn-action btn-action-sm" style="background:#6c757d; border-color:#6c757d;"
+                        x-on:click="editing = false">Cancel</button>
+              </div>
+            </form>
+          </div>
+          @endcan
         </div>
+        @empty
+        @endforelse
+
+        {{-- Add New button — max 3 --}}
+        @can('update', $project)
+        @if($project->permitSubmissions->count() < 3)
+        <div class="mt-3 text-center" x-data="{ open: false }">
+          <button type="button" class="btn-action" x-on:click="open = !open">+ Add New Permit Submission</button>
+          <div x-show="open" x-cloak class="mt-3">
+            <form action="{{ route('projects.permit-submission.store', $project) }}" method="POST" enctype="multipart/form-data">
+              @csrf
+              <div class="row g-2">
+                <div class="col-md-3">
+                  <label class="form-label small">Submit Date <span class="text-danger">*</span></label>
+                  <input type="date" name="submit_date" class="form-control form-control-38" required>
+                </div>
+                <div class="col-md-5">
+                  <label class="form-label small">Submission File (PDF) <span class="text-danger">*</span></label>
+                  <div x-data="{ fn: '' }" class="d-flex align-items-center gap-2">
+                    <label class="btn-action mb-0" style="cursor:pointer; white-space:nowrap;">
+                      Choose File
+                      <input type="file" name="submission_file" class="d-none" accept="application/pdf"
+                             required @change="fn = $event.target.files[0]?.name ?? ''">
+                    </label>
+                    <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px; font-weight:normal;"></span>
+                  </div>
+                  <div class="text-muted" style="font-size:0.7rem; margin-top:2px;">PDF only — max 10MB</div>
+                </div>
+              </div>
+              <div class="mt-2 text-center">
+                <button type="submit" class="btn-action">Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+        @endif
         @endcan
         <hr class="mt-3 mb-2" style="opacity:1;">
         {{-- Note + example image side by side --}}
@@ -1195,8 +1248,8 @@ $tlLabels = [
           <div class="text-muted small flex-grow-1">
             <strong>NOTA:</strong>
             <ol class="mb-0 ps-3 mt-1">
-              <li>SILA HANTAR Serahan Dokumen Lengkap Bagi Permohonan Permit BESERTA BG/BD KEPADA PIHAK KUTT/PBT.</li>
-              <li>PASTIKAN ADA COP TERIMA &amp; TARIKH TERIMA OLEH PBT/KUTT.</li>
+              <li>SILA HANTAR Serahan Dokumen Lengkap Bagi Permohonan Permit BESERTA BG/BD KEPADA PIHAK PBT.</li>
+              <li>PASTIKAN ADA COP TERIMA &amp; TARIKH TERIMA OLEH PBT.</li>
               <li>SILA SCAN &amp; MUAT-NAIK Surat Serahan Dokumen Lengkap Bagi Permohonan Permit.</li>
             </ol>
           </div>
@@ -1235,6 +1288,7 @@ $tlLabels = [
                 <input type="file" name="image" class="d-none" accept="image/*"
                        onchange="this.form.submit()">
               </label>
+              <div class="text-muted" style="font-size:0.65rem; margin-top:3px;">JPG, PNG, WebP — max 5MB</div>
             </form>
             @endrole
           </div>
@@ -1252,62 +1306,109 @@ $tlLabels = [
     <div class="card">
       <div class="card-body">
         <h3 class="card-title"><span class="me-3">9</span> NF: Upload Permit Received from PBT</h3>
-        @php $permitRec = $project->permitReceived; @endphp
-        @if($permitRec)
-          <div class="row mb-3">
-            <div class="col-md-3">
+
+        {{-- List of existing permits received --}}
+        @forelse($project->permitReceiveds as $rec)
+        <div x-data="{ editing: false }">
+          {{-- Read row --}}
+          <div class="d-flex align-items-center gap-4 mb-2" x-show="!editing">
+            <div>
               <div class="text-muted small">Permit Received Date</div>
-              <div>{{ $permitRec->permit_received_date?->format('d/m/Y') ?? '—' }}</div>
+              <div>{{ $rec->permit_received_date?->format('d/m/Y') ?? '—' }}</div>
             </div>
-            <div class="col-md-3">
+            <div>
               <div class="text-muted small">Permit File</div>
-              <a href="{{ route('projects.download', ['project' => $project, 'path' => $permitRec->permit_file]) }}"
+              <a href="{{ route('projects.download', ['project' => $project, 'path' => $rec->permit_file]) }}"
                  class="btn-action btn-action-sm"><i class="ti-download me-1"></i>Download</a>
             </div>
-          </div>
-        @endif
-        @can('update', $project)
-        <div x-data="{ replacing: {{ $permitRec ? 'false' : 'true' }} }">
-          @if($permitRec)
-            <div x-show="!replacing" class="mt-2">
-              <button type="button" class="btn-action btn-action-sm" x-on:click="replacing = true">Replace</button>
+            @can('update', $project)
+            <div class="ms-auto d-flex gap-2 align-items-center">
+              <button type="button" class="btn-action btn-action-sm" x-on:click="editing = true">Edit</button>
+              <form action="{{ route('projects.permit-received.destroy', [$project, $rec]) }}" method="POST"
+                    onsubmit="return confirm('Delete this permit record? This cannot be undone.')"
+                    style="margin:0; display:flex; align-items:center;">
+                @csrf @method('DELETE')
+                <button type="submit" class="btn-action btn-action-red btn-action-sm">Delete</button>
+              </form>
             </div>
-          @endif
-          <form x-show="replacing" x-cloak action="{{ route('projects.permit-received.store', $project) }}" method="POST" enctype="multipart/form-data" class="mt-3">
-            @csrf
-            <div class="row g-2">
-              <div class="col-md-3">
-                <label class="form-label small">Date Received <span class="text-danger">*</span></label>
-                <input type="date" name="permit_received_date" class="form-control form-control-38"
-                       value="{{ $permitRec?->permit_received_date?->format('Y-m-d') }}" required>
-              </div>
-              <div class="col-md-5">
-                <label class="form-label small">Permit File (PDF)</label>
-                <div x-data="{ fn: '' }" class="d-flex align-items-center gap-2">
-                  <label class="btn-action mb-0" style="cursor:pointer; white-space:nowrap;">
-                    Choose File
-                    <input type="file" name="permit_file" class="d-none" accept="application/pdf"
-                           {{ $permitRec ? '' : 'required' }} @change="fn = $event.target.files[0]?.name ?? ''">
-                  </label>
-                  <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px; font-weight:normal;"></span>
+            @endcan
+          </div>
+          {{-- Inline edit form --}}
+          @can('update', $project)
+          <div x-show="editing" x-cloak class="mb-3 p-3" style="background:#f8f9fa; border-radius:4px;">
+            <form action="{{ route('projects.permit-received.update', [$project, $rec]) }}" method="POST" enctype="multipart/form-data">
+              @csrf @method('PUT')
+              <div class="row g-2">
+                <div class="col-md-3">
+                  <label class="form-label small">Date Received <span class="text-danger">*</span></label>
+                  <input type="date" name="permit_received_date" class="form-control form-control-sm"
+                         value="{{ $rec->permit_received_date?->format('Y-m-d') }}" required>
+                </div>
+                <div class="col-md-5">
+                  <label class="form-label small">Replace File <span class="text-muted">(leave blank to keep current)</span></label>
+                  <div x-data="{ fn: '' }" class="d-flex align-items-center gap-2">
+                    <label class="btn-action mb-0" style="cursor:pointer; white-space:nowrap;">
+                      Choose File
+                      <input type="file" name="permit_file" class="d-none" accept="application/pdf"
+                             @change="fn = $event.target.files[0]?.name ?? ''">
+                    </label>
+                    <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px; font-weight:normal;"></span>
+                  </div>
+                  <div class="text-muted" style="font-size:0.7rem; margin-top:2px;">PDF only — max 10MB</div>
                 </div>
               </div>
-            </div>
-            <div class="mt-2 d-flex gap-2 @if(!$permitRec) justify-content-center @endif">
-              <button type="submit" class="btn-action">Save</button>
-              @if($permitRec)
-                <button type="button" class="btn-action" style="background:#6c757d; border-color:#6c757d;" x-on:click="replacing = false">Cancel</button>
-              @endif
-            </div>
-          </form>
+              <div class="d-flex gap-2 mt-2">
+                <button type="submit" class="btn-action btn-action-sm">Save</button>
+                <button type="button" class="btn-action btn-action-sm" style="background:#6c757d; border-color:#6c757d;"
+                        x-on:click="editing = false">Cancel</button>
+              </div>
+            </form>
+          </div>
+          @endcan
         </div>
+        @empty
+        @endforelse
+
+        {{-- Add New button — max 3 --}}
+        @can('update', $project)
+        @if($project->permitReceiveds->count() < 3)
+        <div class="mt-3 text-center" x-data="{ open: false }">
+          <button type="button" class="btn-action" x-on:click="open = !open">+ Add New Permit Received</button>
+          <div x-show="open" x-cloak class="mt-3">
+            <form action="{{ route('projects.permit-received.store', $project) }}" method="POST" enctype="multipart/form-data">
+              @csrf
+              <div class="row g-2">
+                <div class="col-md-3">
+                  <label class="form-label small">Date Received <span class="text-danger">*</span></label>
+                  <input type="date" name="permit_received_date" class="form-control form-control-38" required>
+                </div>
+                <div class="col-md-5">
+                  <label class="form-label small">Permit File (PDF) <span class="text-danger">*</span></label>
+                  <div x-data="{ fn: '' }" class="d-flex align-items-center gap-2">
+                    <label class="btn-action mb-0" style="cursor:pointer; white-space:nowrap;">
+                      Choose File
+                      <input type="file" name="permit_file" class="d-none" accept="application/pdf"
+                             required @change="fn = $event.target.files[0]?.name ?? ''">
+                    </label>
+                    <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px; font-weight:normal;"></span>
+                  </div>
+                  <div class="text-muted" style="font-size:0.7rem; margin-top:2px;">PDF only — max 10MB</div>
+                </div>
+              </div>
+              <div class="mt-2 text-center">
+                <button type="submit" class="btn-action">Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+        @endif
         @endcan
         <hr class="mt-3 mb-2" style="opacity:1;">
         <div class="d-flex align-items-start gap-4">
           <div class="text-muted small flex-grow-1">
             <strong>NOTA:</strong>
             <ol class="mb-0 ps-3 mt-1">
-              <li>HARDCOPY PERMIT PERLU DIAMBIL DARIPADA PIHAK PBT/KUTT.</li>
+              <li>HARDCOPY PERMIT PERLU DIAMBIL DARIPADA PIHAK PBT.</li>
               <li>SILA SCAN DAN MUAT NAIK KELULUSAN PERMIT.</li>
             </ol>
           </div>
@@ -1341,6 +1442,7 @@ $tlLabels = [
                 {{ $exampleImages['section9'] ? 'Replace' : 'Upload' }}
                 <input type="file" name="image" class="d-none" accept="image/*" onchange="this.form.submit()">
               </label>
+              <div class="text-muted" style="font-size:0.65rem; margin-top:3px;">JPG, PNG, WebP — max 5MB</div>
             </form>
             @endrole
           </div>
@@ -1397,6 +1499,7 @@ $tlLabels = [
                   </label>
                   <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px; font-weight:normal;"></span>
                 </div>
+                <div class="text-muted" style="font-size:0.7rem; margin-top:2px;">PDF only — max 10MB</div>
               </div>
             </div>
             <div class="mt-2 d-flex gap-2 @if(!$workNotice?->notis_mula_file) justify-content-center @endif">
@@ -1413,9 +1516,9 @@ $tlLabels = [
           <div class="text-muted small flex-grow-1">
             <strong>NOTA:</strong>
             <ol class="mb-0 ps-3 mt-1">
-              <li>SILA HANTAR NOTIS MULA KERJA KEPADA PIHAK KUTT/PBT.</li>
-              <li>PASTIKAN ADA COP TERIMA &amp; TARIKH TERIMA OLEH KUTT/PBT.</li>
-              <li>SEKIRANYA TERDAPAT PERUBAHAN ATAU HALANGAN DI TAPAK, SILA MAKLUM KEPADA PBT/KUTT SEBELUM KERJA-KERJA DIBUAT.</li>
+              <li>SILA HANTAR NOTIS MULA KERJA KEPADA PIHAK PBT.</li>
+              <li>PASTIKAN ADA COP TERIMA &amp; TARIKH TERIMA OLEH PBT.</li>
+              <li>SEKIRANYA TERDAPAT PERUBAHAN ATAU HALANGAN DI TAPAK, SILA MAKLUM KEPADA PBT SEBELUM KERJA-KERJA DIBUAT.</li>
               <li>SILA AMBIL GAMBAR SEBELUM, SEMASA DAN SELEPAS.</li>
             </ol>
           </div>
@@ -1449,6 +1552,7 @@ $tlLabels = [
                 {{ $exampleImages['section10'] ? 'Replace' : 'Upload' }}
                 <input type="file" name="image" class="d-none" accept="image/*" onchange="this.form.submit()">
               </label>
+              <div class="text-muted" style="font-size:0.65rem; margin-top:3px;">JPG, PNG, WebP — max 5MB</div>
             </form>
             @endrole
           </div>
@@ -1504,6 +1608,7 @@ $tlLabels = [
                   </label>
                   <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px; font-weight:normal;"></span>
                 </div>
+                <div class="text-muted" style="font-size:0.7rem; margin-top:2px;">PDF only — max 10MB</div>
               </div>
             </div>
             <div class="mt-2 d-flex gap-2 @if(!$workNotice?->notis_siap_file) justify-content-center @endif">
@@ -1520,8 +1625,8 @@ $tlLabels = [
           <div class="text-muted small flex-grow-1">
             <strong>NOTA:</strong>
             <ol class="mb-0 ps-3 mt-1">
-              <li>SILA HANTAR NOTIS SIAP KERJA KEPADA PIHAK KUTT/PBT.</li>
-              <li>PASTIKAN ADA COP TERIMA &amp; TARIKH TERIMA OLEH KUTT/PBT.</li>
+              <li>SILA HANTAR NOTIS SIAP KERJA KEPADA PIHAK PBT.</li>
+              <li>PASTIKAN ADA COP TERIMA &amp; TARIKH TERIMA OLEH PBT.</li>
               <li>SILA SCAN &amp; MUAT-NAIK SALINAN NOTIS SIAP KERJA.</li>
             </ol>
           </div>
@@ -1555,6 +1660,7 @@ $tlLabels = [
                 {{ $exampleImages['section11'] ? 'Replace' : 'Upload' }}
                 <input type="file" name="image" class="d-none" accept="image/*" onchange="this.form.submit()">
               </label>
+              <div class="text-muted" style="font-size:0.65rem; margin-top:3px;">JPG, PNG, WebP — max 5MB</div>
             </form>
             @endrole
           </div>
@@ -1584,8 +1690,8 @@ $tlLabels = [
         @if($cpcApp)
           <div class="row mb-3">
             <div class="col-md-2">
-              <div class="text-muted small fw-normal">Date Submitted to KUTT</div>
-              <div>{{ $cpcApp->date_submit_to_kutt?->format('d/m/Y') ?? '—' }}</div>
+              <div class="text-muted small fw-normal">Date Submitted to PBT</div>
+              <div>{{ $cpcApp->date_submit_to_pbt?->format('d/m/Y') ?? '—' }}</div>
             </div>
             @foreach([
               'surat_serahan_file'    => 'Surat Serahan',
@@ -1596,8 +1702,18 @@ $tlLabels = [
               @if($cpcApp->$col)
                 <div class="col-md-2">
                   <div class="text-muted small fw-normal">{{ $label }}</div>
-                  <a href="{{ route('projects.download', ['project' => $project, 'path' => $cpcApp->$col]) }}"
-                     class="btn-action btn-action-sm"><i class="ti-download me-1"></i>Download</a>
+                  <div class="d-flex gap-1 align-items-center flex-wrap mt-1">
+                    <a href="{{ route('projects.download', ['project' => $project, 'path' => $cpcApp->$col]) }}"
+                       class="btn-action btn-action-sm"><i class="ti-download me-1"></i>Download</a>
+                    @can('update', $project)
+                    <form action="{{ route('projects.cpc-application.destroy-file', [$project, $cpcApp, $col]) }}"
+                          method="POST" onsubmit="return confirm('Delete this file? This cannot be undone.')"
+                          style="margin:0; display:flex; align-items:center;">
+                      @csrf @method('DELETE')
+                      <button type="submit" class="btn-action btn-action-red btn-action-sm">Delete</button>
+                    </form>
+                    @endcan
+                  </div>
                 </div>
               @endif
             @endforeach
@@ -1610,9 +1726,9 @@ $tlLabels = [
           @csrf
           <div class="row g-3" x-show="replacing">
             <div class="col-md-4">
-              <label class="form-label small">Date Submitted to KUTT <span class="text-danger">*</span></label>
-              <input type="date" name="date_submit_to_kutt" class="form-control form-control-38"
-                     value="{{ $cpcApp?->date_submit_to_kutt?->format('Y-m-d') }}" :required="replacing">
+              <label class="form-label small">Date Submitted to PBT <span class="text-danger">*</span></label>
+              <input type="date" name="date_submit_to_pbt" class="form-control form-control-38"
+                     value="{{ $cpcApp?->date_submit_to_pbt?->format('Y-m-d') }}" :required="replacing">
             </div>
           </div>
           <div class="row g-3 mt-0" x-show="replacing">
@@ -1625,6 +1741,7 @@ $tlLabels = [
                 </label>
                 <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:120px; font-weight:normal;"></span>
               </div>
+              <div class="text-muted" style="font-size:0.7rem; margin-top:2px;">PDF only — max 10MB</div>
             </div>
             <div class="col-md-4">
               <label class="form-label small">Laporan Bergambar</label>
@@ -1635,6 +1752,7 @@ $tlLabels = [
                 </label>
                 <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:120px; font-weight:normal;"></span>
               </div>
+              <div class="text-muted" style="font-size:0.7rem; margin-top:2px;">PDF only — max 10MB</div>
             </div>
             <div class="col-md-4">
               <label class="form-label small">Salinan COA</label>
@@ -1645,6 +1763,7 @@ $tlLabels = [
                 </label>
                 <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:120px; font-weight:normal;"></span>
               </div>
+              <div class="text-muted" style="font-size:0.7rem; margin-top:2px;">PDF only — max 10MB</div>
             </div>
             <div class="col-md-4">
               <label class="form-label small">Salinan Permit</label>
@@ -1655,6 +1774,7 @@ $tlLabels = [
                 </label>
                 <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:120px; font-weight:normal;"></span>
               </div>
+              <div class="text-muted" style="font-size:0.7rem; margin-top:2px;">PDF only — max 10MB</div>
             </div>
           </div>
           <div class="mt-3 text-center">
@@ -1678,7 +1798,7 @@ $tlLabels = [
             <strong>NOTA:</strong>
             <ol class="mb-0 ps-3 mt-1">
               <li>SILA MUAT-NAIK SALINAN Surat Serahan Dokumen Lengkap CPC.</li>
-              <li>PASTIKAN ADA COP TERIMA &amp; TARIKH TERIMA OLEH PBT/KUTT.</li>
+              <li>PASTIKAN ADA COP TERIMA &amp; TARIKH TERIMA OLEH PBT.</li>
             </ol>
           </div>
           <div class="text-center" style="min-width:130px;">
@@ -1711,6 +1831,7 @@ $tlLabels = [
                 {{ $exampleImages['section12'] ? 'Replace' : 'Upload' }}
                 <input type="file" name="image" class="d-none" accept="image/*" onchange="this.form.submit()">
               </label>
+              <div class="text-muted" style="font-size:0.65rem; margin-top:3px;">JPG, PNG, WebP — max 5MB</div>
             </form>
             @endrole
           </div>
@@ -1771,6 +1892,7 @@ $tlLabels = [
                   </label>
                   <span class="text-muted small" x-text="fn || 'No file chosen'" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px; font-weight:normal;"></span>
                 </div>
+                <div class="text-muted" style="font-size:0.7rem; margin-top:2px;">PDF only — max 10MB</div>
               </div>
             </div>
             <div class="mt-2 d-flex gap-2 @if(!$cpcRec) justify-content-center @endif">

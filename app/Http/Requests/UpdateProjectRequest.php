@@ -6,7 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 // Validates Section 1 edits on the project detail page.
 // Any user who can view the project can edit Section 1 fields.
-// payment_to_kutt and application_status changes are included here.
+// payment_to_pbt and application_status changes are included here.
 // Officers/admins can also update node_id and self_applied_by_tm.
 class UpdateProjectRequest extends FormRequest
 {
@@ -25,7 +25,7 @@ class UpdateProjectRequest extends FormRequest
             'nd_state'           => ['required', 'in:ND_TRG,ND_PHG,ND_KEL'],
             'node_id'            => ['nullable', 'exists:nodes,id'],
             'self_applied_by_tm' => ['nullable', 'boolean'],
-            'payment_to_kutt'    => ['nullable', 'in:charged,waived,not_required'],
+            'payment_to_pbt'     => ['nullable', 'in:charged,waived,not_required'],
             'company_id'         => ['nullable', 'exists:companies,id'],
             'remarks'            => ['nullable', 'string'],
         ];

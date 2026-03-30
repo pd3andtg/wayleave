@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 // All 13 workflow sections hang off this model.
 // Contractors are always scoped by company_id — never trust user input.
 //
-// payment_to_kutt = waived/not_required -> Sections 2 & 3 are hidden (data preserved).
+// payment_to_pbt = waived/not_required -> Sections 2 & 3 are hidden (data preserved).
 // application_status = cancelled -> all sections locked except Section 1.
 // self_applied_by_tm = true -> company_id is set to TM's company record.
 class Project extends Model
@@ -22,7 +22,7 @@ class Project extends Model
         'nd_state',
         'node_id',
         'self_applied_by_tm',
-        'payment_to_kutt',
+        'payment_to_pbt',
         'application_status',
         'cancellation_reason',
         'remarks',
@@ -68,16 +68,16 @@ class Project extends Model
         return $this->hasMany(WayleavePayment::class);
     }
 
-    // Section 8
-    public function permitSubmission()
+    // Section 8 — up to 3 submissions per project
+    public function permitSubmissions()
     {
-        return $this->hasOne(PermitSubmission::class);
+        return $this->hasMany(PermitSubmission::class);
     }
 
-    // Section 9
-    public function permitReceived()
+    // Section 9 — up to 3 permits received per project
+    public function permitReceiveds()
     {
-        return $this->hasOne(PermitReceived::class);
+        return $this->hasMany(PermitReceived::class);
     }
 
     // Sections 10 & 11 (notis_mula_file and notis_siap_file — same table, two sections)
@@ -104,9 +104,9 @@ class Project extends Model
         return $this->application_status === 'cancelled';
     }
 
-    // Helper: should Sections 2 & 3 be hidden due to payment_to_kutt setting?
+    // Helper: should Sections 2 & 3 be hidden due to payment_to_pbt setting?
     public function isBoqHidden(): bool
     {
-        return in_array($this->payment_to_kutt, ['waived', 'not_required']);
+        return in_array($this->payment_to_pbt, ['waived', 'not_required']);
     }
 }

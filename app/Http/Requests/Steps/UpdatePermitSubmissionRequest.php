@@ -4,8 +4,8 @@ namespace App\Http\Requests\Steps;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-// Step 6: contractor submits the permit document to PBT.
-class StorePermitSubmissionRequest extends FormRequest
+// Section 8: update an existing permit submission (date required, file optional — kept if blank).
+class UpdatePermitSubmissionRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -16,7 +16,7 @@ class StorePermitSubmissionRequest extends FormRequest
     {
         return [
             'submit_date'     => ['required', 'date'],
-            'submission_file' => ['required', 'file', 'mimes:pdf', 'max:10240'],
+            'submission_file' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
         ];
     }
 }
