@@ -814,7 +814,7 @@ $tlLabels = [
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title"><span class="me-3">5</span> TM: Wayleave Endorsement and Payment</h3>
+        <h3 class="card-title"><span class="me-3">5</span> TM: Wayleave Endorsement</h3>
         @if($project->wayleavePhbts->isEmpty())
           <p class="text-muted">No wayleave PBT records yet (Section 4 must be filled first).</p>
         @else
@@ -880,7 +880,7 @@ $tlLabels = [
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title"><span class="me-3">6</span> TM: Update Deposit & FI Payment Application Date</h3>
+        <h3 class="card-title"><span class="me-3">6</span> TM: Update Deposit & FI Payment (BG/BD) Application Date</h3>
         @if($project->wayleavePhbts->isEmpty())
           <p class="text-muted">No PBT records yet.</p>
         @else
@@ -1048,7 +1048,7 @@ $tlLabels = [
   <div class="col-12 grid-margin">
     <div class="card">
       <div class="card-body">
-        <h3 class="card-title"><span class="me-3">7</span> TM: UPLOAD BG & BD RECEIVED FROM FINSSO</h3>
+        <h3 class="card-title"><span class="me-3">7</span> TM: UPLOAD BG/BD RECEIVED DATE FROM FINSSO</h3>
         @php
           $requiredPayments = $project->wayleavePayments->where('status', 'required');
         @endphp

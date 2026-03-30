@@ -20,9 +20,40 @@ class DatabaseSeeder extends Seeder
         $contractorRole = Role::firstOrCreate(['name' => 'contractor']);
 
         // ── Units ─────────────────────────────────────────────────────────────
-        $unitTrg = Unit::firstOrCreate(['name' => 'ND TRG']);
-                   Unit::firstOrCreate(['name' => 'ND KEL']);
-                   Unit::firstOrCreate(['name' => 'ND PHG']);
+        $unitTrg =  Unit::firstOrCreate(['name' => 'ND JS']);
+                    Unit::firstOrCreate(['name' => 'ND JU']);
+                    Unit::firstOrCreate(['name' => 'ND KD/PL']);
+                    Unit::firstOrCreate(['name' => 'ND KEL']);
+                    Unit::firstOrCreate(['name' => 'ND KL']);
+                    Unit::firstOrCreate(['name' => 'ND MK']);
+                    Unit::firstOrCreate(['name' => 'ND MSC']);
+                    Unit::firstOrCreate(['name' => 'ND NS']);
+                    Unit::firstOrCreate(['name' => 'ND PG']);
+                    Unit::firstOrCreate(['name' => 'ND PHG']);
+                    Unit::firstOrCreate(['name' => 'ND PJ']);
+                    Unit::firstOrCreate(['name' => 'ND PRK']);
+                    Unit::firstOrCreate(['name' => 'ND SABAH']);
+                    Unit::firstOrCreate(['name' => 'ND SARAWAK']);
+                    Unit::firstOrCreate(['name' => 'ND SB']);
+                    Unit::firstOrCreate(['name' => 'ND ST']);
+                    Unit::firstOrCreate(['name' => 'ND TRG']);
+                    Unit::firstOrCreate(['name' => 'NO JS']);
+                    Unit::firstOrCreate(['name' => 'NO JU']);
+                    Unit::firstOrCreate(['name' => 'NO KD/PL']);
+                    Unit::firstOrCreate(['name' => 'NO KEL']);
+                    Unit::firstOrCreate(['name' => 'NO KL']);
+                    Unit::firstOrCreate(['name' => 'NO MK']);
+                    Unit::firstOrCreate(['name' => 'NO MSC']);
+                    Unit::firstOrCreate(['name' => 'NO NS']);
+                    Unit::firstOrCreate(['name' => 'NO PG']);
+                    Unit::firstOrCreate(['name' => 'NO PHG']);
+                    Unit::firstOrCreate(['name' => 'NO PJ']);
+                    Unit::firstOrCreate(['name' => 'NO PRK']);
+                    Unit::firstOrCreate(['name' => 'NO SABAH']);
+                    Unit::firstOrCreate(['name' => 'NO SARAWAK']);
+                    Unit::firstOrCreate(['name' => 'NO SB']);
+                    Unit::firstOrCreate(['name' => 'NO ST']);
+                    Unit::firstOrCreate(['name' => 'NO TRG']);
 
         // ── Nodes (TM Nodes — Admin can add more via UI) ───────────────────────
         // Truncate and re-seed so the list stays exact on migrate:fresh.

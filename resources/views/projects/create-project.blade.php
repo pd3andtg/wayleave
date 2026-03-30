@@ -67,8 +67,8 @@
             <div class="col-sm-9">
               <select class="form-control" name="self_applied_by_tm"
                       @change="selfApplied = $event.target.value === '1'">
-                <option value="0" {{ old('self_applied_by_tm', '0') !== '1' ? 'selected' : '' }}>No | Register on behalf of contractor</option>
-                <option value="1" {{ old('self_applied_by_tm') === '1' ? 'selected' : '' }}>Yes | TM self-applied and managed project</option>
+                <option value="0" {{ old('self_applied_by_tm', '0') !== '1' ? 'selected' : '' }}>No: Managed by TM Contractor (NF)</option>
+                <option value="1" {{ old('self_applied_by_tm') === '1' ? 'selected' : '' }}>Yes: Self-applied and managed by TM</option>
               </select>
             </div>
           </div>
@@ -129,20 +129,51 @@
           </div>
 
           <div class="form-group row">
-            <label class="col-sm-3 col-form-label text-sm-end">ND State <span class="text-danger">*</span></label>
+            <label class="col-sm-3 col-form-label text-sm-end">ND/NO State <span class="text-danger">*</span></label>
             <div class="col-sm-9">
               <select class="form-control @error('nd_state') is-invalid @enderror" name="nd_state" required
                       x-model="ndState"
                       @change="nodeId = ''; nodeSearch = ''; showNodeDropdown = false;">
-                <option value="">-- Select ND State --</option>
-                <option value="ND_TRG" {{ old('nd_state') === 'ND_TRG' ? 'selected' : '' }}>ND TRG</option>
-                <option value="ND_PHG" {{ old('nd_state') === 'ND_PHG' ? 'selected' : '' }}>ND PHG</option>
+                <option value="">-- Select ND/NO State --</option>
+                <option value="ND_JS" {{ old('nd_state') === 'ND_JS' ? 'selected' : '' }}>ND JS</option>
+                <option value="ND_JU" {{ old('nd_state') === 'ND_JU' ? 'selected' : '' }}>ND JU</option>
+                <option value="ND_KD_PL" {{ old('nd_state') === 'ND_KD_PL' ? 'selected' : '' }}>ND KD/PL</option>
                 <option value="ND_KEL" {{ old('nd_state') === 'ND_KEL' ? 'selected' : '' }}>ND KEL</option>
+                <option value="ND_KL" {{ old('nd_state') === 'ND_KL' ? 'selected' : '' }}>ND KL</option>
+                <option value="ND_MK" {{ old('nd_state') === 'ND_MK' ? 'selected' : '' }}>ND MK</option>
+                <option value="ND_MSC" {{ old('nd_state') === 'ND_MSC' ? 'selected' : '' }}>ND MSC</option>
+                <option value="ND_NS" {{ old('nd_state') === 'ND_NS' ? 'selected' : '' }}>ND NS</option>
+                <option value="ND_PG" {{ old('nd_state') === 'ND_PG' ? 'selected' : '' }}>ND PG</option>
+                <option value="ND_PHG" {{ old('nd_state') === 'ND_PHG' ? 'selected' : '' }}>ND PHG</option>
+                <option value="ND_PJ" {{ old('nd_state') === 'ND_PJ' ? 'selected' : '' }}>ND PJ</option>
+                <option value="ND_PRK" {{ old('nd_state') === 'ND_PRK' ? 'selected' : '' }}>ND PRK</option>
+                <option value="ND_SABAH" {{ old('nd_state') === 'ND_SABAH' ? 'selected' : '' }}>ND SABAH</option>
+                <option value="ND_SARAWAK" {{ old('nd_state') === 'ND_SARAWAK' ? 'selected' : '' }}>ND SARAWAK</option>
+                <option value="ND_SB" {{ old('nd_state') === 'ND_SB' ? 'selected' : '' }}>ND SB</option>
+                <option value="ND_ST" {{ old('nd_state') === 'ND_ST' ? 'selected' : '' }}>ND ST</option>
+                <option value="ND_TRG" {{ old('nd_state') === 'ND_TRG' ? 'selected' : '' }}>ND TRG</option>
+                <option value="NO_JS" {{ old('nd_state') === 'NO_JS' ? 'selected' : '' }}>NO JS</option>
+                <option value="NO_JU" {{ old('nd_state') === 'NO_JU' ? 'selected' : '' }}>NO JU</option>
+                <option value="NO_KD_PL" {{ old('nd_state') === 'NO_KD_PL' ? 'selected' : '' }}>NO KD/PL</option>
+                <option value="NO_KEL" {{ old('nd_state') === 'NO_KEL' ? 'selected' : '' }}>NO KEL</option>
+                <option value="NO_KL" {{ old('nd_state') === 'NO_KL' ? 'selected' : '' }}>NO KL</option>
+                <option value="NO_MK" {{ old('nd_state') === 'NO_MK' ? 'selected' : '' }}>NO MK</option>
+                <option value="NO_MSC" {{ old('nd_state') === 'NO_MSC' ? 'selected' : '' }}>NO MSC</option>
+                <option value="NO_NS" {{ old('nd_state') === 'NO_NS' ? 'selected' : '' }}>NO NS</option>
+                <option value="NO_PG" {{ old('nd_state') === 'NO_PG' ? 'selected' : '' }}>NO PG</option>
+                <option value="NO_PHG" {{ old('nd_state') === 'NO_PHG' ? 'selected' : '' }}>NO PHG</option>
+                <option value="NO_PJ" {{ old('nd_state') === 'NO_PJ' ? 'selected' : '' }}>NO PJ</option>
+                <option value="NO_PRK" {{ old('nd_state') === 'NO_PRK' ? 'selected' : '' }}>NO PRK</option>
+                <option value="NO_SABAH" {{ old('nd_state') === 'NO_SABAH' ? 'selected' : '' }}>NO SABAH</option>
+                <option value="NO_SARAWAK" {{ old('nd_state') === 'NO_SARAWAK' ? 'selected' : '' }}>NO SARAWAK</option>
+                <option value="NO_SB" {{ old('nd_state') === 'NO_SB' ? 'selected' : '' }}>NO SB</option>
+                <option value="NO_ST" {{ old('nd_state') === 'NO_ST' ? 'selected' : '' }}>NO ST</option>
+                <option value="NO_TRG" {{ old('nd_state') === 'NO_TRG' ? 'selected' : '' }}>NO TRG</option>
               </select>
             </div>
           </div>
 
-          {{-- TM Node — filtered by ND State, searchable typeahead --}}
+          {{-- TM Node — filtered by ND/NO State, searchable typeahead --}}
           <div class="form-group row">
             <label class="col-sm-3 col-form-label text-sm-end">TM Node <span class="text-danger">*</span></label>
             <div class="col-sm-9">
@@ -154,7 +185,7 @@
                        @focus="if (ndState) showNodeDropdown = true"
                        @input="showNodeDropdown = true; nodeId = ''"
                        @click.outside="showNodeDropdown = false"
-                       :placeholder="ndState ? 'Type acronym or name to search...' : 'Select an ND State first'"
+                       :placeholder="ndState ? 'Type acronym or name to search...' : 'Select an ND/NO State first'"
                        :disabled="!ndState"
                        autocomplete="off">
                 <div x-show="showNodeDropdown && filteredNodes.length > 0"
@@ -173,7 +204,7 @@
                 <div x-show="ndState && nodeSearch.trim() && !nodeId && filteredNodes.length === 0"
                      x-cloak
                      class="form-text text-muted" style="font-size:0.8rem; margin-top:4px;">
-                  No nodes found for this ND State matching your search.
+                  No nodes found for this ND/NO State matching your search.
                 </div>
               </div>
               @error('node_id')
@@ -184,7 +215,7 @@
 
           {{-- Payment to PBT --}}
           <div class="form-group row">
-            <label class="col-sm-3 col-form-label text-sm-end">Payment to PBT</label>
+            <label class="col-sm-3 col-form-label text-sm-end">Payment to KUTT/PBI/KUP</label>
             <div class="col-sm-9">
               <select class="form-control @error('payment_to_pbt') is-invalid @enderror" name="payment_to_pbt">
                 <option value="">-- Select --</option>
