@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AdminUnitController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\DepositManagementController;
 use App\Http\Controllers\DocumentReferenceController;
 use App\Http\Controllers\ExampleImageController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
@@ -110,6 +111,11 @@ Route::middleware('auth')->group(function () {
 
     // ── Section 13: CPC Received → Project Completed (Contractor) ────────────
     Route::post('/projects/{project}/cpc-received',      [CpcReceivedController::class, 'store'])->name('projects.cpc-received.store');
+
+    // ── Deposit Management (officer + admin only) ─────────────────────────────
+    Route::middleware('role:admin|officer')->group(function () {
+        Route::get('/deposit-management', [DepositManagementController::class, 'index'])->name('deposit-management.index');
+    });
 
     // ── Document References (reference library for contractors/officers) ────────
     Route::get('/document-references',                          [DocumentReferenceController::class, 'index'])->name('document-references.index');

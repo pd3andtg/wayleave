@@ -115,10 +115,10 @@
               </div>
               <div class="col-md-4 mb-3">
                 <div class="text-muted small fw-bold">PIC Name</div>
-                <div>{{ $project->pic_name }}</div>
+                <div>{{ $project->pic_name ?: '—' }}</div>
               </div>
               <div class="col-md-4 mb-3">
-                <div class="text-muted small fw-bold">Payment to PBT</div>
+                <div class="text-muted small fw-bold">Payment to KUTT/BKI/KUP/PBT</div>
                 <div>{{ $project->payment_to_pbt ? ucfirst(str_replace('_', ' ', $project->payment_to_pbt)) : '—' }}</div>
               </div>
               @role('officer|admin')
@@ -165,50 +165,126 @@
                }">
             <form action="{{ route('projects.update', $project) }}" method="POST">
               @csrf @method('PUT')
-              <div class="row">
+              @php
+                $nodesJson = $nodes->map(fn($n) => [
+                    'id'        => $n->id,
+                    'acronym'   => $n->acronym,
+                    'full_name' => $n->full_name,
+                    'nd'        => $n->nd,
+                ])->toJson();
+              @endphp
+              {{-- x-data on the row so ND State + TM Node share scope without breaking column flow --}}
+              <div class="row"
+                   x-data="{
+                     ndState: '{{ old('nd_state', $project->nd_state) }}',
+                     selectedNode: '{{ old('node_id', $project->node_id) }}',
+                     allNodes: {{ $nodesJson }},
+                     get filteredNodes() {
+                       if (!this.ndState) return this.allNodes;
+                       const suffix = this.ndState.replace('ND_', '');
+                       const filtered = this.allNodes.filter(n => n.nd === suffix || n.nd === this.ndState);
+                       // Always keep the currently selected node in the list so x-model
+                       // retains the saved value on load, even if nd column is null or mismatched.
+                       if (this.selectedNode && !filtered.some(n => String(n.id) === String(this.selectedNode))) {
+                         const current = this.allNodes.find(n => String(n.id) === String(this.selectedNode));
+                         if (current) filtered.unshift(current);
+                       }
+                       return filtered;
+                     },
+                     onNdChange() {
+                       // Only clear node when user explicitly changes ND state and node no longer matches.
+                       const suffix = this.ndState.replace('ND_', '');
+                       const valid = this.allNodes.filter(n => n.nd === suffix || n.nd === this.ndState);
+                       const stillValid = valid.some(n => String(n.id) === String(this.selectedNode));
+                       if (!stillValid) this.selectedNode = '';
+                     }
+                   }">
                 <div class="col-md-4 mb-3">
                   <label class="form-label text-muted small">PBT Ref No</label>
-                  <input type="text" autocomplete="off" name="ref_no" class="form-control" value="{{ old('ref_no', $project->ref_no) }}">
+                  <input type="text" autocomplete="off" name="ref_no" class="form-control" style="height:38px;" value="{{ old('ref_no', $project->ref_no) }}">
                 </div>
                 <div class="col-md-4 mb-3">
                   <label class="form-label text-muted small">LOR No</label>
-                  <input type="text" autocomplete="off" name="lor_no" class="form-control" value="{{ old('lor_no', $project->lor_no) }}">
+                  <input type="text" autocomplete="off" name="lor_no" class="form-control" style="height:38px;" value="{{ old('lor_no', $project->lor_no) }}">
                 </div>
                 <div class="col-md-4 mb-3">
                   <label class="form-label text-muted small">Project No</label>
-                  <input type="text" autocomplete="off" name="project_no" class="form-control" value="{{ old('project_no', $project->project_no) }}">
+                  <input type="text" autocomplete="off" name="project_no" class="form-control" style="height:38px;" value="{{ old('project_no', $project->project_no) }}">
                 </div>
                 <div class="col-md-4 mb-3">
                   <label class="form-label text-muted small">Project Description <span class="text-danger">*</span></label>
-                  <textarea autocomplete="off" name="project_desc" class="form-control" rows="1" required>{{ old('project_desc', $project->project_desc) }}</textarea>
+                  <textarea autocomplete="off" name="project_desc" class="form-control" style="height:38px; resize:none;" rows="1" required>{{ old('project_desc', $project->project_desc) }}</textarea>
                 </div>
                 <div class="col-md-4 mb-3">
                   <label class="form-label text-muted small">ND State <span class="text-danger">*</span></label>
-                  <select name="nd_state" class="form-control" required>
-                    <option value="ND_TRG" {{ old('nd_state', $project->nd_state) === 'ND_TRG' ? 'selected' : '' }}>ND TRG</option>
-                    <option value="ND_PHG" {{ old('nd_state', $project->nd_state) === 'ND_PHG' ? 'selected' : '' }}>ND PHG</option>
-                    <option value="ND_KEL" {{ old('nd_state', $project->nd_state) === 'ND_KEL' ? 'selected' : '' }}>ND KEL</option>
+                  <select name="nd_state" class="form-control" style="height:38px;" required
+                          x-model="ndState" @change="onNdChange()">
+                    <option value="ND_TRG">ND TRG</option>
+                    <option value="ND_PHG">ND PHG</option>
+                    <option value="ND_KEL">ND KEL</option>
                   </select>
                 </div>
                 <div class="col-md-4 mb-3">
                   <label class="form-label text-muted small">TM Node</label>
-                  <select name="node_id" class="form-control">
-                    <option value="">-- None --</option>
-                    @foreach($nodes as $node)
-                      <option value="{{ $node->id }}" {{ old('node_id', $project->node_id) == $node->id ? 'selected' : '' }}>
-                        {{ $node->acronym }} — {{ $node->full_name }}
-                      </option>
-                    @endforeach
-                  </select>
+                  <input type="hidden" name="node_id" :value="selectedNode">
+                  {{-- Searchable typeahead for TM Node --}}
+                  <div x-data="{
+                         nodeSearch: filteredNodes.find(n => String(n.id) === String(selectedNode))
+                                       ? (filteredNodes.find(n => String(n.id) === String(selectedNode)).acronym + ' — ' + filteredNodes.find(n => String(n.id) === String(selectedNode)).full_name)
+                                       : (allNodes.find(n => String(n.id) === String(selectedNode))
+                                           ? (allNodes.find(n => String(n.id) === String(selectedNode)).acronym + ' — ' + allNodes.find(n => String(n.id) === String(selectedNode)).full_name)
+                                           : ''),
+                         nodeOpen: false,
+                         get nodeResults() {
+                           if (!this.nodeSearch) return filteredNodes;
+                           const q = this.nodeSearch.toLowerCase();
+                           return filteredNodes.filter(n =>
+                             n.acronym.toLowerCase().includes(q) || n.full_name.toLowerCase().includes(q)
+                           );
+                         },
+                         selectNode(node) {
+                           selectedNode = node.id;
+                           this.nodeSearch = node.id ? node.acronym + ' — ' + node.full_name : '';
+                           this.nodeOpen = false;
+                         },
+                         clearNode() {
+                           selectedNode = '';
+                           this.nodeSearch = '';
+                         }
+                       }"
+                       style="position:relative;">
+                    <input type="text" autocomplete="off" class="form-control" style="height:38px;"
+                           placeholder="Search node..."
+                           x-model="nodeSearch"
+                           @focus="nodeOpen = true"
+                           @input="nodeOpen = true; if(!nodeSearch) clearNode()"
+                           @click.outside="nodeOpen = false">
+                    <div x-show="nodeOpen" x-cloak
+                         style="position:absolute; z-index:999; background:#fff; border:1px solid #ced4da;
+                                border-radius:4px; width:100%; max-height:200px; overflow-y:auto; top:100%; left:0;">
+                      <div @click="selectNode({ id: '', acronym: '', full_name: '' })"
+                           style="padding:6px 12px; cursor:pointer; font-size:0.85rem; color:#6c757d;"
+                           @mouseover="$el.style.background='#f8f9fa'" @mouseout="$el.style.background=''">
+                        — None —
+                      </div>
+                      <template x-for="node in nodeResults" :key="node.id">
+                        <div @click="selectNode(node)"
+                             style="padding:6px 12px; cursor:pointer; font-size:0.85rem;"
+                             @mouseover="$el.style.background='#f0f4ff'" @mouseout="$el.style.background=''">
+                          <span x-text="node.acronym + ' — ' + node.full_name"></span>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
                 </div>
                 <div class="col-md-4 mb-3">
                   <label class="form-label text-muted small">Application Date <span class="text-muted" style="font-size:0.7rem;">(Registration Date at KUTT/BKI/KUP/PBT)</span></label>
-                  <input type="date" name="application_date" class="form-control"
+                  <input type="date" name="application_date" class="form-control" style="height:38px;"
                          value="{{ old('application_date', $project->application_date?->format('Y-m-d')) }}">
                 </div>
                 <div class="col-md-4 mb-3">
-                  <label class="form-label text-muted small">Payment to KUTT/</label>
-                  <select name="payment_to_pbt" class="form-control">
+                  <label class="form-label text-muted small">Payment to KUTT/BKI/KUP/PBT</label>
+                  <select name="payment_to_pbt" class="form-control" style="height:38px;">
                     <option value="">-- Select --</option>
                     <option value="charged"      {{ old('payment_to_pbt', $project->payment_to_pbt) === 'charged'      ? 'selected' : '' }}>Charged</option>
                     <option value="waived"       {{ old('payment_to_pbt', $project->payment_to_pbt) === 'waived'       ? 'selected' : '' }}>Waived</option>
@@ -218,26 +294,126 @@
                 @role('officer|admin')
                 <div class="col-md-4 mb-3">
                   <label class="form-label text-muted small">Self Applied by TM</label>
-                  <select name="self_applied_by_tm" class="form-control"
+                  <select name="self_applied_by_tm" class="form-control" style="height:38px;"
                           @change="selfApplied = $event.target.value === '1'">
                     <option value="0" {{ !$project->self_applied_by_tm ? 'selected' : '' }}>No</option>
                     <option value="1" {{ $project->self_applied_by_tm  ? 'selected' : '' }}>Yes</option>
                   </select>
                 </div>
+                @php
+                  $companiesJson = $companies->map(fn($c) => ['id' => $c->id, 'name' => $c->name])->toJson();
+                  $selectedCompanyName = $companies->firstWhere('id', old('company_id', $project->company_id))?->name ?? '';
+                @endphp
                 <div class="col-md-4 mb-3" x-show="!selfApplied" x-cloak>
                   <label class="form-label text-muted small">Company</label>
-                  <select name="company_id" class="form-control">
-                    @foreach($companies as $company)
-                      <option value="{{ $company->id }}" {{ old('company_id', $project->company_id) == $company->id ? 'selected' : '' }}>
-                        {{ $company->name }}
-                      </option>
-                    @endforeach
-                  </select>
+                  {{-- Searchable typeahead for Company --}}
+                  <div x-data="{
+                         allCompanies: {{ $companiesJson }},
+                         companySearch: '{{ addslashes($selectedCompanyName) }}',
+                         selectedCompany: '{{ old('company_id', $project->company_id) }}',
+                         companyOpen: false,
+                         get companyResults() {
+                           if (!this.companySearch) return this.allCompanies;
+                           const q = this.companySearch.toLowerCase();
+                           return this.allCompanies.filter(c => c.name.toLowerCase().includes(q));
+                         },
+                         selectCompany(c) {
+                           this.selectedCompany = c.id;
+                           this.companySearch = c.name;
+                           this.companyOpen = false;
+                         }
+                       }"
+                       style="position:relative;">
+                    <input type="hidden" name="company_id" :value="selectedCompany">
+                    <input type="text" autocomplete="off" class="form-control" style="height:38px;"
+                           placeholder="Search company..."
+                           x-model="companySearch"
+                           @focus="companyOpen = true"
+                           @input="companyOpen = true"
+                           @click.outside="companyOpen = false">
+                    <div x-show="companyOpen && companyResults.length > 0" x-cloak
+                         style="position:absolute; z-index:999; background:#fff; border:1px solid #ced4da;
+                                border-radius:4px; width:100%; max-height:200px; overflow-y:auto; top:100%; left:0;">
+                      <template x-for="c in companyResults" :key="c.id">
+                        <div @click="selectCompany(c)"
+                             style="padding:6px 12px; cursor:pointer; font-size:0.85rem;"
+                             @mouseover="$el.style.background='#f0f4ff'" @mouseout="$el.style.background=''">
+                          <span x-text="c.name"></span>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
                 </div>
                 @endrole
+                @php
+                  $picUsersJson = $picUsers->map(fn($u) => ['id' => $u->id, 'name' => $u->name, 'company_id' => $u->company_id])->toJson();
+                  // For contractors, company is fixed to their own; for officer/admin it follows selectedCompany
+                  $picCompanyId = auth()->user()->hasRole('contractor') ? auth()->user()->company_id : $project->company_id;
+                @endphp
+                <div class="col-md-4 mb-3"
+                     x-data="{
+                       allPicUsers: {{ $picUsersJson }},
+                       picSearch: '{{ addslashes($project->pic_name) }}',
+                       picName: '{{ addslashes($project->pic_name) }}',
+                       picOpen: false,
+                       picCompanyId: '{{ $picCompanyId }}',
+                       get picResults() {
+                         {{-- For officer/admin, follow the company typeahead selection --}}
+                         @role('officer|admin')
+                           const cid = String(typeof selectedCompany !== 'undefined' ? selectedCompany : this.picCompanyId);
+                         @else
+                           const cid = String(this.picCompanyId);
+                         @endrole
+                         const users = cid ? this.allPicUsers.filter(u => String(u.company_id) === cid) : this.allPicUsers;
+                         if (!this.picSearch) return users;
+                         const q = this.picSearch.toLowerCase();
+                         return users.filter(u => u.name.toLowerCase().includes(q));
+                       },
+                       selectPic(u) {
+                         this.picName = u.name;
+                         this.picSearch = u.name;
+                         this.picOpen = false;
+                       }
+                     }">
+                  <label class="form-label text-muted small">PIC Name</label>
+                  <input type="hidden" name="pic_name" :value="picName">
+                  <div style="position:relative;">
+                  <input type="text" autocomplete="off" class="form-control" style="height:38px;"
+                         placeholder="Search PIC..."
+                         x-model="picSearch"
+                         @focus="picOpen = true"
+                         @input="picOpen = true; picName = picSearch"
+                         @click.outside="picOpen = false">
+                  <div x-show="picOpen" x-cloak
+                       style="position:absolute; z-index:999; background:#fff; border:1px solid #ced4da;
+                              border-radius:4px; width:100%; max-height:200px; overflow-y:auto; top:100%; left:0;">
+                    <div @click="picName = ''; picSearch = ''; picOpen = false;"
+                         style="padding:6px 12px; cursor:pointer; font-size:0.85rem; color:#6c757d;"
+                         @mouseover="$el.style.background='#f8f9fa'" @mouseout="$el.style.background=''">
+                      — None —
+                    </div>
+                    <template x-if="picResults.length > 0">
+                      <div>
+                        <template x-for="u in picResults" :key="u.id">
+                          <div @click="selectPic(u)"
+                               style="padding:6px 12px; cursor:pointer; font-size:0.85rem;"
+                               @mouseover="$el.style.background='#f0f4ff'" @mouseout="$el.style.background=''">
+                            <span x-text="u.name"></span>
+                          </div>
+                        </template>
+                      </div>
+                    </template>
+                    <template x-if="picResults.length === 0">
+                      <div style="padding:6px 12px; font-size:0.85rem; color:#6c757d;">
+                        No users found for this company.
+                      </div>
+                    </template>
+                  </div>
+                  </div>{{-- end position:relative --}}
+                </div>
                 <div class="col-md-4 mb-3">
                   <label class="form-label text-muted small">Remarks</label>
-                  <textarea autocomplete="off" name="remarks" class="form-control" rows="1">{{ old('remarks', $project->remarks) }}</textarea>
+                  <textarea autocomplete="off" name="remarks" class="form-control" style="height:38px; resize:none;" rows="1">{{ old('remarks', $project->remarks) }}</textarea>
                 </div>
               </div>
               <div class="d-flex justify-content-end gap-2">
@@ -387,33 +563,53 @@ if ($tlStartDate) {
         {{-- Stage brackets — proportional to node count each stage spans --}}
         {{-- Each unit = 1 node width (64px min). Stages share the same scroll container. --}}
         @php
-        $stageColor = '#144e90';
         $dropHeight = '20px';
         $barHeight  = '2px';
         $stages = [
-            ['units' => 1, 'label' => 'Stage 1: Registration of Wayleave & Permit Application.'],
-            ['units' => 2, 'label' => 'Stage 2: Payment to Koridor Utiliti - KUTT/KUP/BKI.'],
-            ['units' => 5, 'label' => 'Stage 3: Wayleave Acquisition, Document Preparation, Preparation of Deposit & FI, and Submission of Documents to PBT.'],
-            ['units' => 2, 'label' => 'Stage 4: Project Implementation Upon Permit Approval.'],
-            ['units' => 3, 'label' => 'Stage 5: Preparation of Documents for CPC Application.'],
+            ['units' => 1, 'sections' => [1],          'label' => 'Stage 1: Registration of Wayleave & Permit Application.'],
+            ['units' => 2, 'sections' => [2, 3],        'label' => 'Stage 2: Payment to Koridor Utiliti - KUTT/KUP/BKI.'],
+            ['units' => 5, 'sections' => [4, 5, 6, 7, 8], 'label' => 'Stage 3: Wayleave Acquisition, Document Preparation, Preparation of Deposit & FI, and Submission of Documents to PBT.'],
+            ['units' => 2, 'sections' => [9, 10],       'label' => 'Stage 4: Project Implementation Upon Permit Approval.'],
+            ['units' => 3, 'sections' => [11, 12, 13],  'label' => 'Stage 5: Preparation of Documents for CPC Application.'],
         ];
+
+        // Determine each stage's color:
+        // - If ALL stages are completed → all blue
+        // - Otherwise → current stage (first incomplete) is blue, everything else is grey
+        $allStagesDone = collect($stages)->every(
+            fn($stage) => collect($stage['sections'])->every(fn($s) => !empty($tl[$s]))
+        );
+        $foundCurrent = false;
+        foreach ($stages as &$stage) {
+            $allDone = collect($stage['sections'])->every(fn($s) => !empty($tl[$s]));
+            if ($allStagesDone) {
+                $stage['color'] = '#144e90';
+            } elseif (!$allDone && !$foundCurrent) {
+                $stage['color'] = '#144e90';
+                $foundCurrent = true;
+            } else {
+                $stage['color'] = '#adb5bd';
+            }
+        }
+        unset($stage);
         @endphp
         <div class="d-flex" style="overflow-x:visible; margin-top:4px; gap:6px;">
           @foreach ($stages as $stage)
+            @php $stageColor = $stage['color']; @endphp
             <div style="flex:{{ $stage['units'] }}; min-width:{{ $stage['units'] * 64 }}px; display:flex; flex-direction:column; align-items:stretch; padding:0 8px;">
               {{-- U-bracket: two vertical drops + horizontal bar at bottom --}}
               <div style="display:flex; align-items:flex-end; height:{{ $dropHeight }};">
-                {{-- Left vertical drop --}}
                 <div style="width:{{ $barHeight }}; height:100%; background:{{ $stageColor }}; flex-shrink:0;"></div>
-                {{-- Spacer --}}
                 <div style="flex:1;"></div>
-                {{-- Right vertical drop --}}
                 <div style="width:{{ $barHeight }}; height:100%; background:{{ $stageColor }}; flex-shrink:0;"></div>
               </div>
               {{-- Horizontal bar --}}
               <div style="height:{{ $barHeight }}; background:{{ $stageColor }};"></div>
-              {{-- Stage label --}}
-              <div class="text-center mt-1" style="font-size:0.65rem; color:#212529 !important; font-weight:400 !important; line-height:1.3; padding:0 12px;">
+              {{-- Stage label — fixed min-height so all boxes are equal height --}}
+              <div class="text-center mt-1"
+                   style="font-size:0.68rem; color:#212529 !important; font-weight:400 !important;
+                          line-height:1.4; padding:6px 10px; min-height:64px;
+                          display:flex; align-items:center; justify-content:center;">
                 {{ $stage['label'] }}
               </div>
             </div>
@@ -814,10 +1010,10 @@ if ($tlStartDate) {
 
         @forelse ($project->wayleavePhbts as $pbt)
         <div class="border rounded p-2 mb-2" x-data="{ editing: false, showOther: {{ $pbt->pbt_name === 'Others' ? 'true' : 'false' }} }">
-          <div>
+          <div class="d-flex justify-content-between align-items-center">
             <strong class="small">{{ $pbt->pbt_number }} — {{ $pbt->pbt_name === 'Others' ? $pbt->pbt_name_other : str_replace('_', ' ', $pbt->pbt_name) }}</strong>
             @if($pbt->endorsed_by)
-              <span class="badge bg-success ms-2">Endorsed by {{ $pbt->endorsedBy?->name }}</span>
+              <span class="text-muted small fw-normal">Endorsed by {{ $pbt->endorsedBy?->name }}</span>
             @endif
           </div>
 
@@ -897,12 +1093,12 @@ if ($tlStartDate) {
                   <div class="text-muted" style="font-size:0.7rem; margin-top:2px;">PDF only — max 10MB</div>
                 </div>
                 @endif
+              </div>
 
-                <div class="col-md-2 d-flex align-items-end gap-2">
-                  <button type="submit" class="btn-action btn-action-sm">Save</button>
-                  <button type="button" class="btn-action btn-action-sm" style="background:#6c757d;"
-                          x-on:click="editing = false">Cancel</button>
-                </div>
+              <div class="d-flex gap-2 mt-3">
+                <button type="submit" class="btn-action btn-action-sm">Save</button>
+                <button type="button" class="btn-action btn-action-sm" style="background:#6c757d;"
+                        x-on:click="editing = false">Cancel</button>
               </div>
             </form>
           </div>
@@ -985,35 +1181,35 @@ if ($tlStartDate) {
         @else
           @foreach($project->wayleavePhbts as $pbt)
           <div class="border rounded p-2 mb-2" x-data="{ open: false }">
-            <div class="d-flex align-items-start justify-content-between">
-              <div>
-                <strong class="small">{{ $pbt->pbt_number }} — {{ str_replace('_', ' ', $pbt->pbt_name === 'Others' ? $pbt->pbt_name_other : $pbt->pbt_name) }}</strong>
-                @if($pbt->wayleave_file)
-                  <div class="mt-1">
-                    @if($pbt->endorsed_by)
-                      <div class="text-muted small fw-normal mb-1">Endorsed File</div>
-                    @endif
+            <div class="d-flex justify-content-between align-items-center">
+              <strong class="small">{{ $pbt->pbt_number }} — {{ str_replace('_', ' ', $pbt->pbt_name === 'Others' ? $pbt->pbt_name_other : $pbt->pbt_name) }}</strong>
+              @if($pbt->endorsed_by)
+                <span class="text-muted small fw-normal">Endorsed by {{ $pbt->endorsedBy?->name }}</span>
+              @else
+                <span class="text-muted small fw-normal">Pending Endorsement</span>
+              @endif
+            </div>
+            <div class="d-flex align-items-start justify-content-between mt-2">
+              <div class="d-flex align-items-start gap-4">
+                <div>
+                  <div class="small fw-normal text-muted">Endorsed Date</div>
+                  <div class="small">{{ $pbt->endorsed_date?->format('d/m/Y') ?? '—' }}</div>
+                </div>
+                <div>
+                  <div class="small fw-normal text-muted">Endorsed File</div>
+                  @if($pbt->wayleave_file)
                     <a href="{{ route('projects.download', ['project' => $project, 'path' => $pbt->wayleave_file]) }}"
                        class="btn-action btn-action-sm"><i class="ti-download me-1"></i>Download</a>
-                  </div>
-                @endif
-              </div>
-              <div class="d-flex flex-column align-items-end gap-1">
-                @if($pbt->endorsed_by)
-                  <span class="text-muted small fw-normal">Endorsed by {{ $pbt->endorsedBy?->name }}</span>
-                  @if($pbt->endorsed_date)
-                    <span class="text-muted small fw-normal">Endorsed Date: {{ $pbt->endorsed_date->format('d/m/Y') }}</span>
+                  @else
+                    <span class="small text-muted">—</span>
                   @endif
-                @else
-                  <span class="text-muted small fw-normal">Pending Endorsement</span>
-                @endif
-                {{-- Officer/admin: upload/replace endorsed file --}}
-                @role('officer|admin')
-                <button type="button" class="btn-action btn-action-sm" x-on:click="open = !open">
-                  {{ $pbt->endorsed_by ? 'Replace' : 'Upload Endorsed File' }}
-                </button>
-                @endrole
+                </div>
               </div>
+              @role('officer|admin')
+              <button type="button" class="btn-action btn-action-sm" x-on:click="open = !open">
+                {{ $pbt->endorsed_by ? 'Edit' : 'Upload Endorsed File' }}
+              </button>
+              @endrole
             </div>
             @role('officer|admin')
             <div x-show="open" x-cloak class="mt-2">
@@ -1038,7 +1234,7 @@ if ($tlStartDate) {
                   </div>
                 </div>
                 <div class="d-flex gap-2">
-                  <button type="submit" class="btn-action btn-action-sm">Endorse</button>
+                  <button type="submit" class="btn-action btn-action-sm">Save</button>
                   <button type="button" class="btn-action btn-action-sm" style="background:#6c757d; border-color:#6c757d;"
                           x-on:click="open = false">Cancel</button>
                 </div>
@@ -1243,7 +1439,7 @@ if ($tlStartDate) {
                   <th style="font-weight:600; color:#07326A;">Payment Type</th>
                   <th style="font-weight:600; color:#07326A;">Amount (RM)</th>
                   <th style="font-weight:600; color:#07326A;">EDS No</th>
-                  <th style="font-weight:600; color:#07326A;">Method</th>
+                  <th style="font-weight:600; color:#07326A;">Method of Payment</th>
                   <th style="font-weight:600; color:#07326A;">Application Date</th>
                   <th style="font-weight:600; color:#07326A;">Received / Posted Date</th>
                   <th style="font-weight:600; color:#07326A;">BG/BD Document</th>

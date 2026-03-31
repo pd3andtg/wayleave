@@ -151,6 +151,15 @@
             </a>
           </li>
 
+          @hasanyrole('admin|officer')
+          <li class="nav-item {{ request()->routeIs('deposit-management.*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('deposit-management.index') }}">
+              <i class="ti-money menu-icon"></i>
+              <span class="menu-title">Deposit Management</span>
+            </a>
+          </li>
+          @endhasanyrole
+
           <li class="nav-item {{ request()->routeIs('document-references.*') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('document-references.index') }}">
               <i class="ti-folder menu-icon"></i>

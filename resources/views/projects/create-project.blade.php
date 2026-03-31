@@ -267,7 +267,7 @@
 
           {{-- Payment to PBT --}}
           <div class="form-group row">
-            <label class="col-sm-3 col-form-label text-sm-end">Payment to KUTT/PBI/KUP</label>
+            <label class="col-sm-3 col-form-label text-sm-end">Payment to KUTT/BKI/KUP</label>
             <div class="col-sm-9">
               <select class="form-control @error('payment_to_pbt') is-invalid @enderror" name="payment_to_pbt">
                 <option value="">-- Select --</option>

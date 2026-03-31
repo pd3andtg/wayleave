@@ -28,6 +28,7 @@ class UpdateProjectRequest extends FormRequest
             'self_applied_by_tm' => ['nullable', 'boolean'],
             'payment_to_pbt'     => ['nullable', 'in:charged,waived,not_required'],
             'company_id'         => ['nullable', 'exists:companies,id'],
+            'pic_name'           => ['nullable', 'string', 'max:255'],
             'remarks'            => ['nullable', 'string'],
         ];
     }

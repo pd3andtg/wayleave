@@ -102,6 +102,13 @@ class ProjectController extends Controller
 
         $nodes = Node::orderBy('acronym')->get();
 
+        // Pass all active users with their company_id for the PIC picker.
+        // Contractors only need users from their own company.
+        $picUsers = \App\Models\User::whereNotNull('company_id')
+            ->where('is_suspended', false)
+            ->orderBy('name')
+            ->get(['id', 'name', 'company_id']);
+
         // Global example/reference images — same across all projects.
         // Resolved here so Blade templates contain no storage logic.
         $exampleImages = [
@@ -112,7 +119,7 @@ class ProjectController extends Controller
             'section12' => ExampleImageController::exists('section12'),
         ];
 
-        return view('projects.project-detail', compact('project', 'timelineStatus', 'timelineDates', 'companies', 'nodes', 'exampleImages'));
+        return view('projects.project-detail', compact('project', 'timelineStatus', 'timelineDates', 'companies', 'nodes', 'picUsers', 'exampleImages'));
     }
 
     // Section 1: update project information (editable by anyone with access).

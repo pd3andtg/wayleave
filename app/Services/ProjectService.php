@@ -240,6 +240,11 @@ class ProjectService
                 // Keep the provided company_id
             }
         }
+        // pic_name is NOT NULL — use empty string when user explicitly clears it (None selected).
+        if (!isset($data['pic_name']) || $data['pic_name'] === null) {
+            $data['pic_name'] = $project->pic_name ?? '';
+        }
+
         $project->update($data);
     }
 
@@ -740,5 +745,42 @@ class ProjectService
         $project->update(['status' => 'completed']);
 
         return $record;
+    }
+
+    // ── Deposit Management ────────────────────────────────────────────────────
+
+    // Returns a paginated list of Deposit-type wayleave payment rows where status = required.
+    // Officers are scoped to their unit's nd_state. Admins see all.
+    // Supports search (ref_no / project_desc) and admin-only nd_state filter.
+    public function getDepositList(User $user, array $filters): LengthAwarePaginator
+    {
+        $query = WayleavePayment::with(['project.company', 'wayleavePhbt'])
+            ->where('payment_type', 'Deposit')
+            ->where('status', 'required')
+            ->whereHas('project', function ($q) use ($user, $filters) {
+                // Officers are auto-scoped to their unit's nd_state.
+                if ($user->hasRole('officer') && $user->unit) {
+                    $ndState = strtoupper(str_replace(' ', '_', $user->unit->name));
+                    $q->where('nd_state', $ndState);
+                }
+
+                // Admin-only nd_state filter.
+                if (!empty($filters['nd_state'])) {
+                    $q->where('nd_state', $filters['nd_state']);
+                }
+
+                // Search by ref_no or project_desc.
+                if (!empty($filters['search'])) {
+                    $search   = $filters['search'];
+                    $operator = config('database.default') === 'pgsql' ? 'ilike' : 'like';
+                    $q->where(function ($sq) use ($search, $operator) {
+                        $sq->where('ref_no', $operator, "%{$search}%")
+                           ->orWhere('project_desc', $operator, "%{$search}%");
+                    });
+                }
+            })
+            ->latest();
+
+        return $query->paginate(20)->withQueryString();
     }
 }
