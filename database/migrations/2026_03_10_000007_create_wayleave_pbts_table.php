@@ -20,11 +20,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('project_id')->constrained('projects')->cascadeOnDelete();
             $table->enum('pbt_number', ['PBT1', 'PBT2', 'PBT3']);
-            $table->enum('pbt_name', [
-                'MBKT', 'MPK', 'MDS', 'MDB', 'MPD',
-                'JKR HT', 'JKR KN', 'JKR DN', 'JKR KT', 'JKR KM', 'JKR ST',
-                'Others',
-            ]);
+            $table->string('pbt_name'); // Full display string, e.g. "MBKT - MAJLIS BANDARAYA KUALA TERENGGANU"
             $table->string('pbt_name_other')->nullable();
             // Shared file column: contractor uploads first (Section 4),
             // officer overwrites with endorsed version (Section 5).

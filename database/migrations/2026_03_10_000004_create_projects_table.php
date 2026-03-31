@@ -25,7 +25,7 @@ return new class extends Migration
             $table->string('project_no')->nullable();
             $table->text('project_desc');
             $table->string('pic_name');                   // Auto-filled from creator's name on creation
-            $table->enum('nd_state', ['ND_TRG', 'ND_PHG', 'ND_KEL']);
+            $table->string('nd_state'); // Validated at Form Request level — no DB enum needed
             $table->foreignId('node_id')->nullable()->constrained('nodes')->nullOnDelete(); // TM Node
             $table->boolean('self_applied_by_tm')->default(false); // Officer/admin only — sets company to TM
             $table->enum('payment_to_pbt', ['charged', 'waived', 'not_required'])->nullable();

@@ -179,10 +179,27 @@
                      ndState: '{{ old('nd_state', $project->nd_state) }}',
                      selectedNode: '{{ old('node_id', $project->node_id) }}',
                      allNodes: {{ $nodesJson }},
+                     get ndKey() {
+                       const ndMap = {
+                         'ND_TRG': 'TRG', 'ND_PHG': 'PHG', 'ND_KEL': 'KEL',
+                         'ND_JS': 'JS', 'ND_JU': 'JU', 'ND_KD_PL': 'KD/PL',
+                         'ND_KL': 'KL', 'ND_MK': 'MK', 'ND_MSC': 'MSC',
+                         'ND_NS': 'NS', 'ND_PG': 'PP', 'ND_PJ': 'PJ',
+                         'ND_PRK': 'PRK', 'ND_SABAH': 'SABAH', 'ND_SARAWAK': 'SARAWAK',
+                         'ND_SB': 'SB', 'ND_ST': 'ST',
+                         'NO_TRG': 'TRG', 'NO_PHG': 'PHG', 'NO_KEL': 'KEL',
+                         'NO_JS': 'JS', 'NO_JU': 'JU', 'NO_KD_PL': 'KD/PL',
+                         'NO_KL': 'KL', 'NO_MK': 'MK', 'NO_MSC': 'MSC',
+                         'NO_NS': 'NS', 'NO_PG': 'PP', 'NO_PJ': 'PJ',
+                         'NO_PRK': 'PRK', 'NO_SABAH': 'SABAH', 'NO_SARAWAK': 'SARAWAK',
+                         'NO_SB': 'SB', 'NO_ST': 'ST',
+                       };
+                       return ndMap[this.ndState] ?? null;
+                     },
                      get filteredNodes() {
                        if (!this.ndState) return this.allNodes;
-                       const suffix = this.ndState.replace('ND_', '');
-                       const filtered = this.allNodes.filter(n => n.nd === suffix || n.nd === this.ndState);
+                       const nd = this.ndKey;
+                       const filtered = nd ? this.allNodes.filter(n => n.nd === nd) : this.allNodes;
                        // Always keep the currently selected node in the list so x-model
                        // retains the saved value on load, even if nd column is null or mismatched.
                        if (this.selectedNode && !filtered.some(n => String(n.id) === String(this.selectedNode))) {
@@ -193,8 +210,8 @@
                      },
                      onNdChange() {
                        // Only clear node when user explicitly changes ND state and node no longer matches.
-                       const suffix = this.ndState.replace('ND_', '');
-                       const valid = this.allNodes.filter(n => n.nd === suffix || n.nd === this.ndState);
+                       const nd = this.ndKey;
+                       const valid = nd ? this.allNodes.filter(n => n.nd === nd) : this.allNodes;
                        const stillValid = valid.some(n => String(n.id) === String(this.selectedNode));
                        if (!stillValid) this.selectedNode = '';
                      }
@@ -219,9 +236,44 @@
                   <label class="form-label text-muted small">ND State <span class="text-danger">*</span></label>
                   <select name="nd_state" class="form-control" style="height:38px;" required
                           x-model="ndState" @change="onNdChange()">
-                    <option value="ND_TRG">ND TRG</option>
-                    <option value="ND_PHG">ND PHG</option>
-                    <option value="ND_KEL">ND KEL</option>
+                    <optgroup label="ND">
+                      <option value="ND_JS">ND JS</option>
+                      <option value="ND_JU">ND JU</option>
+                      <option value="ND_KD_PL">ND KD/PL</option>
+                      <option value="ND_KEL">ND KEL</option>
+                      <option value="ND_KL">ND KL</option>
+                      <option value="ND_MK">ND MK</option>
+                      <option value="ND_MSC">ND MSC</option>
+                      <option value="ND_NS">ND NS</option>
+                      <option value="ND_PG">ND PG</option>
+                      <option value="ND_PHG">ND PHG</option>
+                      <option value="ND_PJ">ND PJ</option>
+                      <option value="ND_PRK">ND PRK</option>
+                      <option value="ND_SABAH">ND SABAH</option>
+                      <option value="ND_SARAWAK">ND SARAWAK</option>
+                      <option value="ND_SB">ND SB</option>
+                      <option value="ND_ST">ND ST</option>
+                      <option value="ND_TRG">ND TRG</option>
+                    </optgroup>
+                    <optgroup label="NO">
+                      <option value="NO_JS">NO JS</option>
+                      <option value="NO_JU">NO JU</option>
+                      <option value="NO_KD_PL">NO KD/PL</option>
+                      <option value="NO_KEL">NO KEL</option>
+                      <option value="NO_KL">NO KL</option>
+                      <option value="NO_MK">NO MK</option>
+                      <option value="NO_MSC">NO MSC</option>
+                      <option value="NO_NS">NO NS</option>
+                      <option value="NO_PG">NO PG</option>
+                      <option value="NO_PHG">NO PHG</option>
+                      <option value="NO_PJ">NO PJ</option>
+                      <option value="NO_PRK">NO PRK</option>
+                      <option value="NO_SABAH">NO SABAH</option>
+                      <option value="NO_SARAWAK">NO SARAWAK</option>
+                      <option value="NO_SB">NO SB</option>
+                      <option value="NO_ST">NO ST</option>
+                      <option value="NO_TRG">NO TRG</option>
+                    </optgroup>
                   </select>
                 </div>
                 <div class="col-md-4 mb-3">
@@ -345,71 +397,10 @@
                   </div>
                 </div>
                 @endrole
-                @php
-                  $picUsersJson = $picUsers->map(fn($u) => ['id' => $u->id, 'name' => $u->name, 'company_id' => $u->company_id])->toJson();
-                  // For contractors, company is fixed to their own; for officer/admin it follows selectedCompany
-                  $picCompanyId = auth()->user()->hasRole('contractor') ? auth()->user()->company_id : $project->company_id;
-                @endphp
-                <div class="col-md-4 mb-3"
-                     x-data="{
-                       allPicUsers: {{ $picUsersJson }},
-                       picSearch: '{{ addslashes($project->pic_name) }}',
-                       picName: '{{ addslashes($project->pic_name) }}',
-                       picOpen: false,
-                       picCompanyId: '{{ $picCompanyId }}',
-                       get picResults() {
-                         {{-- For officer/admin, follow the company typeahead selection --}}
-                         @role('officer|admin')
-                           const cid = String(typeof selectedCompany !== 'undefined' ? selectedCompany : this.picCompanyId);
-                         @else
-                           const cid = String(this.picCompanyId);
-                         @endrole
-                         const users = cid ? this.allPicUsers.filter(u => String(u.company_id) === cid) : this.allPicUsers;
-                         if (!this.picSearch) return users;
-                         const q = this.picSearch.toLowerCase();
-                         return users.filter(u => u.name.toLowerCase().includes(q));
-                       },
-                       selectPic(u) {
-                         this.picName = u.name;
-                         this.picSearch = u.name;
-                         this.picOpen = false;
-                       }
-                     }">
+                <div class="col-md-4 mb-3">
                   <label class="form-label text-muted small">PIC Name</label>
-                  <input type="hidden" name="pic_name" :value="picName">
-                  <div style="position:relative;">
-                  <input type="text" autocomplete="off" class="form-control" style="height:38px;"
-                         placeholder="Search PIC..."
-                         x-model="picSearch"
-                         @focus="picOpen = true"
-                         @input="picOpen = true; picName = picSearch"
-                         @click.outside="picOpen = false">
-                  <div x-show="picOpen" x-cloak
-                       style="position:absolute; z-index:999; background:#fff; border:1px solid #ced4da;
-                              border-radius:4px; width:100%; max-height:200px; overflow-y:auto; top:100%; left:0;">
-                    <div @click="picName = ''; picSearch = ''; picOpen = false;"
-                         style="padding:6px 12px; cursor:pointer; font-size:0.85rem; color:#6c757d;"
-                         @mouseover="$el.style.background='#f8f9fa'" @mouseout="$el.style.background=''">
-                      — None —
-                    </div>
-                    <template x-if="picResults.length > 0">
-                      <div>
-                        <template x-for="u in picResults" :key="u.id">
-                          <div @click="selectPic(u)"
-                               style="padding:6px 12px; cursor:pointer; font-size:0.85rem;"
-                               @mouseover="$el.style.background='#f0f4ff'" @mouseout="$el.style.background=''">
-                            <span x-text="u.name"></span>
-                          </div>
-                        </template>
-                      </div>
-                    </template>
-                    <template x-if="picResults.length === 0">
-                      <div style="padding:6px 12px; font-size:0.85rem; color:#6c757d;">
-                        No users found for this company.
-                      </div>
-                    </template>
-                  </div>
-                  </div>{{-- end position:relative --}}
+                  <input type="hidden" name="pic_name" value="{{ $project->pic_name }}">
+                  <input type="text" class="form-control" style="height:38px;" value="{{ $project->pic_name ?: '—' }}" disabled>
                 </div>
                 <div class="col-md-4 mb-3">
                   <label class="form-label text-muted small">Remarks</label>
@@ -1054,7 +1045,8 @@ if ($tlStartDate) {
                   <label class="form-label small">PBT Name <span class="text-danger">*</span></label>
                   <select name="pbt_name" class="form-control form-control-sm" required
                           @change="showOther = $event.target.value === 'Others'">
-                    @foreach(['MBKT','MPK','MDS','MDB','MPD','JKR HT','JKR KN','JKR DN','JKR KT','JKR KM','JKR ST','Others'] as $pn)
+                    @foreach(['MBKT - MAJLIS BANDARAYA KUALA TERENGGANU','MPK - MAJLIS PERBANDARAN KEMAMAN','MDS - MAJLIS PERBANDARAN SETIU','MDB - MAJLIS DAERAH BESUT','MPD - MAJLIS PERBANDARAN DUNGUN','JKR HT - JKR HULU TERENGGANU','JKR KN - JKR KUALA NERUS','JKR DN - JKR DUNGUN',
+                    'JKR KT - JKR KUALA TERENGGANU','JKR KM - JKR KEMAMAN','JKR ST - JKR SETIU','Others'] as $pn)
                       <option value="{{ $pn }}" {{ $pbt->pbt_name === $pn ? 'selected' : '' }}>{{ $pn }}</option>
                     @endforeach
                   </select>
@@ -1132,7 +1124,8 @@ if ($tlStartDate) {
                   <label class="form-label small">PBT Name <span class="text-danger">*</span></label>
                   <select name="pbt_name" class="form-control form-control-sm" required
                           @change="showOther = $event.target.value === 'Others'">
-                    @foreach(['MBKT','MPK','MDS','MDB','MPD','JKR HT','JKR KN','JKR DN','JKR KT','JKR KM','JKR ST','Others'] as $pn)
+                    @foreach(['MBKT - MAJLIS BANDARAYA KUALA TERENGGANU','MPK - MAJLIS PERBANDARAN KEMAMAN','MDS - MAJLIS PERBANDARAN SETIU','MDB - MAJLIS DAERAH BESUT','MPD - MAJLIS PERBANDARAN DUNGUN','JKR HT - JKR HULU TERENGGANU','JKR KN - JKR KUALA NERUS','JKR DN - JKR DUNGUN',
+                    'JKR KT - JKR KUALA TERENGGANU','JKR KM - JKR KEMAMAN','JKR ST - JKR SETIU','Others'] as $pn)
                       <option value="{{ $pn }}">{{ $pn }}</option>
                     @endforeach
                   </select>

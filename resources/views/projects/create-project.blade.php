@@ -32,7 +32,20 @@
                 nodeSearch: '',
                 showNodeDropdown: false,
                 get filteredNodes() {
-                    const ndMap = { 'ND_TRG': 'TRG', 'ND_PHG': 'PHG', 'ND_KEL': 'KEL' };
+                    const ndMap = {
+                        'ND_TRG': 'TRG', 'ND_PHG': 'PHG', 'ND_KEL': 'KEL',
+                        'ND_JS': 'JS', 'ND_JU': 'JU', 'ND_KD_PL': 'KD/PL',
+                        'ND_KL': 'KL', 'ND_MK': 'MK', 'ND_MSC': 'MSC',
+                        'ND_NS': 'NS', 'ND_PG': 'PP', 'ND_PHG': 'PHG',
+                        'ND_PJ': 'PJ', 'ND_PRK': 'PRK', 'ND_SABAH': 'SABAH',
+                        'ND_SARAWAK': 'SARAWAK', 'ND_SB': 'SB', 'ND_ST': 'ST',
+                        'NO_TRG': 'TRG', 'NO_PHG': 'PHG', 'NO_KEL': 'KEL',
+                        'NO_JS': 'JS', 'NO_JU': 'JU', 'NO_KD_PL': 'KD/PL',
+                        'NO_KL': 'KL', 'NO_MK': 'MK', 'NO_MSC': 'MSC',
+                        'NO_NS': 'NS', 'NO_PG': 'PP', 'NO_PHG': 'PHG',
+                        'NO_PJ': 'PJ', 'NO_PRK': 'PRK', 'NO_SABAH': 'SABAH',
+                        'NO_SARAWAK': 'SARAWAK', 'NO_SB': 'SB', 'NO_ST': 'ST',
+                    };
                     const nd = ndMap[this.ndState] ?? null;
                     if (!nd) return [];
                     let list = this.allNodes.filter(n => n.nd === nd);

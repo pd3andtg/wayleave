@@ -10,23 +10,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('projects', function (Blueprint $table) {
-            $table->renameColumn('payment_to_kutt', 'payment_to_pbt');
-        });
-
-        Schema::table('cpc_applications', function (Blueprint $table) {
-            $table->renameColumn('date_submit_to_kutt', 'date_submit_to_pbt');
-        });
+        // No-op: payment_to_pbt and date_submit_to_pbt already use final names in create migrations.
     }
 
     public function down(): void
     {
-        Schema::table('projects', function (Blueprint $table) {
-            $table->renameColumn('payment_to_pbt', 'payment_to_kutt');
-        });
-
-        Schema::table('cpc_applications', function (Blueprint $table) {
-            $table->renameColumn('date_submit_to_pbt', 'date_submit_to_kutt');
-        });
+        // No-op.
     }
 };

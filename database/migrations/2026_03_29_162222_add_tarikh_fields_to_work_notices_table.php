@@ -11,16 +11,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('work_notices', function (Blueprint $table) {
-            $table->date('tarikh_mula_kerja')->nullable()->after('notis_mula_file');
-            $table->date('tarikh_siap_kerja')->nullable()->after('notis_siap_file');
-        });
+        // No-op: tarikh_mula_kerja and tarikh_siap_kerja already defined in the create migration.
     }
 
     public function down(): void
     {
-        Schema::table('work_notices', function (Blueprint $table) {
-            $table->dropColumn(['tarikh_mula_kerja', 'tarikh_siap_kerja']);
-        });
+        // No-op.
     }
 };
