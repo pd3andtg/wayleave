@@ -15,9 +15,10 @@ class DepositManagementController extends Controller
 
     public function index(Request $request)
     {
-        $filters  = $request->only(['search', 'nd_state']);
+        $filters  = $request->only(['search', 'nd_state', 'method']);
         $deposits = $this->projectService->getDepositList(auth()->user(), $filters);
+        $totals   = $this->projectService->getDepositTotals(auth()->user(), $filters);
 
-        return view('deposit-management.index', compact('deposits', 'filters'));
+        return view('deposit-management.index', compact('deposits', 'filters', 'totals'));
     }
 }

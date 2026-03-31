@@ -751,7 +751,7 @@ class ProjectService
 
     // Returns a paginated list of Deposit-type wayleave payment rows where status = required.
     // Officers are scoped to their unit's nd_state. Admins see all.
-    // Supports search (ref_no / project_desc) and admin-only nd_state filter.
+    // Supports search (ref_no / project_desc), admin-only nd_state filter, and method_of_payment filter.
     public function getDepositList(User $user, array $filters): LengthAwarePaginator
     {
         $query = WayleavePayment::with(['project.company', 'wayleavePhbt'])
@@ -778,9 +778,54 @@ class ProjectService
                            ->orWhere('project_desc', $operator, "%{$search}%");
                     });
                 }
-            })
-            ->latest();
+            });
 
-        return $query->paginate(20)->withQueryString();
+        // Method of payment filter (BG / BD_DAP / EFT_DAP).
+        if (!empty($filters['method'])) {
+            $query->where('method_of_payment', $filters['method']);
+        }
+
+        return $query->latest()->paginate(20)->withQueryString();
+    }
+
+    // Returns totals (count + sum of amount) per method_of_payment for the summary cards.
+    // Applies the same search/nd_state filters but ignores the method filter so totals are always visible.
+    public function getDepositTotals(User $user, array $filters): array
+    {
+        $query = WayleavePayment::where('payment_type', 'Deposit')
+            ->where('status', 'required')
+            ->whereHas('project', function ($q) use ($user, $filters) {
+                if ($user->hasRole('officer') && $user->unit) {
+                    $ndState = strtoupper(str_replace(' ', '_', $user->unit->name));
+                    $q->where('nd_state', $ndState);
+                }
+                if (!empty($filters['nd_state'])) {
+                    $q->where('nd_state', $filters['nd_state']);
+                }
+                if (!empty($filters['search'])) {
+                    $search   = $filters['search'];
+                    $operator = config('database.default') === 'pgsql' ? 'ilike' : 'like';
+                    $q->where(function ($sq) use ($search, $operator) {
+                        $sq->where('ref_no', $operator, "%{$search}%")
+                           ->orWhere('project_desc', $operator, "%{$search}%");
+                    });
+                }
+            });
+
+        $rows = $query->selectRaw('method_of_payment, COUNT(*) as total_count, SUM(amount) as total_amount')
+                      ->groupBy('method_of_payment')
+                      ->get()
+                      ->keyBy('method_of_payment');
+
+        $methods = ['BG', 'BD_DAP', 'EFT_DAP'];
+        $totals  = [];
+        foreach ($methods as $method) {
+            $totals[$method] = [
+                'count'  => $rows[$method]->total_count ?? 0,
+                'amount' => $rows[$method]->total_amount ?? 0,
+            ];
+        }
+
+        return $totals;
     }
 }

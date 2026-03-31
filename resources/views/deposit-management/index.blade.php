@@ -12,8 +12,45 @@
       <h2 class="card-title mb-0" style="font-weight:600;">Deposit Management</h2>
     </div>
 
+    {{-- Method filter cards --}}
+    @php
+      $activeMethod = $filters['method'] ?? '';
+      $methodMeta = [
+          'BG'      => ['label' => 'BG',       'color' => '#07326A'],
+          'BD_DAP'  => ['label' => 'BD (DAP)',  'color' => '#145a32'],
+          'EFT_DAP' => ['label' => 'EFT (DAP)', 'color' => '#6c3483'],
+      ];
+    @endphp
+    <div class="d-flex gap-3 mb-4">
+      @foreach ($methodMeta as $key => $meta)
+        @php
+          $isActive  = $activeMethod === $key;
+          $cardQuery = array_merge($filters, ['method' => $isActive ? '' : $key]);
+          $cardUrl   = route('deposit-management.index', array_filter($cardQuery, fn($v) => $v !== ''));
+        @endphp
+        <a href="{{ $cardUrl }}" class="text-decoration-none flex-fill">
+          <div class="card mb-0" style="border-left: 4px solid {{ $meta['color'] }}; {{ $isActive ? 'background:#f0f4ff;' : '' }}">
+            <div class="card-body py-3">
+              <div class="text-muted small">{{ $meta['label'] }}</div>
+              <div style="font-size:1.6rem; font-weight:700; color:{{ $meta['color'] }}; line-height:1.2;">
+                {{ $totals[$key]['count'] }}
+              </div>
+              <div style="font-size:0.78rem; color:{{ $meta['color'] }}; font-weight:500;">
+                RM {{ number_format($totals[$key]['amount'], 2) }}
+              </div>
+            </div>
+          </div>
+        </a>
+      @endforeach
+    </div>
+
     {{-- Search + Filter --}}
     <form method="GET" action="{{ route('deposit-management.index') }}" id="filter-form">
+      {{-- Preserve active method filter when submitting the search/nd_state form --}}
+      @if (!empty($activeMethod))
+        <input type="hidden" name="method" value="{{ $activeMethod }}">
+      @endif
+
       <div class="row g-2 mb-4">
 
         {{-- Search bar (all roles) --}}
@@ -43,9 +80,9 @@
       </div>
     </form>
 
-    @if (!empty($filters['search']) || !empty($filters['nd_state']))
+    @if (!empty($filters['search']) || !empty($filters['nd_state']) || !empty($filters['method']))
       <div class="d-flex justify-content-end mb-2">
-        <a href="{{ route('deposit-management.index') }}" class="text-muted small">Show All</a>
+        <a href="{{ route('deposit-management.index') }}" class="text-muted small">Clear All Filters</a>
       </div>
     @endif
 
