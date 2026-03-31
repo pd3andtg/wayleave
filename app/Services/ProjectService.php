@@ -749,14 +749,14 @@ class ProjectService
 
     // ── Deposit Management ────────────────────────────────────────────────────
 
-    // Returns a paginated list of Deposit-type wayleave payment rows where status = required.
-    // Officers are scoped to their unit's nd_state. Admins see all.
-    // Supports search (ref_no / project_desc), admin-only nd_state filter, and method_of_payment filter.
-    public function getDepositList(User $user, array $filters): LengthAwarePaginator
+    // Builds the base deposit query shared by list, totals, and export.
+    // Shows ALL Deposit-type rows (not just status=required) so that deposits
+    // from cancelled projects or changed statuses remain visible.
+    // Officers scoped to their unit's nd_state. Admins see all.
+    private function depositBaseQuery(User $user, array $filters)
     {
         $query = WayleavePayment::with(['project.company', 'wayleavePhbt'])
             ->where('payment_type', 'Deposit')
-            ->where('status', 'required')
             ->whereHas('project', function ($q) use ($user, $filters) {
                 // Officers are auto-scoped to their unit's nd_state.
                 if ($user->hasRole('officer') && $user->unit) {
@@ -767,6 +767,16 @@ class ProjectService
                 // Admin-only nd_state filter.
                 if (!empty($filters['nd_state'])) {
                     $q->where('nd_state', $filters['nd_state']);
+                }
+
+                // Project status filter (maps to application_status + status columns).
+                if (!empty($filters['project_status'])) {
+                    match($filters['project_status']) {
+                        'cancelled'   => $q->where('application_status', 'cancelled'),
+                        'completed'   => $q->where('status', 'completed')->where('application_status', 'in_progress'),
+                        'in_progress' => $q->where('application_status', 'in_progress')->where('status', 'outstanding'),
+                        default       => null,
+                    };
                 }
 
                 // Search by ref_no or project_desc.
@@ -785,37 +795,26 @@ class ProjectService
             $query->where('method_of_payment', $filters['method']);
         }
 
-        return $query->latest()->paginate(20)->withQueryString();
+        return $query;
+    }
+
+    // Returns a paginated deposit list.
+    public function getDepositList(User $user, array $filters): LengthAwarePaginator
+    {
+        return $this->depositBaseQuery($user, $filters)->latest()->paginate(20)->withQueryString();
     }
 
     // Returns totals (count + sum of amount) per method_of_payment for the summary cards.
-    // Applies the same search/nd_state filters but ignores the method filter so totals are always visible.
+    // Ignores the method filter so all three card totals are always shown.
     public function getDepositTotals(User $user, array $filters): array
     {
-        $query = WayleavePayment::where('payment_type', 'Deposit')
-            ->where('status', 'required')
-            ->whereHas('project', function ($q) use ($user, $filters) {
-                if ($user->hasRole('officer') && $user->unit) {
-                    $ndState = strtoupper(str_replace(' ', '_', $user->unit->name));
-                    $q->where('nd_state', $ndState);
-                }
-                if (!empty($filters['nd_state'])) {
-                    $q->where('nd_state', $filters['nd_state']);
-                }
-                if (!empty($filters['search'])) {
-                    $search   = $filters['search'];
-                    $operator = config('database.default') === 'pgsql' ? 'ilike' : 'like';
-                    $q->where(function ($sq) use ($search, $operator) {
-                        $sq->where('ref_no', $operator, "%{$search}%")
-                           ->orWhere('project_desc', $operator, "%{$search}%");
-                    });
-                }
-            });
+        $filtersWithoutMethod = array_merge($filters, ['method' => '']);
 
-        $rows = $query->selectRaw('method_of_payment, COUNT(*) as total_count, SUM(amount) as total_amount')
-                      ->groupBy('method_of_payment')
-                      ->get()
-                      ->keyBy('method_of_payment');
+        $rows = $this->depositBaseQuery($user, $filtersWithoutMethod)
+                     ->selectRaw('method_of_payment, COUNT(*) as total_count, SUM(amount) as total_amount')
+                     ->groupBy('method_of_payment')
+                     ->get()
+                     ->keyBy('method_of_payment');
 
         $methods = ['BG', 'BD_DAP', 'EFT_DAP'];
         $totals  = [];
@@ -827,5 +826,37 @@ class ProjectService
         }
 
         return $totals;
+    }
+
+    // Returns project status counts for the deposit management summary cards.
+    // Ignores both method and project_status filters so counts always reflect the full scope.
+    public function getDepositProjectStatusCounts(User $user, array $filters): array
+    {
+        $baseFilters = array_merge($filters, ['method' => '', 'project_status' => '']);
+
+        $all = $this->depositBaseQuery($user, $baseFilters)
+                    ->with('project')
+                    ->get();
+
+        $counts = ['in_progress' => 0, 'completed' => 0, 'cancelled' => 0];
+        foreach ($all as $row) {
+            $project = $row->project;
+            if (!$project) continue;
+            if ($project->application_status === 'cancelled') {
+                $counts['cancelled']++;
+            } elseif ($project->status === 'completed') {
+                $counts['completed']++;
+            } else {
+                $counts['in_progress']++;
+            }
+        }
+
+        return $counts;
+    }
+
+    // Returns all deposit rows (no pagination) for CSV export.
+    public function getDepositListForExport(User $user, array $filters)
+    {
+        return $this->depositBaseQuery($user, $filters)->latest()->get();
     }
 }

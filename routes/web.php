@@ -114,8 +114,12 @@ Route::middleware('auth')->group(function () {
 
     // ── Deposit Management (officer + admin only) ─────────────────────────────
     Route::middleware('role:admin|officer')->group(function () {
-        Route::get('/deposit-management', [DepositManagementController::class, 'index'])->name('deposit-management.index');
+        Route::get('/deposit-management',         [DepositManagementController::class, 'index'])->name('deposit-management.index');
+        Route::get('/deposit-management/export',  [DepositManagementController::class, 'export'])->name('deposit-management.export');
     });
+
+    // ── About page (all authenticated users) ─────────────────────────────────
+    Route::view('/about', 'about')->name('about');
 
     // ── Document References (reference library for contractors/officers) ────────
     Route::get('/document-references',                          [DocumentReferenceController::class, 'index'])->name('document-references.index');

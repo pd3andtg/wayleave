@@ -4,7 +4,7 @@
 
 @section('content')
 
-<div class="row">
+<div class="row justify-content-center">
   <div class="col-md-8 grid-margin">
     <div class="card">
       <div class="card-body">

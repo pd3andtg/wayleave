@@ -2,10 +2,19 @@
 
 namespace Database\Seeders;
 
+use App\Models\BoqInvItem;
 use App\Models\Company;
+use App\Models\CpcApplication;
+use App\Models\CpcReceived;
 use App\Models\Node;
+use App\Models\PermitReceived;
+use App\Models\PermitSubmission;
+use App\Models\Project;
 use App\Models\Unit;
 use App\Models\User;
+use App\Models\WayleavePayment;
+use App\Models\WayleavePhbt;
+use App\Models\WorkNotice;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
@@ -1070,5 +1079,123 @@ class DatabaseSeeder extends Seeder
             ]
         );
         $contractorB->assignRole($contractorRole);
+
+        // ── Demo Projects ──────────────────────────────────────────────────────
+        // Three projects covering all statuses: in_progress, completed, cancelled.
+        // Each has wayleave PBTs and wayleave payments (BG, BD_DAP, EFT_DAP)
+        // so the Deposit Management page has data to display.
+
+        $node = Node::where('nd', 'TRG')->first();
+
+        // Project 1 — In Progress (Company A)
+        $project1 = Project::firstOrCreate(
+            ['ref_no' => 'MBKT/WL/2026/001'],
+            [
+                'lor_no'             => 'LOR-2026-001',
+                'project_no'         => 'PRJ-TRG-001',
+                'project_desc'       => 'Pembentangan Kabel Serat Optik Jalan Sultan Ismail, Kuala Terengganu',
+                'pic_name'           => $contractorA->name,
+                'nd_state'           => 'ND_TRG',
+                'node_id'            => $node?->id,
+                'self_applied_by_tm' => false,
+                'payment_to_pbt'     => 'charged',
+                'application_status' => 'in_progress',
+                'remarks'            => 'Demo project — in progress',
+                'company_id'         => $companyA->id,
+                'created_by'         => $contractorA->id,
+                'status'             => 'outstanding',
+                'application_date'   => '2026-01-15',
+            ]
+        );
+
+        // Project 2 — Completed (Company A)
+        $project2 = Project::firstOrCreate(
+            ['ref_no' => 'MPK/WL/2026/002'],
+            [
+                'lor_no'             => 'LOR-2026-002',
+                'project_no'         => 'PRJ-TRG-002',
+                'project_desc'       => 'Pemasangan Kabel Bawah Tanah Fasa 2, Kemaman',
+                'pic_name'           => $contractorA->name,
+                'nd_state'           => 'ND_TRG',
+                'node_id'            => $node?->id,
+                'self_applied_by_tm' => false,
+                'payment_to_pbt'     => 'charged',
+                'application_status' => 'in_progress',
+                'remarks'            => 'Demo project — completed',
+                'company_id'         => $companyA->id,
+                'created_by'         => $contractorA->id,
+                'status'             => 'completed',
+                'application_date'   => '2025-10-01',
+            ]
+        );
+
+        // Project 3 — Cancelled (Company B)
+        $project3 = Project::firstOrCreate(
+            ['ref_no' => 'MDS/WL/2026/003'],
+            [
+                'lor_no'             => 'LOR-2026-003',
+                'project_no'         => 'PRJ-TRG-003',
+                'project_desc'       => 'Kerja-kerja Pembentangan Kabel Bawah Tanah, Dungun',
+                'pic_name'           => $contractorB->name,
+                'nd_state'           => 'ND_TRG',
+                'node_id'            => $node?->id,
+                'self_applied_by_tm' => false,
+                'payment_to_pbt'     => 'charged',
+                'application_status' => 'cancelled',
+                'cancellation_reason' => 'Projek dibatalkan atas permintaan pihak kontraktor.',
+                'remarks'            => 'Demo project — cancelled',
+                'company_id'         => $companyB->id,
+                'created_by'         => $contractorB->id,
+                'status'             => 'outstanding',
+                'application_date'   => '2025-11-20',
+            ]
+        );
+
+        // ── Wayleave PBTs & Payments for each project ─────────────────────────
+
+        foreach ([
+            [$project1, 'BG',      25000.00],
+            [$project2, 'BD_DAP',  18500.00],
+            [$project3, 'EFT_DAP', 12000.00],
+        ] as [$project, $method, $amount]) {
+
+            $pbt = WayleavePhbt::firstOrCreate(
+                ['project_id' => $project->id, 'pbt_number' => 'PBT1'],
+                [
+                    'pbt_name'              => 'MBKT - MAJLIS BANDARAYA KUALA TERENGGANU',
+                    'wayleave_file'         => null,
+                    'wayleave_received_date' => '2026-02-01',
+                    'endorsed_by'           => null,
+                ]
+            );
+
+            WayleavePayment::firstOrCreate(
+                ['project_id' => $project->id, 'wayleave_pbt_id' => $pbt->id, 'payment_type' => 'FI'],
+                [
+                    'status'              => 'required',
+                    'amount'              => $amount * 0.5,
+                    'eds_no'              => 'EDS-' . str_pad($project->id, 4, '0', STR_PAD_LEFT) . '-FI',
+                    'method_of_payment'   => $method,
+                    'application_date'    => '2026-02-15',
+                    'received_posted_date' => null,
+                    'bg_bd_file_path'     => null,
+                    'recorded_by'         => $officerTrg->id,
+                ]
+            );
+
+            WayleavePayment::firstOrCreate(
+                ['project_id' => $project->id, 'wayleave_pbt_id' => $pbt->id, 'payment_type' => 'Deposit'],
+                [
+                    'status'              => 'required',
+                    'amount'              => $amount,
+                    'eds_no'              => 'EDS-' . str_pad($project->id, 4, '0', STR_PAD_LEFT) . '-DEP',
+                    'method_of_payment'   => $method,
+                    'application_date'    => '2026-02-15',
+                    'received_posted_date' => $project->status === 'completed' ? '2026-03-01' : null,
+                    'bg_bd_file_path'     => null,
+                    'recorded_by'         => $officerTrg->id,
+                ]
+            );
+        }
     }
 }
