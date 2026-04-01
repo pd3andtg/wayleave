@@ -74,9 +74,44 @@
               <select name="nd_state" class="form-control" onchange="document.getElementById('filter-form').submit()"
                       style="height: 52px;">
                 <option value="">All ND States</option>
-                <option value="ND_TRG" {{ request('nd_state') === 'ND_TRG' ? 'selected' : '' }}>ND TRG</option>
-                <option value="ND_PHG" {{ request('nd_state') === 'ND_PHG' ? 'selected' : '' }}>ND PHG</option>
-                <option value="ND_KEL" {{ request('nd_state') === 'ND_KEL' ? 'selected' : '' }}>ND KEL</option>
+                <optgroup label="ND">
+                  <option value="ND_JS"      {{ request('nd_state') === 'ND_JS'      ? 'selected' : '' }}>ND JS</option>
+                  <option value="ND_JU"      {{ request('nd_state') === 'ND_JU'      ? 'selected' : '' }}>ND JU</option>
+                  <option value="ND_KD_PL"   {{ request('nd_state') === 'ND_KD_PL'   ? 'selected' : '' }}>ND KD/PL</option>
+                  <option value="ND_KEL"     {{ request('nd_state') === 'ND_KEL'     ? 'selected' : '' }}>ND KEL</option>
+                  <option value="ND_KL"      {{ request('nd_state') === 'ND_KL'      ? 'selected' : '' }}>ND KL</option>
+                  <option value="ND_MK"      {{ request('nd_state') === 'ND_MK'      ? 'selected' : '' }}>ND MK</option>
+                  <option value="ND_MSC"     {{ request('nd_state') === 'ND_MSC'     ? 'selected' : '' }}>ND MSC</option>
+                  <option value="ND_NS"      {{ request('nd_state') === 'ND_NS'      ? 'selected' : '' }}>ND NS</option>
+                  <option value="ND_PG"      {{ request('nd_state') === 'ND_PG'      ? 'selected' : '' }}>ND PG</option>
+                  <option value="ND_PHG"     {{ request('nd_state') === 'ND_PHG'     ? 'selected' : '' }}>ND PHG</option>
+                  <option value="ND_PJ"      {{ request('nd_state') === 'ND_PJ'      ? 'selected' : '' }}>ND PJ</option>
+                  <option value="ND_PRK"     {{ request('nd_state') === 'ND_PRK'     ? 'selected' : '' }}>ND PRK</option>
+                  <option value="ND_SABAH"   {{ request('nd_state') === 'ND_SABAH'   ? 'selected' : '' }}>ND SABAH</option>
+                  <option value="ND_SARAWAK" {{ request('nd_state') === 'ND_SARAWAK' ? 'selected' : '' }}>ND SARAWAK</option>
+                  <option value="ND_SB"      {{ request('nd_state') === 'ND_SB'      ? 'selected' : '' }}>ND SB</option>
+                  <option value="ND_ST"      {{ request('nd_state') === 'ND_ST'      ? 'selected' : '' }}>ND ST</option>
+                  <option value="ND_TRG"     {{ request('nd_state') === 'ND_TRG'     ? 'selected' : '' }}>ND TRG</option>
+                </optgroup>
+                <optgroup label="NO">
+                  <option value="NO_JS"      {{ request('nd_state') === 'NO_JS'      ? 'selected' : '' }}>NO JS</option>
+                  <option value="NO_JU"      {{ request('nd_state') === 'NO_JU'      ? 'selected' : '' }}>NO JU</option>
+                  <option value="NO_KD_PL"   {{ request('nd_state') === 'NO_KD_PL'   ? 'selected' : '' }}>NO KD/PL</option>
+                  <option value="NO_KEL"     {{ request('nd_state') === 'NO_KEL'     ? 'selected' : '' }}>NO KEL</option>
+                  <option value="NO_KL"      {{ request('nd_state') === 'NO_KL'      ? 'selected' : '' }}>NO KL</option>
+                  <option value="NO_MK"      {{ request('nd_state') === 'NO_MK'      ? 'selected' : '' }}>NO MK</option>
+                  <option value="NO_MSC"     {{ request('nd_state') === 'NO_MSC'     ? 'selected' : '' }}>NO MSC</option>
+                  <option value="NO_NS"      {{ request('nd_state') === 'NO_NS'      ? 'selected' : '' }}>NO NS</option>
+                  <option value="NO_PG"      {{ request('nd_state') === 'NO_PG'      ? 'selected' : '' }}>NO PG</option>
+                  <option value="NO_PHG"     {{ request('nd_state') === 'NO_PHG'     ? 'selected' : '' }}>NO PHG</option>
+                  <option value="NO_PJ"      {{ request('nd_state') === 'NO_PJ'      ? 'selected' : '' }}>NO PJ</option>
+                  <option value="NO_PRK"     {{ request('nd_state') === 'NO_PRK'     ? 'selected' : '' }}>NO PRK</option>
+                  <option value="NO_SABAH"   {{ request('nd_state') === 'NO_SABAH'   ? 'selected' : '' }}>NO SABAH</option>
+                  <option value="NO_SARAWAK" {{ request('nd_state') === 'NO_SARAWAK' ? 'selected' : '' }}>NO SARAWAK</option>
+                  <option value="NO_SB"      {{ request('nd_state') === 'NO_SB'      ? 'selected' : '' }}>NO SB</option>
+                  <option value="NO_ST"      {{ request('nd_state') === 'NO_ST'      ? 'selected' : '' }}>NO ST</option>
+                  <option value="NO_TRG"     {{ request('nd_state') === 'NO_TRG'     ? 'selected' : '' }}>NO TRG</option>
+                </optgroup>
               </select>
             </div>
             @endrole
