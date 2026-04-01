@@ -22,4 +22,4 @@ cmds = ["composer install --no-dev --optimize-autoloader", "npm ci", "npm run bu
 
 [start]
 # All artisan caching runs at start time so Railway's env vars are already injected.
-cmd = "php artisan config:clear && php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT"
+cmd = "echo DB_HOST=$DB_HOST && echo DB_DATABASE=$DB_DATABASE && echo DATABASE_URL=$DATABASE_URL && php artisan config:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT"
