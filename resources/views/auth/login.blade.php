@@ -4,6 +4,10 @@
 
 @section('content')
 
+  <div class="text-center mb-4">
+    <img src="{{ asset('images/waytrack.png') }}" alt="{{ config('app.name') }}" style="height:64px; width:auto;">
+  </div>
+
   <h4>Hello! let's get started</h4>
   <h6 class="font-weight-light">Sign in to continue.</h6>
 
