@@ -73,7 +73,7 @@
             <div class="col-auto">
               <select name="nd_state" class="form-control" onchange="document.getElementById('filter-form').submit()"
                       style="height: 52px;">
-                <option value="">All ND States</option>
+                <option value="">All ND/NO States</option>
                 <optgroup label="ND">
                   <option value="ND_JS"      {{ request('nd_state') === 'ND_JS'      ? 'selected' : '' }}>ND JS</option>
                   <option value="ND_JU"      {{ request('nd_state') === 'ND_JU'      ? 'selected' : '' }}>ND JU</option>

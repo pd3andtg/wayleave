@@ -757,6 +757,13 @@ class ProjectService
     {
         $query = WayleavePayment::with(['project.company', 'wayleavePhbt'])
             ->where('payment_type', 'Deposit')
+            // Show required deposits always.
+            // Also show waived/not_required deposits if the project is cancelled,
+            // so records from cancelled projects remain visible regardless of payment status.
+            ->where(function ($q) {
+                $q->where('status', 'required')
+                  ->orWhereHas('project', fn($pq) => $pq->where('application_status', 'cancelled'));
+            })
             ->whereHas('project', function ($q) use ($user, $filters) {
                 // Officers are auto-scoped to their unit's nd_state.
                 if ($user->hasRole('officer') && $user->unit) {
