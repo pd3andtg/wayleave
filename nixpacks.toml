@@ -20,12 +20,6 @@ nixPkgs = [
 [phases.install]
 cmds = ["composer install --no-dev --optimize-autoloader", "npm ci", "npm run build"]
 
-[phases.build]
-# route:cache and view:cache are safe at build time — they don't need DB or env vars.
-# config:cache is intentionally NOT here — it must run at start time so Railway's
-# real env vars (DB_HOST, etc.) are already injected before the config is baked.
-cmds = ["php artisan route:cache", "php artisan view:cache"]
-
 [start]
-# config:cache runs first so all env vars are available before migrate and serve.
-cmd = "php artisan config:cache && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT"
+# All artisan caching runs at start time so Railway's env vars are already injected.
+cmd = "php artisan config:clear && php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT"
